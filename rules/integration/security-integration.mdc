@@ -1,0 +1,246 @@
+---
+ruleId: "INT-SEC-01"
+title: "Security Integration Standards"
+status: "active"
+compliance: "mandatory"
+description: "Cross-cutting security integration standards that apply across all development domains"
+globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/*.swift", "**/*.kt", "**/*.yaml", "**/*.yml", "**/*.tf", "**/*.sql"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "integration"
+---
+
+# INT-SEC-01: Security Integration Standards
+
+## Purpose & Scope
+
+This integration rule ensures security standards are consistently applied across all development domains, providing a unified security framework that bridges gaps between domain-specific rules.
+
+## Cross-Domain Security Integration
+
+### 1. Authentication & Authorization
+```yaml
+authentication:
+  web_applications:
+    - "JWT tokens with proper expiration"
+    - "OAuth 2.0 / OpenID Connect integration"
+    - "Multi-factor authentication support"
+  
+  mobile_applications:
+    - "Biometric authentication integration"
+    - "Secure token storage in keychain/keystore"
+    - "Certificate pinning for API calls"
+  
+  apis:
+    - "API key management and rotation"
+    - "Rate limiting per user/API key"
+    - "Request signing and validation"
+  
+  infrastructure:
+    - "Service-to-service authentication"
+    - "mTLS for internal communication"
+    - "RBAC for Kubernetes resources"
+```
+
+### 2. Data Protection
+```yaml
+data_protection:
+  encryption:
+    at_rest: "AES-256 encryption for sensitive data"
+    in_transit: "TLS 1.3 for all communications"
+    key_management: "HSM or cloud KMS for key storage"
+  
+  data_classification:
+    public: "No special handling required"
+    internal: "Access logging and monitoring"
+    confidential: "Encryption + access controls"
+    restricted: "Encryption + audit trails + approval workflows"
+  
+  privacy_compliance:
+    gdpr: "Data minimization, consent management, right to deletion"
+    ccpa: "Consumer rights, data transparency"
+    hipaa: "Healthcare data protection requirements"
+```
+
+### 3. Input Validation & Sanitization
+```yaml
+input_validation:
+  web_forms:
+    - "Client-side validation for UX"
+    - "Server-side validation for security"
+    - "CSRF protection tokens"
+  
+  api_endpoints:
+    - "Request schema validation"
+    - "SQL injection prevention"
+    - "XSS prevention in responses"
+  
+  file_uploads:
+    - "File type validation"
+    - "Virus scanning"
+    - "Sandboxed processing"
+  
+  database_queries:
+    - "Parameterized queries only"
+    - "Input sanitization"
+    - "Query result filtering"
+```
+
+## Domain-Specific Security Requirements
+
+### Frontend Security (FE-01 Integration)
+- **Content Security Policy (CSP)** headers
+- **XSS prevention** in React/Vue components
+- **Secure cookie** configuration
+- **HTTPS enforcement** redirects
+
+### API Security (API-01 Integration)
+- **OpenAPI security schemes** definition
+- **Request/response validation** middleware
+- **API versioning** security considerations
+- **Error handling** without information leakage
+
+### Database Security (DP-01 Integration)
+- **Connection encryption** (TLS)
+- **Database user** least privilege
+- **Audit logging** for sensitive operations
+- **Backup encryption** and secure storage
+
+### Mobile Security (MB-01/MB-02 Integration)
+- **App Transport Security** (iOS)
+- **Network Security Config** (Android)
+- **Code obfuscation** for sensitive logic
+- **Root/jailbreak detection**
+
+### Infrastructure Security (K8S-01/INF-01 Integration)
+- **Pod Security Standards** enforcement
+- **Network policies** for micro-segmentation
+- **Secrets management** with external providers
+- **Image vulnerability scanning**
+
+## Security Monitoring & Alerting
+
+### Real-time Monitoring
+```yaml
+monitoring:
+  authentication_failures:
+    threshold: "5 failures per minute per IP"
+    action: "Temporary IP blocking"
+  
+  suspicious_activity:
+    - "Unusual data access patterns"
+    - "Privilege escalation attempts"
+    - "Anomalous API usage"
+  
+  security_events:
+    - "Failed login attempts"
+    - "Permission denied errors"
+    - "Data access violations"
+    - "Configuration changes"
+```
+
+### Incident Response Integration
+- **Security incident** classification
+- **Automated response** triggers
+- **Escalation procedures** for critical issues
+- **Post-incident** security improvements
+
+## Rule Dependencies
+
+## Rule Application Signals
+
+When you encounter security-related work, reference these additional rules:
+
+### Security Implementation Signals
+- **API Security Implementation** → Reference `.cursor/rules/architecture/api-development-standards.mdc` for API-specific security patterns
+- **Database Security Implementation** → Reference `.cursor/rules/architecture/database-standards.mdc` for database-specific security patterns
+- **Frontend Security Implementation** → Reference `.cursor/rules/architecture/frontend-development-standards.mdc` for frontend-specific security patterns
+- **Mobile Security Implementation** → Reference `.cursor/rules/mobile/ios-development-standards.mdc` or `.cursor/rules/mobile/android-development-standards.mdc` for mobile-specific security patterns
+- **Infrastructure Security Implementation** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` or `.cursor/rules/infrastructure/infrastructure-standards.mdc` for infrastructure-specific security patterns
+
+### Security Testing Signals
+- **Security Testing Required** → Reference `.cursor/rules/integration/testing-integration.mdc` for security testing patterns
+- **Performance Security Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` for security performance considerations
+- **Security Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for security monitoring patterns
+
+### Security Issue Resolution Signals
+- **Security Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for security conflict resolution
+- **Security Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for security rule versioning
+- **Security Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for security change impact analysis
+
+### Related Standards Integration
+```yaml
+dependencies:
+  core_security:
+    rule: "SEC-01: Universal Security Standards"
+    integration: "Foundation security principles and requirements"
+  
+  api_security:
+    rule: "API-01: API Development Standards"
+    integration: "API-specific security implementations"
+  
+  database_security:
+    rule: "DP-01: Database Standards"
+    integration: "Database security and access controls"
+  
+  frontend_security:
+    rule: "FE-01: Frontend Development Standards"
+    integration: "Client-side security implementations"
+  
+  mobile_security:
+    rules: ["MB-01: iOS Development Standards", "MB-02: Android Development Standards"]
+    integration: "Mobile platform security features"
+  
+  infrastructure_security:
+    rules: ["K8S-01: Kubernetes Standards", "INF-01: Infrastructure Standards"]
+    integration: "Infrastructure security and hardening"
+```
+
+## Implementation Guidelines
+
+### 1. Security-First Development
+- **Threat modeling** for new features
+- **Security code reviews** for all changes
+- **Automated security testing** in CI/CD
+- **Regular security audits** and assessments
+
+### 2. Security Testing Integration
+- **SAST** (Static Application Security Testing)
+- **DAST** (Dynamic Application Security Testing)
+- **Dependency scanning** for vulnerabilities
+- **Penetration testing** for critical systems
+
+### 3. Security Documentation
+- **Security architecture** diagrams
+- **Threat model** documentation
+- **Incident response** playbooks
+- **Security training** materials
+
+## Compliance & Auditing
+
+### Security Compliance
+- **SOC 2** Type II compliance
+- **ISO 27001** security management
+- **PCI DSS** for payment processing
+- **Industry-specific** regulations
+
+### Audit Requirements
+- **Security control** effectiveness testing
+- **Vulnerability assessment** reports
+- **Penetration testing** results
+- **Compliance audit** documentation
+
+## Success Metrics
+
+### Security KPIs
+- **Mean Time to Detection** (MTTD) for security incidents
+- **Mean Time to Response** (MTTR) for security issues
+- **Vulnerability remediation** time
+- **Security training** completion rates
+- **False positive** rates for security alerts
+
+### Quality Gates
+- **Zero critical** vulnerabilities in production
+- **100% security** test coverage for sensitive features
+- **All security** requirements documented and tested
+- **Regular security** reviews completed

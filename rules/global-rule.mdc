@@ -1,0 +1,298 @@
+---
+ruleId: "GLOBAL-01"
+title: "Comprehensive Rule Reading Protocol"
+status: "active"
+compliance: "mandatory"
+description: "Ensures systematic reading, application, and continuous auditing of all rules in .cursor/rules/*"
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "global"
+---
+
+# GLOBAL-01: Comprehensive Rule Reading Protocol
+
+## Purpose & Scope
+
+This rule ensures that I systematically read, apply, and continuously audit ALL rules in `.cursor/rules/*` without missing any, preventing the incomplete analysis errors that occurred previously. This is a meta-rule that governs how I process, apply, and maintain all other rules to prevent them from going stale.
+
+## ⚠️ CRITICAL: Anonymized Repository Notice
+
+**THIS REPOSITORY CONTAINS ANONYMIZED PLACEHOLDER VALUES FOR PUBLIC SHARING:**
+
+All examples use placeholder values like `YOUR_USERNAME`, `YOUR_USER_ID`, `YOUR_GITHUB_USERNAME`, `YOUR_PROJECT_NAME`, and `example-platform`.
+
+**MANDATORY PLACEHOLDER REPLACEMENT PROTOCOL:**
+1. **NEVER execute commands** with placeholder values
+2. **ALWAYS prompt users** for real values when implementing rules
+3. **VALIDATE** all placeholders are replaced before execution
+4. **ASK for clarification** when encountering placeholder values
+5. **TREAT placeholders as invalid** until replaced with real values
+
+This ensures security and prevents accidental use of anonymized examples.
+
+## MANDATORY Rule Reading Protocol
+
+### 1. Complete Directory Traversal
+When asked to follow rules in `.cursor/rules/*`, I MUST:
+
+1. **List ALL subdirectories** in `.cursor/rules/`
+2. **Read ALL `.mdc` files** in each subdirectory completely
+3. **Extract ALL `alwaysApply` fields** from every file
+4. **Extract ALL `globs` patterns** from every file
+5. **Extract ALL `ruleId` and `title` fields** for identification
+6. **Create a comprehensive mapping** of all rules by category
+
+### 2. Systematic Rule Processing
+
+#### Phase 1: Discovery
+```bash
+# I must systematically discover all rule files
+find .cursor/rules/ -name "*.mdc" -type f
+```
+
+#### Phase 2: Complete Reading
+For each discovered file, I must:
+- Read the ENTIRE file content
+- Extract the YAML frontmatter completely
+- Identify the `alwaysApply` field (true/false)
+- Identify the `globs` patterns
+- Identify the `ruleId` and `title`
+- Note any scope limitations or context requirements
+
+#### Phase 3: Categorization
+I must categorize rules into:
+- **Always Apply**: `alwaysApply: true` (applied to all interactions)
+- **Auto Attached**: `alwaysApply: false` but matching current file patterns
+- **Agent Requested**: Rules I explicitly reference when appropriate
+- **Manual**: Rules requiring explicit user instruction
+
+### 3. Verification Protocol
+
+Before providing any rule analysis, I must:
+
+1. **Count total rules** discovered
+2. **Count alwaysApply: true rules** 
+3. **Count alwaysApply: false rules**
+4. **Verify I read ALL files** in the directory structure
+5. **Cross-reference** my analysis against the complete file list
+
+### 4. Error Prevention Measures
+
+#### Mandatory Checks
+- [ ] Did I read ALL `.mdc` files in ALL subdirectories?
+- [ ] Did I extract the `alwaysApply` field from EVERY file?
+- [ ] Did I count the total number of rules correctly?
+- [ ] Did I identify ALL rules marked as `alwaysApply: true`?
+- [ ] Did I miss any files due to incomplete directory traversal?
+
+#### Quality Assurance
+- [ ] Can I provide a complete list of all rule files?
+- [ ] Can I provide an accurate count of `alwaysApply: true` rules?
+- [ ] Can I explain why each rule is categorized as it is?
+- [ ] Have I avoided making assumptions about rule content?
+
+## Implementation Requirements
+
+### When Processing Rules
+1. **NEVER assume** I have found all rules after reading a few files
+2. **ALWAYS complete** the full directory traversal
+3. **ALWAYS verify** my count against the actual file count
+4. **ALWAYS double-check** the `alwaysApply` field extraction
+5. **ALWAYS provide** a complete and accurate analysis
+
+### When Reporting Rule Analysis
+I must provide:
+1. **Complete file count** from `.cursor/rules/*`
+2. **Accurate count** of `alwaysApply: true` rules
+3. **Complete list** of all rules with their categories
+4. **Verification** that no rules were missed
+
+## Error Recovery Protocol
+
+If I discover I missed rules in my analysis:
+1. **Immediately acknowledge** the error
+2. **Re-read ALL rule files** completely
+3. **Provide corrected analysis** with accurate counts
+4. **Explain what went wrong** in my initial analysis
+5. **Implement additional checks** to prevent recurrence
+
+## Continuous Rule Auditing and Maintenance
+
+### 1. Rule Health Monitoring
+I must continuously monitor and audit all rules to ensure they remain effective and up-to-date:
+
+#### Rule Quality Checks
+- **YAML Header Validation**: Ensure all rules have proper YAML frontmatter
+- **Field Completeness**: Verify all required fields are present and correct
+- **Glob Pattern Validation**: Ensure glob patterns are specific and relevant
+- **Dependency Verification**: Confirm all rule dependencies are accurate
+- **Trigger Signal Validation**: Verify manual rule triggers are properly configured
+
+#### Rule Effectiveness Monitoring
+- **Usage Pattern Analysis**: Monitor how rules are being applied
+- **Compliance Rate Tracking**: Track rule compliance and effectiveness
+- **Conflict Detection**: Identify and resolve rule conflicts
+- **Performance Monitoring**: Monitor rule application performance
+- **User Feedback Integration**: Incorporate user feedback for rule improvements
+
+### 2. Rule Maintenance Protocol
+
+#### Regular Auditing Schedule
+- **Daily**: Check for rule application errors and conflicts
+- **Weekly**: Review rule effectiveness and compliance rates
+- **Monthly**: Comprehensive rule audit and quality assessment
+- **Quarterly**: Rule refactoring and optimization review
+- **Annually**: Complete rule base overhaul and modernization
+
+#### Rule Refactoring Triggers
+- **Stale Rules**: Rules that haven't been updated in 6+ months
+- **Low Compliance**: Rules with <80% compliance rate
+- **High Conflict Rate**: Rules causing frequent conflicts
+- **Performance Issues**: Rules causing performance degradation
+- **User Complaints**: Rules receiving negative user feedback
+
+#### Rule Documentation Maintenance
+- **Missing Documentation**: Identify and document missing rule aspects
+- **Outdated Examples**: Update rule examples and use cases
+- **Incomplete Integration**: Document missing rule integration points
+- **Missing Dependencies**: Identify and add missing rule dependencies
+- **Incomplete Triggers**: Add missing trigger signals for manual rules
+
+### 3. Rule Evolution Management
+
+#### Version Control and Compatibility
+- **Rule Versioning**: Implement semantic versioning for all rules
+- **Compatibility Matrix**: Maintain compatibility between rule versions
+- **Migration Guides**: Provide migration paths for rule updates
+- **Deprecation Management**: Manage rule deprecation and sunsetting
+- **Change Impact Analysis**: Analyze impact of rule changes
+
+#### Rule Learning and Adaptation
+- **Usage Pattern Learning**: Learn from rule usage patterns
+- **Effectiveness Optimization**: Optimize rules based on effectiveness data
+- **User Behavior Adaptation**: Adapt rules based on user behavior
+- **Context-Aware Updates**: Update rules based on changing contexts
+- **Predictive Maintenance**: Predict and prevent rule issues
+
+### 4. Rule Quality Assurance
+
+#### Pre-Deployment Validation
+- **Syntax Validation**: Ensure all rules have valid YAML and markdown
+- **Logic Validation**: Verify rule logic and requirements
+- **Integration Testing**: Test rule integration with other rules
+- **Performance Testing**: Validate rule performance characteristics
+- **User Acceptance Testing**: Validate rules with end users
+
+#### Post-Deployment Monitoring
+- **Real-time Monitoring**: Monitor rule application in real-time
+- **Error Tracking**: Track and resolve rule application errors
+- **Performance Metrics**: Monitor rule performance metrics
+- **User Feedback**: Collect and analyze user feedback
+- **Continuous Improvement**: Implement continuous improvements
+
+## Rule Application Signals
+
+When you encounter specific work types, reference these additional rules:
+
+### Development Work Signals
+- **API Development** → Reference `.cursor/rules/architecture/api-development-standards.mdc` + `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/integration/performance-integration.mdc`
+- **Database Work** → Reference `.cursor/rules/architecture/database-standards.mdc` + `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/integration/performance-integration.mdc`
+- **Frontend Work** → Reference `.cursor/rules/architecture/frontend-development-standards.mdc` + `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/mobile/cross-platform-consistency.mdc` (if cross-platform)
+- **Mobile Work** → Reference `.cursor/rules/mobile/ios-development-standards.mdc` or `.cursor/rules/mobile/android-development-standards.mdc` + `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/mobile/cross-platform-consistency.mdc` + `.cursor/rules/mobile/mobile-testing-standards.mdc`
+- **Infrastructure Work** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` or `.cursor/rules/infrastructure/infrastructure-standards.mdc` + `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/operations/operational-excellence.mdc`
+- **Deployment Work** → Reference `.cursor/rules/operations/deployment-progression-standards.mdc` + `.cursor/rules/operations/docker-container-standards.mdc` + `.cursor/rules/infrastructure/kubernetes-standards.mdc`
+- **Testing Work** → Reference `.cursor/rules/core/comprehensive-testing-standards.mdc` + `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/integration/security-integration.mdc`
+
+### Issue Resolution Signals
+- **Performance Issues** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/rule-performance-monitoring.mdc` + `.cursor/rules/operations/operational-excellence.mdc`
+- **Rule Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` + `.cursor/rules/integration/rule-application-decision-tree.mdc`
+- **Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` + `.cursor/rules/integration/rule-impact-analysis-tools.mdc`
+- **Usage Analysis** → Reference `.cursor/rules/integration/rule-learning-system.mdc` + `.cursor/rules/integration/rule-effectiveness-metrics.mdc`
+
+### Communication and Writing Signals
+- **Writing Work** → Reference `.cursor/rules/core/human-like-writing-standards.mdc` + `.cursor/rules/core/documentation-standards.mdc` + `.cursor/rules/core/document-synchronization-cross-reference.mdc`
+- **Unclear Situations** → Reference `.cursor/rules/core/no-assumptions-rule.mdc` + `.cursor/rules/core/ai-assistant-communication-protocol.mdc`
+- **Documentation Work** → Reference `.cursor/rules/core/documentation-standards.mdc` + `.cursor/rules/core/feature-documentation-sync.mdc` + `.cursor/rules/core/human-like-writing-standards.mdc`
+- **Systematic Work** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for focus maintenance and task divergence management
+- **PM Tool Usage** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for PM tool commands and work item management
+
+## Integration with Other Rules
+
+This global rule works in conjunction with:
+- **QC-13**: AI Assistant Communication Protocol
+- **QC-14**: Document Synchronization & Cross-Reference Management
+- **QC-15**: Systematic Debugging Methodology
+- **QC-16**: No Assumptions Rule
+- **QC-17**: Human-Like Writing Standards
+- **INT-VERSION-01**: Rule Versioning and Compatibility Standards
+- **INT-IMPACT-01**: Rule Impact Analysis Tools and Framework
+- **INT-PERF-MON-01**: Rule Performance Monitoring and Optimization
+- **INT-LEARN-01**: Rule Learning System and Usage Pattern Analysis
+
+## Success Metrics
+
+### Accuracy Metrics
+- **100% file coverage**: All `.mdc` files in `.cursor/rules/*` must be read
+- **100% field extraction**: All `alwaysApply` fields must be correctly identified
+- **0% missed rules**: No rules should be overlooked in analysis
+- **100% verification**: Analysis must be verifiable against actual file contents
+
+### Quality Metrics
+- **Complete analysis**: Must provide comprehensive rule categorization
+- **Accurate counts**: Must provide correct counts of rule types
+- **Clear explanation**: Must explain rule application modes clearly
+- **Error-free reporting**: Must avoid incomplete or inaccurate reporting
+
+### Maintenance Metrics
+- **100% rule health**: All rules must pass quality checks
+- **95%+ compliance rate**: Rules must maintain high compliance rates
+- **0% stale rules**: No rules should be outdated or ineffective
+- **100% integration**: All rules must have proper dependencies and triggers
+- **Continuous improvement**: Rules must be continuously improved and optimized
+
+### Auditing Metrics
+- **Daily monitoring**: Rule health must be monitored daily
+- **Weekly reviews**: Rule effectiveness must be reviewed weekly
+- **Monthly audits**: Comprehensive rule audits must be conducted monthly
+- **Quarterly refactoring**: Rule refactoring must be conducted quarterly
+- **Annual modernization**: Complete rule base modernization must be conducted annually
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before providing any rule analysis, I must verify:
+- [ ] I have read ALL files in `.cursor/rules/*`
+- [ ] I have extracted ALL `alwaysApply` fields
+- [ ] I have counted ALL rules correctly
+- [ ] I can provide a complete file list
+- [ ] I can provide accurate rule categorization
+- [ ] I have not made any assumptions about rule content
+
+### Rule Health Verification Checklist
+Before applying any rules, I must verify:
+- [ ] All rules have proper YAML headers
+- [ ] All required fields are present and correct
+- [ ] Glob patterns are specific and relevant
+- [ ] Rule dependencies are accurate and up-to-date
+- [ ] Manual rule triggers are properly configured
+- [ ] No rules are stale or outdated
+- [ ] Rule integration points are complete
+- [ ] Rule documentation is current and comprehensive
+
+### Error Prevention
+- [ ] I will not stop reading after finding some rules
+- [ ] I will not assume I have found all `alwaysApply: true` rules
+- [ ] I will not make assumptions about rule content
+- [ ] I will verify my analysis against actual file contents
+- [ ] I will provide complete and accurate reporting
+- [ ] I will continuously monitor rule health and effectiveness
+- [ ] I will proactively identify and resolve rule issues
+- [ ] I will maintain rule quality and prevent staleness
+
+## Conclusion
+
+This global rule ensures that I systematically and completely process all rules in `.cursor/rules/*` without missing any, preventing the incomplete analysis errors that occurred previously. It establishes a mandatory protocol for comprehensive rule reading, accurate reporting, and continuous rule auditing and maintenance to prevent rules from going stale.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all rule processing and maintenance  
+**Purpose**: Ensure complete and accurate rule analysis without misses, plus continuous rule health and effectiveness

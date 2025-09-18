@@ -1,0 +1,738 @@
+---
+ruleId: "DP-01"
+title: "Database Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive database standards covering schema design, migration management, operations, and performance optimization"
+globs: ["**/*.sql", "**/migrations/**", "**/database/**", "**/db/**", "**/*.db.*"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "architecture"
+---
+
+# DP-01: Database Standards
+
+## Purpose & Scope
+
+Comprehensive database standards covering schema design, migration management, operations, and performance optimization. This rule establishes database architecture patterns, operational excellence, and best practices for data integrity and performance.
+
+## Rule Application Signals
+
+When you encounter database development work, reference these additional rules:
+
+### Database Implementation Signals
+- **Database Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **Database Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **Database Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **Database Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Database Quality Signals
+- **Database Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Database Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Database Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for database monitoring patterns
+
+### Database Issue Resolution Signals
+- **Database Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Database Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Database Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  security:
+    rule: "SEC-01: Universal Security Standards"
+    integration: "Database security, encryption, and access control"
+    requirements:
+      - "Data encryption at rest and in transit"
+      - "Database access control and authentication"
+      - "SQL injection prevention"
+      - "Sensitive data protection"
+  
+  performance:
+    rule: "PERF-01: Performance Standards"
+    integration: "Database performance optimization and monitoring"
+    requirements:
+      - "Query optimization"
+      - "Index strategy"
+      - "Connection pooling"
+      - "Database monitoring"
+  
+  testing:
+    rule: "QC-01: Comprehensive Testing Standards"
+    integration: "Database testing requirements and test data management"
+    requirements:
+      - "Database unit tests"
+      - "Migration testing"
+      - "Data integrity tests"
+      - "Performance tests"
+  
+  api_integration:
+    rule: "API-01: API Development Standards"
+    integration: "Database integration with API layer"
+    requirements:
+      - "API data validation"
+      - "Database transaction management"
+      - "Error handling"
+      - "Data serialization"
+```
+
+## Core Standards
+
+### 1. Schema Design Standards
+
+#### MANDATORY Database Schema Requirements
+- **USE:** Consistent naming conventions across all database objects
+- **IMPLEMENT:** Proper data types and constraints for data integrity
+- **DESIGN:** Normalized schemas with appropriate denormalization for performance
+- **ENFORCE:** Foreign key constraints and referential integrity
+
+#### Naming Conventions
+```sql
+-- Table naming: plural, snake_case
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Column naming: snake_case, descriptive
+CREATE TABLE user_profiles (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  date_of_birth DATE,
+  email_address VARCHAR(320) UNIQUE NOT NULL,
+  phone_number VARCHAR(20),
+  is_email_verified BOOLEAN DEFAULT FALSE,
+  profile_image_url TEXT
+);
+
+-- Index naming: idx_<table>_<columns>
+CREATE INDEX idx_users_email_address ON users(email_address);
+CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
+
+-- Constraint naming: <type>_<table>_<columns>
+ALTER TABLE user_profiles 
+ADD CONSTRAINT chk_user_profiles_email_format 
+CHECK (email_address ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+```
+
+#### Data Type Standards
+```sql
+-- Use appropriate data types
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number VARCHAR(50) UNIQUE NOT NULL,          -- Business identifier
+  user_id UUID NOT NULL REFERENCES users(id),
+  order_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  total_amount DECIMAL(10,2) NOT NULL,               -- Monetary values
+  currency_code CHAR(3) NOT NULL DEFAULT 'USD',     -- ISO currency codes
+  order_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(), -- Always use timezone
+  shipped_date TIMESTAMP WITH TIME ZONE,
+  tracking_number VARCHAR(100),
+  notes TEXT,                                        -- Variable length text
+  metadata JSONB,                                    -- Structured data
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enum types for controlled vocabularies
+CREATE TYPE order_status_enum AS ENUM (
+  'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'
+);
+
+ALTER TABLE orders ALTER COLUMN order_status TYPE order_status_enum 
+USING order_status::order_status_enum;
+```
+
+#### Audit and Soft Delete Patterns
+```sql
+-- Audit columns (required on all tables)
+CREATE TABLE base_entity (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  created_by UUID REFERENCES users(id),
+  updated_by UUID REFERENCES users(id),
+  version INTEGER DEFAULT 1 NOT NULL  -- Optimistic locking
+);
+
+-- Soft delete pattern
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL,
+  is_deleted BOOLEAN DEFAULT FALSE NOT NULL,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  deleted_by UUID REFERENCES users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Trigger for updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  NEW.version = OLD.version + 1;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_products_updated_at 
+  BEFORE UPDATE ON products 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+### 2. Migration Management
+
+#### MANDATORY Migration Standards
+- **VERSION:** All database changes through versioned migration scripts
+- **REVERSIBLE:** Provide rollback scripts for all schema changes
+- **ATOMIC:** Each migration should be atomic and independent
+- **TEST:** Validate migrations on staging before production deployment
+
+#### Migration Template
+```sql
+-- migrations/001_create_users_table.up.sql
+-- Description: Create users table with basic profile information
+-- Author: team@example.com
+-- Date: 2024-01-15
+
+BEGIN;
+
+-- Create users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(320) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE NOT NULL,
+  last_login_at TIMESTAMP WITH TIME ZONE,
+  failed_login_attempts INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Create indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_is_active ON users(is_active);
+CREATE INDEX idx_users_created_at ON users(created_at);
+
+-- Add constraints
+ALTER TABLE users ADD CONSTRAINT chk_users_email_format 
+  CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+
+ALTER TABLE users ADD CONSTRAINT chk_users_failed_attempts 
+  CHECK (failed_login_attempts >= 0 AND failed_login_attempts <= 10);
+
+-- Update migration tracking
+INSERT INTO schema_migrations (version, applied_at) 
+VALUES ('001', NOW());
+
+COMMIT;
+```
+
+```sql
+-- migrations/001_create_users_table.down.sql
+-- Rollback script for users table creation
+
+BEGIN;
+
+-- Remove from migration tracking
+DELETE FROM schema_migrations WHERE version = '001';
+
+-- Drop table (cascades to indexes and constraints)
+DROP TABLE IF EXISTS users CASCADE;
+
+COMMIT;
+```
+
+#### Migration Management System
+```typescript
+// migration-manager.ts
+export interface Migration {
+  version: string;
+  description: string;
+  upSql: string;
+  downSql: string;
+  appliedAt?: Date;
+}
+
+export class MigrationManager {
+  private db: DatabaseClient;
+  
+  constructor(db: DatabaseClient) {
+    this.db = db;
+  }
+
+  async applyMigration(migration: Migration): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      // Check if migration already applied
+      const applied = await this.isMigrationApplied(migration.version);
+      if (applied) {
+        console.log(`Migration ${migration.version} already applied`);
+        return;
+      }
+
+      // Apply migration
+      await tx.query(migration.upSql);
+      
+      // Record migration
+      await tx.query(
+        'INSERT INTO schema_migrations (version, description, applied_at) VALUES ($1, $2, $3)',
+        [migration.version, migration.description, new Date()]
+      );
+    });
+  }
+
+  async rollbackMigration(version: string): Promise<void> {
+    const migration = await this.getMigration(version);
+    if (!migration) {
+      throw new Error(`Migration ${version} not found`);
+    }
+
+    await this.db.transaction(async (tx) => {
+      // Apply rollback
+      await tx.query(migration.downSql);
+      
+      // Remove migration record
+      await tx.query('DELETE FROM schema_migrations WHERE version = $1', [version]);
+    });
+  }
+
+  private async isMigrationApplied(version: string): Promise<boolean> {
+    const result = await this.db.query(
+      'SELECT COUNT(*) FROM schema_migrations WHERE version = $1',
+      [version]
+    );
+    return parseInt(result.rows[0].count) > 0;
+  }
+}
+```
+
+### 3. Database Operations Standards
+
+#### Query Optimization
+```typescript
+// database-operations.ts
+export class DatabaseOperations {
+  private pool: Pool;
+  private queryLogger: QueryLogger;
+
+  constructor(config: DatabaseConfig) {
+    this.pool = new Pool(config);
+    this.queryLogger = new QueryLogger();
+  }
+
+  async executeQuery<T>(query: string, params: any[] = []): Promise<T[]> {
+    const startTime = Date.now();
+    
+    try {
+      const result = await this.pool.query(query, params);
+      
+      // Log query performance
+      const duration = Date.now() - startTime;
+      this.queryLogger.logQuery(query, params, duration, result.rowCount);
+      
+      return result.rows;
+    } catch (error) {
+      this.queryLogger.logError(query, params, error);
+      throw error;
+    }
+  }
+
+  async executeTransaction<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
+    const client = await this.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      const result = await callback(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Prepared statement for frequently used queries
+  async getUserById(userId: string): Promise<User | null> {
+    const query = `
+      SELECT u.*, up.first_name, up.last_name, up.email_address
+      FROM users u
+      LEFT JOIN user_profiles up ON u.id = up.user_id
+      WHERE u.id = $1 AND u.is_deleted = FALSE
+    `;
+    
+    const rows = await this.executeQuery<User>(query, [userId]);
+    return rows.length > 0 ? rows[0] : null;
+  }
+}
+```
+
+#### Connection Pooling Configuration
+```typescript
+// database-config.ts
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+  max: number;           // Maximum number of connections
+  min: number;           // Minimum number of connections
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
+  ssl: boolean;
+}
+
+export const defaultDatabaseConfig: DatabaseConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'app_db',
+  user: process.env.DB_USER || 'app_user',
+  password: process.env.DB_PASSWORD || '',
+  max: 20,                    // Maximum connections
+  min: 2,                     // Minimum connections
+  idleTimeoutMillis: 30000,   // Close idle connections after 30s
+  connectionTimeoutMillis: 2000, // Connection timeout
+  ssl: process.env.NODE_ENV === 'production'
+};
+```
+
+### 4. Indexing Strategy
+
+#### Performance Indexing Guidelines
+```sql
+-- Primary key indexes (automatic)
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- Automatic index
+  order_number VARCHAR(50) UNIQUE NOT NULL,      -- Automatic index
+  user_id UUID NOT NULL,
+  order_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  status VARCHAR(20) NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL
+);
+
+-- Composite indexes for common query patterns
+CREATE INDEX idx_orders_user_date ON orders(user_id, order_date DESC);
+CREATE INDEX idx_orders_status_date ON orders(status, order_date DESC);
+CREATE INDEX idx_orders_amount ON orders(total_amount) WHERE total_amount > 1000;
+
+-- Partial indexes for filtered queries
+CREATE INDEX idx_active_users ON users(email) WHERE is_active = TRUE;
+CREATE INDEX idx_recent_orders ON orders(id) WHERE order_date > NOW() - INTERVAL '30 days';
+
+-- Text search indexes
+CREATE INDEX idx_products_name_search ON products USING gin(to_tsvector('english', name));
+CREATE INDEX idx_products_description_search ON products USING gin(to_tsvector('english', description));
+```
+
+#### Index Maintenance
+```sql
+-- Analyze table statistics
+ANALYZE users;
+ANALYZE orders;
+
+-- Check index usage
+SELECT 
+  schemaname,
+  tablename,
+  indexname,
+  idx_scan,
+  idx_tup_read,
+  idx_tup_fetch
+FROM pg_stat_user_indexes
+WHERE schemaname = 'public'
+ORDER BY idx_scan DESC;
+
+-- Find unused indexes
+SELECT 
+  schemaname,
+  tablename,
+  indexname,
+  idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+AND schemaname = 'public';
+```
+
+### 5. Data Integrity and Validation
+
+#### Constraint Management
+```sql
+-- Check constraints for data validation
+ALTER TABLE users ADD CONSTRAINT chk_users_age 
+  CHECK (date_of_birth <= NOW() - INTERVAL '13 years');
+
+ALTER TABLE orders ADD CONSTRAINT chk_orders_amount 
+  CHECK (total_amount > 0);
+
+ALTER TABLE products ADD CONSTRAINT chk_products_price 
+  CHECK (price >= 0);
+
+-- Foreign key constraints with proper actions
+ALTER TABLE order_items 
+ADD CONSTRAINT fk_order_items_order_id 
+FOREIGN KEY (order_id) REFERENCES orders(id) 
+ON DELETE CASCADE;
+
+ALTER TABLE user_profiles 
+ADD CONSTRAINT fk_user_profiles_user_id 
+FOREIGN KEY (user_id) REFERENCES users(id) 
+ON DELETE CASCADE;
+
+-- Unique constraints
+ALTER TABLE users ADD CONSTRAINT uk_users_email UNIQUE (email);
+ALTER TABLE products ADD CONSTRAINT uk_products_sku UNIQUE (sku);
+```
+
+#### Row-Level Security
+```sql
+-- Enable RLS on tables
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+CREATE POLICY orders_user_policy ON orders
+  FOR ALL
+  USING (user_id = current_setting('app.current_user_id')::UUID);
+
+CREATE POLICY profiles_user_policy ON user_profiles
+  FOR ALL
+  USING (user_id = current_setting('app.current_user_id')::UUID);
+
+-- Function to set user context
+CREATE OR REPLACE FUNCTION set_user_context(user_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  PERFORM set_config('app.current_user_id', user_id::TEXT, FALSE);
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### 6. Backup and Recovery
+
+#### Backup Strategy
+```bash
+#!/bin/bash
+# backup-script.sh
+
+# Configuration
+DB_NAME="app_db"
+BACKUP_DIR="/backups"
+RETENTION_DAYS=30
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
+# Generate backup filename
+BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_$(date +%Y%m%d_%H%M%S).sql"
+
+# Perform backup
+pg_dump \
+  --host=localhost \
+  --port=5432 \
+  --username=backup_user \
+  --dbname=$DB_NAME \
+  --verbose \
+  --clean \
+  --no-owner \
+  --no-privileges \
+  --file=$BACKUP_FILE
+
+# Compress backup
+gzip $BACKUP_FILE
+
+# Clean old backups
+find $BACKUP_DIR -name "*.sql.gz" -mtime +$RETENTION_DAYS -delete
+
+# Verify backup
+if [ -f "${BACKUP_FILE}.gz" ]; then
+  echo "Backup completed successfully: ${BACKUP_FILE}.gz"
+else
+  echo "Backup failed!"
+  exit 1
+fi
+```
+
+#### Recovery Procedures
+```sql
+-- Point-in-time recovery
+-- 1. Stop application
+-- 2. Restore from backup
+pg_restore --dbname=app_db --clean --if-exists backup_file.sql
+
+-- 3. Apply WAL files to reach desired point
+pg_ctl -D /var/lib/postgresql/data start -W
+
+-- 4. Verify data integrity
+SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM orders;
+
+-- 5. Restart application
+```
+
+### 7. Performance Monitoring
+
+#### Query Performance Monitoring
+```sql
+-- Slow query detection
+SELECT 
+  query,
+  calls,
+  total_time,
+  mean_time,
+  rows
+FROM pg_stat_statements
+WHERE mean_time > 100  -- Queries taking more than 100ms
+ORDER BY mean_time DESC
+LIMIT 10;
+
+-- Table access patterns
+SELECT 
+  schemaname,
+  tablename,
+  seq_scan,
+  seq_tup_read,
+  idx_scan,
+  idx_tup_fetch
+FROM pg_stat_user_tables
+WHERE schemaname = 'public'
+ORDER BY seq_scan DESC;
+
+-- Index usage statistics
+SELECT 
+  indexrelname,
+  idx_scan,
+  idx_tup_read,
+  idx_tup_fetch
+FROM pg_stat_user_indexes
+WHERE schemaname = 'public'
+ORDER BY idx_scan DESC;
+```
+
+#### Database Health Monitoring
+```typescript
+// database-monitor.ts
+export class DatabaseMonitor {
+  private db: DatabaseClient;
+  private metrics: MetricsCollector;
+
+  constructor(db: DatabaseClient, metrics: MetricsCollector) {
+    this.db = db;
+    this.metrics = metrics;
+  }
+
+  async collectMetrics(): Promise<DatabaseMetrics> {
+    const [
+      connectionCount,
+      activeQueries,
+      slowQueries,
+      tableSizes,
+      indexUsage
+    ] = await Promise.all([
+      this.getConnectionCount(),
+      this.getActiveQueries(),
+      this.getSlowQueries(),
+      this.getTableSizes(),
+      this.getIndexUsage()
+    ]);
+
+    return {
+      connectionCount,
+      activeQueries,
+      slowQueries,
+      tableSizes,
+      indexUsage,
+      timestamp: new Date()
+    };
+  }
+
+  private async getConnectionCount(): Promise<number> {
+    const result = await this.db.query(
+      'SELECT COUNT(*) FROM pg_stat_activity WHERE state = \'active\''
+    );
+    return parseInt(result.rows[0].count);
+  }
+
+  private async getSlowQueries(): Promise<SlowQuery[]> {
+    const result = await this.db.query(`
+      SELECT 
+        query,
+        calls,
+        total_time,
+        mean_time
+      FROM pg_stat_statements
+      WHERE mean_time > 100
+      ORDER BY mean_time DESC
+      LIMIT 10
+    `);
+    return result.rows;
+  }
+}
+```
+
+### 8. Security Standards
+
+#### Database Security Configuration
+```sql
+-- User and role management
+CREATE ROLE app_user WITH LOGIN PASSWORD 'secure_password';
+CREATE ROLE read_only_user WITH LOGIN PASSWORD 'read_password';
+
+-- Grant appropriate permissions
+GRANT CONNECT ON DATABASE app_db TO app_user;
+GRANT USAGE ON SCHEMA public TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+
+-- Read-only user
+GRANT CONNECT ON DATABASE app_db TO read_only_user;
+GRANT USAGE ON SCHEMA public TO read_only_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO read_only_user;
+
+-- Encrypt sensitive data
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Encrypt sensitive columns
+ALTER TABLE users ADD COLUMN ssn_encrypted BYTEA;
+UPDATE users SET ssn_encrypted = pgp_sym_encrypt(ssn, 'encryption_key');
+
+-- Audit logging
+CREATE TABLE audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  table_name VARCHAR(100) NOT NULL,
+  operation VARCHAR(10) NOT NULL,
+  old_data JSONB,
+  new_data JSONB,
+  user_id UUID,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 9. Quality Gates
+
+#### Definition of Done for Database Changes
+- [ ] **Schema Design**: Normalized design with appropriate constraints
+- [ ] **Migration Scripts**: Versioned, reversible, and tested
+- [ ] **Indexing**: Performance-optimized indexes for query patterns
+- [ ] **Data Integrity**: Foreign keys, check constraints, and validation
+- [ ] **Security**: Row-level security and proper access controls
+- [ ] **Performance**: Query optimization and monitoring in place
+- [ ] **Backup**: Backup and recovery procedures tested
+- [ ] **Documentation**: Schema documentation and migration notes updated
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all database operations  
+**Purpose**: Ensure data integrity, performance, and operational excellence
+description: "Database design and operations standards covering schema design, migrations, and best practices"
+globs: ["**/migrations/**", "**/models/**", "**/*.sql", "**/database/**", "**/schema/**", "**/*.model.*"]
+alwaysApply: false
+---

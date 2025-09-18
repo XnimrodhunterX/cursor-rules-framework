@@ -1,0 +1,609 @@
+---
+ruleId: "OPEX-01"
+title: "Operational Excellence Standards"
+status: "active"
+compliance: "mandatory"
+description: "Operational excellence standards covering incident response, service reliability, and operational procedures"
+globs: ["**/operations/**", "**/runbooks/**", "**/incidents/**", "**/sre/**", "**/oncall/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "operations"
+---
+
+## Service Outage Response
+
+### Immediate Actions (0-5 minutes)
+1. **Acknowledge Alert**: Respond to initial alert
+2. **Assess Impact**: Determine affected services and users
+3. **Notify Stakeholders**: Send initial incident notification
+4. **Begin Investigation**: Start root cause analysis
+
+### Investigation Steps (5-30 minutes)
+1. **Check Service Health**: Verify service status and endpoints
+2. **Review Recent Changes**: Check recent deployments and changes
+3. **Examine Logs**: Review application and infrastructure logs
+4. **Check Dependencies**: Verify dependent services and resources
+
+### Mitigation Actions (30-60 minutes)
+1. **Implement Workarounds**: Apply temporary fixes if available
+2. **Rollback Changes**: Revert recent deployments if necessary
+3. **Scale Resources**: Add capacity if resource-constrained
+4. **Update Status**: Communicate progress to stakeholders
+
+### Resolution Steps (60+ minutes)
+1. **Implement Permanent Fix**: Deploy long-term solution
+2. **Verify Resolution**: Confirm service restoration
+3. **Monitor Stability**: Watch for recurrence
+4. **Update Documentation**: Document lessons learned
+
+### Communication Template
+```
+Subject: [P0/P1] Service Outage - {Service Name}
+
+Status: Investigating
+Impact: {Description of impact}
+Affected Services: {List of services}
+Timeline: {Start time} - Ongoing
+
+Next Update: {Time}
+
+Actions Taken:
+- {List of actions}
+
+Next Steps:
+- {List of next steps}
+```
+
+### Post-Incident Review
+1. **Schedule Review Meeting**: Within 24 hours of resolution
+2. **Document Timeline**: Complete incident timeline
+3. **Identify Root Cause**: Determine underlying cause
+4. **Create Action Items**: Define improvement actions
+5. **Update Runbooks**: Incorporate lessons learned
+```
+
+### 2. SLO/SLI Definitions and Monitoring
+
+#### MANDATORY SLO/SLI Requirements
+- **SLO/SLI definitions for all services**
+- **Automated SLO monitoring and alerting**
+- **Error budget tracking and management**
+- **Service level reporting and dashboards**
+
+#### SLO/SLI Configuration
+```yaml
+# operations/slo-definitions.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-definitions
+  namespace: operations
+data:
+  slo-definitions.yaml: |
+    # Service Level Objectives Configuration
+    serviceLevelObjectives:
+      # Availability SLOs
+      availability:
+        target: 99.9
+        measurement_window: 30d
+        error_budget: 0.1
+        alerting:
+          warning_threshold: 99.5
+          critical_threshold: 99.0
+
+        # Service-specific availability targets
+        services:
+          api-gateway:
+            target: 99.95
+            error_budget: 0.05
+          user-service:
+            target: 99.9
+            error_budget: 0.1
+          payment-service:
+            target: 99.99
+            error_budget: 0.01
+
+      # Performance SLOs
+      performance:
+        response_time:
+          target_p95: 200ms
+          target_p99: 500ms
+          measurement_window: 5m
+          alerting:
+            warning_threshold_p95: 150ms
+            critical_threshold_p95: 300ms
+
+        throughput:
+          target_rps: 1000
+          measurement_window: 1m
+          alerting:
+            warning_threshold: 800
+            critical_threshold: 500
+
+      # Reliability SLOs
+      reliability:
+        error_rate:
+          target: 0.1
+          measurement_window: 5m
+          alerting:
+            warning_threshold: 0.05
+            critical_threshold: 0.2
+
+        deployment_success:
+          target: 100
+          measurement_window: 7d
+          alerting:
+            warning_threshold: 95
+            critical_threshold: 90
+```
+
+#### SLO Monitoring Implementation
+```yaml
+# operations/slo-monitoring.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: slo-alerts
+    rules:
+    # Availability SLO Alerts
+    - alert: ServiceAvailabilityWarning
+      expr: |
+        (
+          sum(rate(http_requests_total{status=~"5.."}[5m])) /
+          sum(rate(http_requests_total[5m]))
+        ) * 100 > 0.5
+      for: 5m
+      labels:
+        severity: warning
+        slo_type: availability
+      annotations:
+        summary: "Service availability below warning threshold"
+        description: "Service {{ $labels.service }} availability is {{ $value }}%"
+
+    - alert: ServiceAvailabilityCritical
+      expr: |
+        (
+          sum(rate(http_requests_total{status=~"5.."}[5m])) /
+          sum(rate(http_requests_total[5m]))
+        ) * 100 > 1.0
+      for: 2m
+      labels:
+        severity: critical
+        slo_type: availability
+      annotations:
+        summary: "Service availability below critical threshold"
+        description: "Service {{ $labels.service }} availability is {{ $value }}%"
+
+    # Performance SLO Alerts
+    - alert: ResponseTimeWarning
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.15
+      for: 5m
+      labels:
+        severity: warning
+        slo_type: performance
+      annotations:
+        summary: "Response time above warning threshold"
+        description: "95th percentile response time is {{ $value }}s"
+
+    - alert: ResponseTimeCritical
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.3
+      for: 2m
+      labels:
+        severity: critical
+        slo_type: performance
+      annotations:
+        summary: "Response time above critical threshold"
+        description: "95th percentile response time is {{ $value }}s"
+```
+
+### 3. Manual Process Elimination
+
+#### MANDATORY Automation Requirements
+- **Automate repetitive operational tasks**
+- **Self-service capabilities for common operations**
+- **Automated recovery procedures**
+- **Infrastructure as Code for all changes**
+
+#### Automation Framework
+```yaml
+# operations/automation-framework.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: automation-config
+  namespace: operations
+data:
+  automation-config.yaml: |
+    # Operational Automation Configuration
+    automation:
+      # Self-Service Operations
+      selfService:
+        enabled: true
+        operations:
+          - name: "deploy-service"
+            description: "Deploy a new service"
+            automation: "gitops-deployment"
+            approval_required: false
+
+          - name: "scale-service"
+            description: "Scale service replicas"
+            automation: "k8s-scale"
+            approval_required: false
+
+          - name: "restart-service"
+            description: "Restart a service"
+            automation: "k8s-restart"
+            approval_required: true
+
+          - name: "backup-database"
+            description: "Create database backup"
+            automation: "db-backup"
+            approval_required: false
+
+      # Automated Recovery
+      recovery:
+        enabled: true
+        procedures:
+          - name: "service-restart"
+            trigger: "service-health-check-failed"
+            actions:
+              - "restart-service"
+              - "verify-health"
+              - "notify-team"
+
+          - name: "node-recovery"
+            trigger: "node-unhealthy"
+            actions:
+              - "drain-node"
+              - "restart-node"
+              - "verify-node-health"
+              - "uncordon-node"
+
+          - name: "database-recovery"
+            trigger: "database-connection-failed"
+            actions:
+              - "check-database-status"
+              - "restart-database"
+              - "verify-connections"
+              - "notify-dba-team"
+
+      # Infrastructure Automation
+      infrastructure:
+        enabled: true
+        operations:
+          - name: "scale-cluster"
+            trigger: "high-cpu-usage"
+            actions:
+              - "add-node"
+              - "rebalance-pods"
+              - "verify-cluster-health"
+
+          - name: "backup-infrastructure"
+            schedule: "daily"
+            actions:
+              - "backup-etcd"
+              - "backup-configurations"
+              - "verify-backup-integrity"
+```
+
+#### Automation Implementation
+```python
+# operations/automation/incident_automation.py
+import kubernetes
+from kubernetes import client, config
+import logging
+from typing import Dict, Any, List
+
+class IncidentAutomation:
+    """Automated incident response and recovery"""
+
+    def __init__(self):
+        config.load_kube_config()
+        self.core_v1 = client.CoreV1Api()
+        self.apps_v1 = client.AppsV1Api()
+        self.logger = logging.getLogger(__name__)
+
+    async def handle_service_outage(self, service_name: str, namespace: str) -> Dict[str, Any]:
+        """Automated service outage response"""
+        try:
+            # Check service status
+            service_status = await self._check_service_status(service_name, namespace)
+
+            if service_status['healthy']:
+                self.logger.info(f"Service {service_name} is healthy")
+                return {'status': 'resolved', 'action': 'none'}
+
+            # Attempt automatic recovery
+            recovery_result = await self._attempt_recovery(service_name, namespace)
+
+            if recovery_result['success']:
+                self.logger.info(f"Service {service_name} recovered automatically")
+                return {'status': 'recovered', 'action': recovery_result['action']}
+            else:
+                self.logger.error(f"Automatic recovery failed for {service_name}")
+                return {'status': 'failed', 'action': 'manual_intervention_required'}
+
+        except Exception as e:
+            self.logger.error(f"Error in service outage automation: {e}")
+            return {'status': 'error', 'action': 'manual_intervention_required'}
+
+    async def _check_service_status(self, service_name: str, namespace: str) -> Dict[str, Any]:
+        """Check service health status"""
+        try:
+            # Check deployment status
+            deployment = self.apps_v1.read_namespaced_deployment(
+                name=service_name, namespace=namespace
+            )
+
+            # Check pod status
+            pods = self.core_v1.list_namespaced_pod(
+                namespace=namespace,
+                label_selector=f"app={service_name}"
+            )
+
+            healthy_pods = sum(1 for pod in pods.items if pod.status.phase == 'Running')
+            total_pods = len(pods.items)
+
+            return {
+                'healthy': healthy_pods == total_pods and total_pods > 0,
+                'ready_pods': healthy_pods,
+                'total_pods': total_pods,
+                'deployment_ready': deployment.status.ready_replicas == deployment.status.replicas
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error checking service status: {e}")
+            return {'healthy': False, 'error': str(e)}
+
+    async def _attempt_recovery(self, service_name: str, namespace: str) -> Dict[str, Any]:
+        """Attempt automatic service recovery"""
+        try:
+            # Restart deployment
+            self.apps_v1.patch_namespaced_deployment(
+                name=service_name,
+                namespace=namespace,
+                body={'spec': {'template': {'metadata': {'annotations': {'kubectl.kubernetes.io/restartedAt': 'true'}}}}}
+            )
+
+            # Wait for recovery
+            import asyncio
+            await asyncio.sleep(30)
+
+            # Check if recovery was successful
+            status = await self._check_service_status(service_name, namespace)
+
+            return {
+                'success': status['healthy'],
+                'action': 'deployment_restart'
+            }
+
+        except Exception as e:
+            self.logger.error(f"Error in recovery attempt: {e}")
+            return {'success': False, 'action': 'failed', 'error': str(e)}
+```
+
+### 4. Post-Incident Review Requirements
+
+#### MANDATORY Post-Incident Requirements
+- **Post-incident review within 24 hours**
+- **Root cause analysis documentation**
+- **Action item tracking and completion**
+- **Knowledge base updates**
+
+#### Post-Incident Review Template
+```yaml
+# operations/post-incident-review.md
+---
+title: "Post-Incident Review Template"
+incident_id: "INC-{YYYYMMDD}-{XXX}"
+incident_title: "{Brief description}"
+severity: "{P0/P1/P2/P3}"
+date: "{YYYY-MM-DD}"
+---
+
+## Incident Summary
+
+### Basic Information
+- **Incident ID**: {INC-YYYYMMDD-XXX}
+- **Title**: {Brief description}
+- **Severity**: {P0/P1/P2/P3}
+- **Start Time**: {YYYY-MM-DD HH:MM UTC}
+- **End Time**: {YYYY-MM-DD HH:MM UTC}
+- **Duration**: {X hours Y minutes}
+- **Affected Services**: {List of services}
+- **Impact**: {Description of user impact}
+
+### Timeline
+| Time | Event | Action Taken |
+|------|-------|--------------|
+| {HH:MM} | Incident detected | {Action} |
+| {HH:MM} | Initial response | {Action} |
+| {HH:MM} | Escalation | {Action} |
+| {HH:MM} | Resolution | {Action} |
+
+## Root Cause Analysis
+
+### What Happened
+{Detailed description of what occurred}
+
+### Why It Happened
+{Analysis of underlying causes}
+
+### Contributing Factors
+- {Factor 1}
+- {Factor 2}
+- {Factor 3}
+
+## Impact Assessment
+
+### User Impact
+- {Impact 1}
+- {Impact 2}
+
+### Business Impact
+- {Impact 1}
+- {Impact 2}
+
+### Technical Impact
+- {Impact 1}
+- {Impact 2}
+
+## Lessons Learned
+
+### What Went Well
+- {Positive aspect 1}
+- {Positive aspect 2}
+
+### What Could Be Improved
+- {Improvement area 1}
+- {Improvement area 2}
+
+### What Went Wrong
+- {Issue 1}
+- {Issue 2}
+
+## Action Items
+
+### Immediate Actions (Next 24 hours)
+- [ ] {Action item 1}
+- [ ] {Action item 2}
+
+### Short-term Actions (Next week)
+- [ ] {Action item 1}
+- [ ] {Action item 2}
+
+### Long-term Actions (Next month)
+- [ ] {Action item 1}
+- [ ] {Action item 2}
+
+## Follow-up
+
+### Review Date
+{Date for follow-up review}
+
+### Success Criteria
+- [ ] {Success criterion 1}
+- [ ] {Success criterion 2}
+
+### Owner
+{Person responsible for follow-up}
+```
+
+## INTEGRATION REQUIREMENTS
+
+### Cross-Rule Dependencies
+```yaml
+dependencies:
+  OPS-01:
+    depends_on:
+      - CN-04: Monitoring Standards
+      - INF-01: Infrastructure Standards
+      - QC-07: Documentation Standards
+    integrates_with:
+      - QC-06: Project Management
+      - QC-01: Testing Standards
+      - SEC-01: Security Standards
+```
+
+### Quality Gates
+```yaml
+quality_gates:
+  operational_excellence:
+    - "Incident response procedures documented"
+    - "SLO/SLI definitions implemented"
+    - "Automated recovery procedures configured"
+    - "Post-incident review process established"
+    - "Knowledge base maintained and updated"
+```
+
+## IMPLEMENTATION CHECKLIST
+
+### Phase 1: Incident Response (Week 1-2)
+- [ ] Create incident response procedures
+- [ ] Implement escalation matrix
+- [ ] Set up incident notification channels
+- [ ] Create runbook templates
+
+### Phase 2: SLO/SLI Implementation (Week 3-4)
+- [ ] Define SLO/SLI for all services
+- [ ] Implement SLO monitoring
+- [ ] Set up error budget tracking
+- [ ] Create SLO dashboards
+
+### Phase 3: Automation and Review (Week 5+)
+- [ ] Implement automated recovery procedures
+- [ ] Set up self-service operations
+- [ ] Establish post-incident review process
+- [ ] Create knowledge base
+
+## SUCCESS METRICS
+
+### Operational Excellence Metrics
+```yaml
+metrics:
+  incident_response: "Mean time to resolution < 1 hour"
+  slo_compliance: ">99% SLO compliance across all services"
+  automation_coverage: ">80% operational tasks automated"
+  knowledge_base: "100% incidents documented with lessons learned"
+```
+
+### K3S Project Integration Metrics
+```yaml
+project_metrics:
+  service_availability: ">99.9% service uptime"
+  incident_frequency: "<1 P0/P1 incident per month"
+  recovery_time: "<15 minutes mean time to recovery"
+  operational_efficiency: ">90% automated operational tasks"
+```
+
+## COMPLIANCE VALIDATION
+
+### Automated Compliance Checks
+```bash
+#!/bin/bash
+# scripts/ops-compliance-check.sh
+
+echo "🔍 Running OPS-01 compliance checks..."
+
+# Check incident response procedures
+if ! find operations/ -name "*runbook*" | grep -q .; then
+    echo "❌ No incident runbooks found"
+    exit 1
+fi
+
+# Check SLO definitions
+if ! find operations/ -name "*slo*" | grep -q .; then
+    echo "❌ No SLO definitions found"
+    exit 1
+fi
+
+# Check automation procedures
+if ! find operations/ -name "*automation*" | grep -q .; then
+    echo "❌ No automation procedures found"
+    exit 1
+fi
+
+echo "✅ OPS-01 compliance checks passed"
+```
+
+### Manual Compliance Validation
+- [ ] Incident response procedures documented and tested
+- [ ] SLO/SLI definitions implemented and monitored
+- [ ] Automated recovery procedures configured
+- [ ] Post-incident review process established
+- [ ] Knowledge base maintained and updated
+- [ ] Escalation matrix defined and communicated
+
+## CONCLUSION
+
+OPS-01 Operational Excellence Standards establish comprehensive requirements for incident management, service level objectives, and operational automation. These standards ensure consistent, reliable, and efficient operations while supporting rapid incident response and continuous improvement.
+
+**Integration Note**: This rule extends CN-04 monitoring standards with operational procedures and integrates with INF-01 infrastructure standards to provide complete operational governance.
+description:
+globs:
+alwaysApply: false
+---

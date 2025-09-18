@@ -1,0 +1,483 @@
+---
+ruleId: "QC-09"
+title: "Engineering Standards"
+status: "active"
+compliance: "mandatory"
+description: "Code structure, quality, performance, and architectural consistency standards"
+globs: ["**/src/**", "**/app/**", "**/lib/**", "**/utils/**", "**/helpers/**", "**/core/**", "**/shared/**", "**/common/**", "**/services/**", "**/models/**", "**/controllers/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "development"
+---
+
+# QC-09: Engineering Standards
+
+## Purpose & Scope
+
+Comprehensive engineering standards covering code structure, quality, performance, and architectural consistency. This rule establishes mandatory engineering practices, code organization, and quality gates for maintainable and scalable software development.
+
+## Core Standards
+
+### 1. Service Structure Standards
+
+#### MANDATORY Directory Structure
+Every microservice **must** follow this exact directory layout:
+
+```bash
+services/
+  └── <service_name>/
+      ├── __init__.py          # Must expose core interfaces and public API
+      ├── __main__.py          # CLI entrypoint (standardized across all services)
+      ├── core/                # Core business logic and orchestration
+      ├── config/              # Configuration schemas, loaders, and validation
+      ├── schemas/             # Pydantic schemas for input/output contracts
+      ├── models/              # Data models and domain entities
+      ├── utils/               # Reusable utilities and helper functions
+      └── README.md            # Service documentation
+```
+
+#### Entrypoint Standardization
+- **All services MUST use `__main__.py`** (not `main.py`) for CLI entrypoints
+- This ensures consistency with Python's module execution pattern
+
+```python
+# services/my_service/__main__.py
+if __name__ == "__main__":
+    from my_service.core import main
+    main()
+```
+
+#### Public API Exposure
+- All public interfaces **must** be exposed through `__init__.py`
+
+```python
+# services/my_service/__init__.py
+from .core import ServiceClass, main_function
+from .schemas import InputSchema, OutputSchema
+
+__all__ = ["ServiceClass", "main_function", "InputSchema", "OutputSchema"]
+```
+
+### 2. Code Quality Standards
+
+#### MANDATORY Code Quality Requirements
+- **Type hints** for all function parameters and return values
+- **Docstrings** for all public functions and classes
+- **Consistent naming conventions** (snake_case for Python, camelCase for JavaScript)
+- **Maximum function length** of 50 lines
+- **Maximum class length** of 200 lines
+- **Cyclomatic complexity** < 10 per function
+
+#### Code Quality Implementation
+```python
+# Example of high-quality code
+from typing import List, Optional, Dict, Any
+from dataclasses import dataclass
+import logging
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class ServiceConfig:
+    """Configuration for the service."""
+    api_key: str
+    timeout: int = 30
+    max_retries: int = 3
+
+class ServiceManager:
+    """Manages service operations and lifecycle."""
+    
+    def __init__(self, config: ServiceConfig) -> None:
+        """Initialize the service manager.
+        
+        Args:
+            config: Service configuration object
+            
+        Raises:
+            ValueError: If configuration is invalid
+        """
+        self.config = config
+        self._validate_config()
+    
+    def _validate_config(self) -> None:
+        """Validate service configuration.
+        
+        Raises:
+            ValueError: If configuration is invalid
+        """
+        if not self.config.api_key:
+            raise ValueError("API key is required")
+        if self.config.timeout <= 0:
+            raise ValueError("Timeout must be positive")
+    
+    def process_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Process input data according to service configuration.
+        
+        Args:
+            data: List of data dictionaries to process
+            
+        Returns:
+            List of processed data dictionaries
+            
+        Raises:
+            ServiceError: If processing fails
+        """
+        try:
+            logger.info(f"Processing {len(data)} items")
+            processed_data = []
+            
+            for item in data:
+                processed_item = self._process_single_item(item)
+                processed_data.append(processed_item)
+            
+            logger.info(f"Successfully processed {len(processed_data)} items")
+            return processed_data
+            
+        except Exception as e:
+            logger.error(f"Failed to process data: {e}")
+            raise ServiceError(f"Processing failed: {e}")
+    
+    def _process_single_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a single data item.
+        
+        Args:
+            item: Data item to process
+            
+        Returns:
+            Processed data item
+        """
+        # Implementation details here
+        return item
+```
+
+### 3. Schema and Configuration Standards
+
+#### MANDATORY Schema Requirements
+- **Use Pydantic V2** for all schemas and configuration models
+- **Use `@field_validator` decorators** (not legacy `@validator`)
+- **All input/output contracts must be strictly typed**
+- **Validation for all input data**
+
+#### Schema Implementation
+```python
+# services/my_service/schemas.py
+from pydantic import BaseModel, field_validator, ConfigDict
+from typing import Optional, List
+from datetime import datetime
+
+class ServiceConfig(BaseModel):
+    """Service configuration schema."""
+    model_config = ConfigDict(extra="forbid")
+    
+    api_key: str
+    timeout: int = 30
+    max_retries: int = 3
+    enable_logging: bool = True
+    
+    @field_validator('timeout')
+    @classmethod
+    def validate_timeout(cls, v: int) -> int:
+        """Validate timeout value."""
+        if v <= 0:
+            raise ValueError('timeout must be positive')
+        if v > 300:
+            raise ValueError('timeout cannot exceed 300 seconds')
+        return v
+    
+    @field_validator('max_retries')
+    @classmethod
+    def validate_max_retries(cls, v: int) -> int:
+        """Validate max retries value."""
+        if v < 0:
+            raise ValueError('max_retries cannot be negative')
+        if v > 10:
+            raise ValueError('max_retries cannot exceed 10')
+        return v
+
+class InputData(BaseModel):
+    """Input data schema."""
+    id: str
+    name: str
+    value: float
+    metadata: Optional[Dict[str, Any]] = None
+    timestamp: datetime
+    
+    @field_validator('value')
+    @classmethod
+    def validate_value(cls, v: float) -> float:
+        """Validate value field."""
+        if v < 0:
+            raise ValueError('value cannot be negative')
+        return v
+
+class OutputData(BaseModel):
+    """Output data schema."""
+    id: str
+    processed_value: float
+    processing_time: float
+    status: str
+    errors: List[str] = []
+```
+
+### 4. Test Structure Standards
+
+#### MANDATORY Test Organization
+- All service-specific tests **must** be placed under:
+  ```bash
+  tests/services/<service_name>/test_*.py
+  ```
+- **No test files** should exist inside the service implementation folders
+- Test files should mirror the service structure
+
+#### Test Structure Example
+```bash
+tests/services/<service_name>/
+├── test_core.py
+├── test_config.py
+├── test_schemas.py
+├── test_models.py
+└── test_utils.py
+```
+
+#### Test Quality Standards
+```python
+# tests/services/my_service/test_core.py
+import pytest
+from unittest.mock import Mock, patch
+from my_service.core import ServiceManager
+from my_service.schemas import ServiceConfig, InputData
+
+class TestServiceManager:
+    """Test cases for ServiceManager."""
+    
+    @pytest.fixture
+    def valid_config(self) -> ServiceConfig:
+        """Create a valid service configuration."""
+        return ServiceConfig(
+            api_key="test_key",
+            timeout=30,
+            max_retries=3
+        )
+    
+    @pytest.fixture
+    def service_manager(self, valid_config: ServiceConfig) -> ServiceManager:
+        """Create a service manager instance."""
+        return ServiceManager(valid_config)
+    
+    def test_service_manager_initialization(self, valid_config: ServiceConfig) -> None:
+        """Test service manager initialization."""
+        manager = ServiceManager(valid_config)
+        assert manager.config == valid_config
+    
+    def test_service_manager_invalid_config(self) -> None:
+        """Test service manager with invalid configuration."""
+        invalid_config = ServiceConfig(
+            api_key="",  # Invalid empty key
+            timeout=30
+        )
+        
+        with pytest.raises(ValueError, match="API key is required"):
+            ServiceManager(invalid_config)
+    
+    def test_process_data_success(self, service_manager: ServiceManager) -> None:
+        """Test successful data processing."""
+        input_data = [
+            {"id": "1", "name": "test", "value": 10.0, "timestamp": "2024-01-01T00:00:00"}
+        ]
+        
+        result = service_manager.process_data(input_data)
+        
+        assert len(result) == 1
+        assert result[0]["id"] == "1"
+    
+    def test_process_data_failure(self, service_manager: ServiceManager) -> None:
+        """Test data processing failure."""
+        with patch.object(service_manager, '_process_single_item', side_effect=Exception("Processing error")):
+            input_data = [{"id": "1", "name": "test", "value": 10.0, "timestamp": "2024-01-01T00:00:00"}]
+            
+            with pytest.raises(ServiceError, match="Processing failed"):
+                service_manager.process_data(input_data)
+```
+
+### 5. Import Structure Standards
+
+#### MANDATORY Import Organization
+- **Services should use relative imports** within their own modules
+- **External imports should be at the top** of files
+- **Group imports** by standard library, third-party, and local
+
+#### Import Structure Example
+```python
+# services/my_service/core/service.py
+# Standard library imports
+import logging
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+
+# Third-party imports
+import requests
+from pydantic import BaseModel
+
+# Local imports
+from ..config import ServiceConfig
+from ..schemas import InputSchema, OutputSchema
+from ..models import DataModel
+from ..utils import helper_function
+```
+
+### 6. Performance Standards
+
+#### MANDATORY Performance Requirements
+- **Response time** < 200ms for API endpoints
+- **Memory usage** < 512MB per service instance
+- **CPU usage** < 80% under normal load
+- **Database query time** < 100ms for simple queries
+- **Async operations** for I/O-bound tasks
+
+#### Performance Implementation
+```python
+# Example of performance-optimized code
+import asyncio
+import aiohttp
+from typing import List, Dict, Any
+from concurrent.futures import ThreadPoolExecutor
+
+class PerformanceOptimizedService:
+    """Service with performance optimizations."""
+    
+    def __init__(self) -> None:
+        self.executor = ThreadPoolExecutor(max_workers=4)
+        self.session = None
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        self.session = aiohttp.ClientSession()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        if self.session:
+            await self.session.close()
+    
+    async def process_data_async(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Process data asynchronously for better performance."""
+        tasks = [self._process_item_async(item) for item in data]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Filter out exceptions
+        processed_data = [r for r in results if not isinstance(r, Exception)]
+        return processed_data
+    
+    async def _process_item_async(self, item: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a single item asynchronously."""
+        # Simulate async processing
+        await asyncio.sleep(0.1)
+        return {"processed": True, "data": item}
+    
+    def cpu_intensive_task(self, data: List[int]) -> List[int]:
+        """CPU-intensive task using thread pool."""
+        loop = asyncio.get_event_loop()
+        return loop.run_in_executor(self.executor, self._cpu_intensive_work, data)
+    
+    def _cpu_intensive_work(self, data: List[int]) -> List[int]:
+        """CPU-intensive work in separate thread."""
+        # Simulate CPU-intensive work
+        return [x * 2 for x in data]
+```
+
+### 7. Error Handling Standards
+
+#### MANDATORY Error Handling Requirements
+- **Custom exception classes** for domain-specific errors
+- **Proper error logging** with context information
+- **Graceful degradation** for non-critical failures
+- **Circuit breaker pattern** for external service calls
+
+#### Error Handling Implementation
+```python
+# services/my_service/exceptions.py
+class ServiceError(Exception):
+    """Base exception for service errors."""
+    pass
+
+class ConfigurationError(ServiceError):
+    """Configuration-related errors."""
+    pass
+
+class ProcessingError(ServiceError):
+    """Data processing errors."""
+    pass
+
+class ExternalServiceError(ServiceError):
+    """External service communication errors."""
+    pass
+
+# services/my_service/core/error_handler.py
+import logging
+from typing import Any, Callable
+from functools import wraps
+from .exceptions import ServiceError, ExternalServiceError
+
+logger = logging.getLogger(__name__)
+
+def handle_errors(func: Callable) -> Callable:
+    """Decorator for consistent error handling."""
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> Any:
+        try:
+            return func(*args, **kwargs)
+        except ServiceError as e:
+            logger.error(f"Service error in {func.__name__}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in {func.__name__}: {e}")
+            raise ServiceError(f"Unexpected error: {e}")
+    return wrapper
+
+class CircuitBreaker:
+    """Circuit breaker pattern implementation."""
+    
+    def __init__(self, failure_threshold: int = 5, timeout: int = 60):
+        self.failure_threshold = failure_threshold
+        self.timeout = timeout
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
+    
+    def call(self, func: Callable, *args, **kwargs) -> Any:
+        """Execute function with circuit breaker protection."""
+        if self.state == "OPEN":
+            if self._should_attempt_reset():
+                self.state = "HALF_OPEN"
+            else:
+                raise ExternalServiceError("Circuit breaker is OPEN")
+        
+        try:
+            result = func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+```
+
+### 8. Quality Gates
+
+#### Definition of Done for Engineering
+- [ ] **Code Structure**: Follows mandatory directory structure
+- [ ] **Code Quality**: Type hints, docstrings, and naming conventions
+- [ ] **Testing**: Comprehensive test coverage (>80%)
+- [ ] **Performance**: Meets performance requirements
+- [ ] **Error Handling**: Proper exception handling and logging
+- [ ] **Documentation**: Complete API documentation
+- [ ] **Validation**: All automated checks pass
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all engineering work  
+**Purpose**: Ensure consistent, high-quality, and maintainable code
+description: "Engineering Standards - Code structure, quality, performance, and architectural consistency"
+globs: ["**/src/**", "**/app/**", "**/lib/**", "**/utils/**", "**/helpers/**", "**/core/**", "**/shared/**", "**/common/**", "**/services/**", "**/models/**", "**/controllers/**"]
+alwaysApply: false
+---

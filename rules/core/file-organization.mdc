@@ -1,0 +1,366 @@
+---
+ruleId: "QC-08"
+title: "File Organization Standards"
+alwaysApply: true
+---
+# 
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all project organization  
+**Purpose**: Ensure consistent, maintainable project structure
+**Rule Type**: Quality Control  
+**Priority**: MANDATORY  
+**Scope**: All project file organization  
+
+## MANDATORY Root Directory Standards
+
+### 🚨 CRITICAL: Minimal Root Principle
+- **MAXIMUM 8 FILES** allowed in any project root directory
+- **REQUIRED ROOT FILES ONLY**: README.md, .gitignore, LICENSE, package.json/pyproject.toml
+- **FORBIDDEN**: Documentation files, source code, configuration files, scripts in root
+- **EXCEPTION**: Only build/deployment configuration files (Dockerfile, docker-compose.yml)
+
+### ✅ REQUIRED Root Directory Structure
+```
+project_root/
+├── 📋 README.md                      # Project overview and quick start
+├── 🔒 .gitignore                     # Version control exclusions
+├── 📄 LICENSE                        # Project licensing
+├── 📦 pyproject.toml                 # Package configuration
+├── 🐳 Dockerfile                     # Container configuration (optional)
+├── 🐙 docker-compose.yml             # Multi-container setup (optional)
+├── 📚 docs/                          # ALL documentation
+├── 💻 services/                      # Business logic microservices (WE BUILD)
+├── 🏗️ platform/                      # Platform services (WE ADOPT/CONFIGURE)
+├── 🏛️ infra/                         # Infrastructure as code
+├── ⚙️ ops/                           # Operations and tooling
+├── 🔗 shared/                        # Shared utilities and libraries
+├── 🧪 tests/                         # ALL test files
+├── 📜 scripts/                       # ALL automation scripts
+├── 🔧 config/                        # ALL configuration files
+├── 📦 backup/                        # Historical preservation
+└── 🗂️ templates/                     # Reusable templates
+```
+
+## MANDATORY Directory Purposes
+
+### Directory Standards
+```yaml
+directory_standards:
+  docs/:
+    purpose: "ALL documentation, guides, and reference materials"
+    structure:
+      - architecture/     # Architecture diagrams and decisions
+      - guides/          # User guides and tutorials
+      - api/             # API documentation
+      - examples/        # Usage examples
+      - reference/       # Reference materials
+    forbidden_in_root: true
+  
+  services/:
+    purpose: "Business logic microservices (WE BUILD) - Custom application code"
+    philosophy: "Code we write, own, and maintain for business functionality"
+    structure:
+      - location/        # Location calculation microservice
+      - activity/        # Activity discovery microservice
+      - gateway/         # API gateway service
+      - plan/           # Plan management service
+      - user/           # User management service
+    examples:
+      - "Custom business logic implementation"
+      - "Domain-specific algorithms and workflows" 
+      - "Application-specific APIs and interfaces"
+      - "Business rule implementations"
+    forbidden_in_root: true
+  
+  platform/:
+    purpose: "Platform services (WE ADOPT/CONFIGURE) - Third-party integrations"
+    philosophy: "Services we configure and integrate but don't build from scratch"
+    structure:
+      - certificates/    # Certificate management (certbot, cert-manager)
+      - databases/       # Database configurations (postgres, redis)
+      - messaging/       # Message queue setups (rabbitmq, kafka)
+      - storage/         # Storage solutions (minio, s3)
+      - monitoring/      # Observability stack (prometheus, grafana)
+      - auth/           # Authentication providers (oauth, ldap)
+    examples:
+      - "Certbot container configurations"
+      - "Database initialization scripts"
+      - "Message queue topic configurations"
+      - "Third-party service integrations"
+      - "Platform service configurations"
+    forbidden_in_root: true
+
+  infra/:
+    purpose: "Infrastructure as Code (WE PROVISION) - Environment provisioning"
+    philosophy: "Infrastructure definitions and provisioning automation"
+    structure:
+      - kubernetes/      # K8s manifests and Helm charts
+        - base/          # Base K8s resources
+        - environments/  # Environment-specific overlays (local, preprod, prod)
+      - terraform/       # Infrastructure provisioning
+      - ansible/         # Configuration management
+      - docker/          # Container definitions and compositions
+        - local/         # Local development containers
+        - production/    # Production container configs
+      - helm/           # Helm charts for complex deployments
+    examples:
+      - "Kubernetes deployment manifests"
+      - "Terraform infrastructure definitions"
+      - "Docker Compose files for environments"
+      - "Helm charts for application deployment"
+      - "Infrastructure provisioning scripts"
+    forbidden_in_root: true
+
+  ops/:
+    purpose: "Operations and Tooling (WE MAINTAIN) - DevOps and operational tools"
+    philosophy: "Tools and scripts for operating and maintaining the system"
+    structure:
+      - monitoring/      # Monitoring configurations and dashboards
+      - alerting/        # Alert rules and notification configs
+      - backup/          # Backup and restore procedures
+      - deployment/      # Deployment scripts and procedures
+      - maintenance/     # System maintenance tools
+      - security/        # Security scanning and compliance tools
+      - ci-cd/          # CI/CD pipeline definitions
+    examples:
+      - "Grafana dashboard definitions"
+      - "Prometheus alert rules"
+      - "Deployment automation scripts"
+      - "Security scanning configurations"
+      - "Backup and recovery procedures"
+      - "CI/CD pipeline configurations"
+    forbidden_in_root: true
+
+  shared/:
+    purpose: "Shared utilities, libraries, and common code (WE BUILD)"
+    philosophy: "Reusable code components shared across our services"
+    structure:
+      - logging/         # Logging utilities
+      - tracing/         # Distributed tracing
+      - utils/           # Common utilities
+      - config/          # Shared configuration
+      - models/          # Shared data models
+      - clients/         # Shared client libraries
+    examples:
+      - "Common utility functions"
+      - "Shared data models and schemas"
+      - "Reusable client libraries"
+      - "Cross-service communication utilities"
+    forbidden_in_root: true
+  
+  tests/:
+    purpose: "ALL test files and test resources"
+    structure:
+      - unit/            # Unit tests
+      - integration/     # Integration tests
+      - fixtures/        # Test fixtures and data
+      - conftest.py      # Test configuration
+    forbidden_in_root: true
+  
+  scripts/:
+    purpose: "ALL automation, build, and utility scripts"
+    structure:
+      - setup/           # Setup and installation scripts
+      - build/           # Build and deployment scripts
+      - maintenance/     # Maintenance and cleanup scripts
+      - utils/           # Utility scripts
+    forbidden_in_root: true
+  
+  config/:
+    purpose: "ALL configuration files and templates"
+    structure:
+      - environments/    # Environment-specific configs
+      - templates/       # Configuration templates
+      - schemas/         # Configuration schemas
+    forbidden_in_root: true
+```
+
+## 🏗️ ARCHITECTURAL DISTINCTIONS
+
+### CRITICAL: Code Ownership and Purpose Classification
+
+The directory structure reflects **what we do** with the code, not just **what the code does**:
+
+```yaml
+architectural_classification:
+  services/:
+    ownership: "WE BUILD"
+    purpose: "Custom business logic and domain-specific functionality"
+    maintenance: "Full ownership - we write, test, deploy, and maintain"
+    examples: ["Location calculation algorithms", "Business rule engines", "Custom APIs"]
+    
+  platform/:
+    ownership: "WE ADOPT/CONFIGURE"  
+    purpose: "Third-party services we integrate and configure"
+    maintenance: "Configuration ownership - we configure but don't build"
+    examples: ["Certbot setup", "Database configurations", "Auth provider integrations"]
+    
+  infra/:
+    ownership: "WE PROVISION"
+    purpose: "Infrastructure as Code for environment provisioning"
+    maintenance: "Infrastructure ownership - we define and provision"
+    examples: ["Kubernetes manifests", "Terraform definitions", "Docker compositions"]
+    
+  ops/:
+    ownership: "WE MAINTAIN"
+    purpose: "Operational tools and procedures for system maintenance"
+    maintenance: "Operational ownership - we create and maintain operational tools"
+    examples: ["Monitoring dashboards", "Deployment scripts", "Backup procedures"]
+    
+  shared/:
+    ownership: "WE BUILD"
+    purpose: "Reusable components shared across our services"
+    maintenance: "Full ownership - we build reusable components"
+    examples: ["Common utilities", "Shared models", "Client libraries"]
+```
+
+### Directory Selection Decision Tree
+
+```
+Is this code custom business logic?
+├─ YES → services/ (location, activity, plan services)
+└─ NO ↓
+
+Are we configuring a third-party service?
+├─ YES → platform/ (certbot, databases, auth providers)
+└─ NO ↓
+
+Are we provisioning infrastructure?
+├─ YES → infra/ (k8s manifests, terraform, docker)
+└─ NO ↓
+
+Are we creating operational tools?
+├─ YES → ops/ (monitoring, deployment, maintenance)
+└─ NO ↓
+
+Is this shared/reusable code we're building?
+├─ YES → shared/ (utils, models, clients)
+└─ NO → Consider if this belongs in the project
+```
+
+### Examples by Category
+
+#### ✅ services/ Examples
+- `services/location/` - Location calculation microservice (business logic we build)
+- `services/activity/` - Activity discovery service (domain-specific algorithms)
+- `services/gateway/` - API gateway (custom routing and business rules)
+
+#### ✅ platform/ Examples  
+- `platform/certificates/certbot/` - Certbot container configuration (we configure certbot)
+- `platform/databases/postgres/` - PostgreSQL setup scripts (we configure postgres)
+- `platform/monitoring/prometheus/` - Prometheus configuration (we configure prometheus)
+
+#### ✅ infra/ Examples
+- `infra/kubernetes/local/` - Local K8s manifests (we provision K8s resources)
+- `infra/docker/development/` - Development docker-compose (we define container orchestration)
+- `infra/terraform/aws/` - AWS infrastructure definitions (we provision cloud resources)
+
+#### ✅ ops/ Examples
+- `ops/monitoring/grafana-dashboards/` - Custom monitoring dashboards (we create dashboards)
+- `ops/deployment/scripts/` - Deployment automation (we build deployment tools)
+- `ops/backup/procedures/` - Backup procedures (we define operational procedures)
+
+## File Categorization Rules
+
+### REQUIRED File Type Organization
+```yaml
+file_categorization:
+  documentation:
+    extensions: [".md", ".rst", ".txt", ".pdf"]
+    required_location: "docs/"
+    exceptions: ["README.md", "LICENSE", "CHANGELOG.md"]
+  
+  source_code:
+    extensions: [".py", ".js", ".ts", ".go", ".rs", ".java"]
+    required_location: ["services/", "shared/"]
+    exceptions: ["setup.py", "manage.py"]
+  
+  configuration:
+    extensions: [".yaml", ".yml", ".json", ".toml", ".ini"]
+    required_location: "config/"
+    exceptions: ["pyproject.toml", "package.json", ".pre-commit-config.yaml"]
+  
+  scripts:
+    extensions: [".sh", ".bat", ".ps1"]
+    required_location: "scripts/"
+    exceptions: ["Dockerfile", "docker-compose.yml"]
+  
+  tests:
+    patterns: ["test_*.py", "*_test.py", "tests.py"]
+    required_location: "tests/"
+    exceptions: []
+```
+
+## File Naming Standards
+
+### MANDATORY Naming Conventions
+```yaml
+naming_standards:
+  directories:
+    format: "lowercase_with_underscores"
+    examples: ["threat_modeling", "api_documentation", "user_guides"]
+    forbidden: ["camelCase", "PascalCase", "spaces", "special-chars"]
+  
+  documentation:
+    format: "descriptive_lowercase.md"
+    examples: ["installation_guide.md", "api_reference.md", "troubleshooting.md"]
+    required_prefix: ["README", "CHANGELOG", "LICENSE"]
+  
+  source_files:
+    format: "module_purpose.extension"
+    examples: ["threat_analyzer.py", "security_validator.js", "config_manager.py"]
+    forbidden: ["generic names", "temp", "test", "old"]
+  
+  configuration:
+    format: "environment_purpose.extension"
+    examples: ["production.yaml", "development.json", "test_config.toml"]
+    required_structure: "environment_component_purpose"
+```
+
+## Implementation Guidance
+
+### MANDATORY Cleanup Process
+1. **Audit Current Structure**: Identify all files and their purposes
+2. **Create Directory Structure**: Establish required directories
+3. **Categorize Files**: Sort files by purpose and type
+4. **Move Files Systematically**: Relocate files to proper directories
+5. **Update References**: Fix all broken links and imports
+6. **Validate Organization**: Ensure compliance with standards
+
+### REQUIRED Organization Steps
+```bash
+# Step 1: Create Standard Directory Structure
+mkdir -p {docs/{architecture,guides,api,examples,reference},services/{monitoring,alert-service},shared/{logging,tracing,utils,config},tests/{unit,integration,fixtures},scripts/{setup,build,maintenance,utils},config/{environments,templates,schemas},backup,templates}
+
+# Step 2: Move Documentation Files
+find . -maxdepth 1 -name "*.md" ! -name "README.md" -exec mv {} docs/ \;
+
+# Step 3: Move Configuration Files
+find . -maxdepth 1 -name "*.yaml" -o -name "*.yml" -o -name "*.json" ! -name "package.json" ! -name "pyproject.toml" -exec mv {} config/ \;
+
+# Step 4: Move Scripts
+find . -maxdepth 1 -name "*.sh" -o -name "*.bat" -o -name "*.ps1" -exec mv {} scripts/ \;
+
+# Step 5: Organize by Purpose
+# Move files based on their actual purpose, not just extension
+```
+
+### Quality Assurance Requirements
+```yaml
+validation_criteria:
+  root_directory:
+    max_files: 8
+    required_files: ["README.md", ".gitignore"]
+    forbidden_types: ["*.py", "*.js", "*.md (except README)", "*.yaml"]
+  
+  directory_structure:
+    required_directories: ["docs", "services", "shared", "tests", "scripts", "config"]
+    forbidden_empty_directories: true
+    max_depth: 4
+  
+  file_placement:
+    documentation_in_docs: 100%
+    source_in_services_or_shared: 100%
+```
+

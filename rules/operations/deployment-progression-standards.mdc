@@ -1,0 +1,345 @@
+---
+ruleId: "OPEX-02"
+title: "Deployment Progression Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive standards for systematic deployment progression from local development to production"
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "operations"
+---
+
+# OPEX-02: Deployment Progression Standards
+
+## Purpose & Scope
+
+This rule establishes mandatory deployment progression requirements ensuring systematic validation at each phase before advancing to the next. It prevents deployment failures by validating each environment thoroughly before production deployment.
+
+## MANDATORY Deployment Progression Protocol
+
+### Phase 1: Local Services (Current Phase)
+**Location**: Local laptop  
+**Services**: Direct Python/npm execution  
+**Dependencies**: Containerized (Redis, etc.)  
+**Orchestration**: Docker Compose for dependencies only  
+**Purpose**: Initial development and debugging
+
+#### Phase 1 Requirements
+```bash
+# Start dependencies only
+docker-compose up redis -d
+
+# Run services directly
+python -m services.location &
+npm run dev
+
+# Validation checklist
+- [ ] Basic functionality works
+- [ ] Services communicate with dependencies
+- [ ] Development workflow is smooth
+- [ ] Debugging tools work effectively
+```
+
+#### Phase 1 Success Criteria
+- **All services start successfully** - No startup errors
+- **Dependencies accessible** - Redis and other services reachable
+- **Basic functionality verified** - Core features work
+- **Development efficiency** - Fast iteration cycles
+
+### Phase 2: Full Containerization (Next Phase)
+**Location**: Local laptop  
+**Services**: Containerized (all services)  
+**Dependencies**: Containerized (Redis, etc.)  
+**Orchestration**: Docker Compose  
+**Purpose**: Container validation before K8s
+
+#### Phase 2 Requirements
+```bash
+# Complete containerized stack
+docker-compose up
+
+# Validation commands
+docker-compose ps
+docker-compose logs
+docker-compose exec service_name /bin/bash
+
+# Health checks
+curl http://localhost:3000/health
+curl http://localhost:8000/health
+```
+
+#### Phase 2 Success Criteria
+- **All services containerized** - No direct Python/npm execution
+- **Container networking works** - Services communicate via Docker network
+- **Container builds succeed** - All Dockerfiles work correctly
+- **Resource usage acceptable** - Containers don't consume excessive resources
+- **Logging works** - Container logs are accessible and useful
+
+### Phase 3: Local Kubernetes (Before Remote)
+**Location**: Local laptop  
+**Services**: Containerized (all services)  
+**Dependencies**: Containerized (Redis, etc.)  
+**Orchestration**: Local K3s or Minikube  
+**Purpose**: Kubernetes validation before remote deployment
+
+#### Phase 3 Local Kubernetes Options
+
+##### Option 1: Minikube (Recommended)
+```bash
+# Install Minikube
+brew install minikube
+
+# Start Minikube with Colima
+minikube start --driver=colima
+
+# Enable addons
+minikube addons enable ingress
+minikube addons enable dns
+
+# Deploy application
+kubectl apply -f k8s/
+
+# Access application
+minikube service web-app
+minikube service api-service
+```
+
+**Minikube Pros:**
+- ✅ Full Kubernetes compatibility
+- ✅ Easy cluster management
+- ✅ Good for learning K8s
+- ✅ Excellent addon ecosystem
+- ✅ Works well with Colima
+
+**Minikube Cons:**
+- ❌ Resource overhead
+- ❌ Slower startup than Docker Compose
+
+##### Option 2: Local K3s
+```bash
+# Install K3s
+curl -sfL https://get.k3s.io | sh -
+
+# Start K3s
+sudo systemctl start k3s
+
+# Deploy application
+kubectl apply -f k8s/
+
+# Access application
+kubectl port-forward service/web-app 3000:80
+```
+
+**Local K3s Pros:**
+- ✅ Lightweight Kubernetes
+- ✅ Faster than Minikube
+- ✅ Identical to production K3s
+- ✅ Lower resource usage
+
+**Local K3s Cons:**
+- ❌ Less feature-complete than full K8s
+- ❌ Fewer debugging tools
+
+##### Option 3: Docker Desktop Kubernetes
+```bash
+# Enable Kubernetes in Docker Desktop
+# Settings > Kubernetes > Enable Kubernetes
+
+# Deploy application
+kubectl apply -f k8s/
+
+# Access application
+kubectl port-forward service/web-app 3000:80
+```
+
+**Docker Desktop K8s Pros:**
+- ✅ Built into Docker Desktop
+- ✅ No additional setup
+- ✅ Good integration
+
+**Docker Desktop K8s Cons:**
+- ❌ Resource heavy
+- ❌ Less control over cluster
+
+#### Phase 3 Requirements
+```bash
+# Deploy to local Kubernetes
+kubectl apply -f k8s/
+
+# Validate deployments
+kubectl get pods
+kubectl get services
+kubectl get ingress
+
+# Test functionality
+kubectl port-forward service/web-app 3000:80
+kubectl port-forward service/api-service 8000:80
+
+# Check logs
+kubectl logs -l app=web-app
+kubectl logs -l app=api-service
+```
+
+#### Phase 3 Success Criteria
+- **All K8s manifests work** - No deployment errors
+- **Services communicate** - Pod-to-pod communication works
+- **Ingress functions** - External access works
+- **Health checks pass** - All pods are healthy
+- **Resource limits respected** - No resource exhaustion
+- **Scaling works** - Can scale up/down services
+
+### Phase 4: Remote Deployment
+**Location**: Remote K3s cluster  
+**Namespace**: preprod → prod  
+**Services**: Containerized  
+**Orchestration**: Kubernetes  
+**Purpose**: Production deployment
+
+#### Phase 4A: Pre-production Deployment
+```bash
+# Deploy to preprod namespace
+kubectl apply -f k8s/ -n preprod
+
+# Validate preprod deployment
+kubectl get pods -n preprod
+kubectl get services -n preprod
+kubectl get ingress -n preprod
+
+# Test preprod functionality
+kubectl port-forward service/web-app 3000:80 -n preprod
+```
+
+#### Phase 4B: Production Deployment
+```bash
+# Deploy to prod namespace
+kubectl apply -f k8s/ -n prod
+
+# Validate prod deployment
+kubectl get pods -n prod
+kubectl get services -n prod
+kubectl get ingress -n prod
+
+# Monitor production
+kubectl logs -f -l app=web-app -n prod
+kubectl logs -f -l app=api-service -n prod
+```
+
+#### Phase 4 Success Criteria
+- **Preprod validation complete** - All tests pass in preprod
+- **Production deployment successful** - No deployment errors
+- **Monitoring active** - Logs and metrics available
+- **Rollback capability** - Can rollback if issues occur
+- **Performance acceptable** - Meets performance requirements
+
+## MANDATORY Phase Validation Protocol
+
+### Phase Advancement Criteria
+**MANDATORY**: Each phase must be 100% validated before advancing to the next phase.
+
+#### Phase 1 → Phase 2 Validation
+- [ ] All services run successfully locally
+- [ ] Dependencies work correctly
+- [ ] Development workflow is efficient
+- [ ] No critical bugs in core functionality
+
+#### Phase 2 → Phase 3 Validation
+- [ ] All services containerized successfully
+- [ ] Container networking works
+- [ ] All Docker builds succeed
+- [ ] Container logs are accessible
+- [ ] Resource usage is acceptable
+
+#### Phase 3 → Phase 4 Validation
+- [ ] All K8s manifests deploy successfully
+- [ ] Services communicate in K8s
+- [ ] Ingress functions correctly
+- [ ] Health checks pass
+- [ ] Scaling works
+- [ ] Local K8s environment mirrors production
+
+#### Phase 4A → Phase 4B Validation
+- [ ] Preprod deployment successful
+- [ ] All functionality works in preprod
+- [ ] Performance meets requirements
+- [ ] Monitoring and logging active
+- [ ] Rollback procedures tested
+
+## Rule Application Signals
+
+When you encounter deployment work, reference these additional rules:
+
+### Deployment Implementation Signals
+- **Container Work** → Reference `.cursor/rules/operations/docker-container-standards.mdc` for container standards
+- **Kubernetes Work** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` for K8s standards
+- **Infrastructure Work** → Reference `.cursor/rules/infrastructure/infrastructure-standards.mdc` for infrastructure patterns
+
+### Deployment Quality Signals
+- **Testing Work** → Reference `.cursor/rules/core/comprehensive-testing-standards.mdc` for testing standards
+- **Security Work** → Reference `.cursor/rules/integration/security-integration.mdc` for security standards
+- **Performance Work** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance standards
+
+### Deployment Issue Resolution Signals
+- **Deployment Failures** → Reference `.cursor/rules/operations/operational-excellence.mdc` for troubleshooting
+- **Container Issues** → Reference `.cursor/rules/operations/docker-container-standards.mdc` for container debugging
+- **K8s Issues** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` for K8s debugging
+
+## Implementation Guidelines
+
+### 1. Phase Progression Protocol
+- **NEVER skip phases** - Each phase must be completed and validated
+- **Document phase completion** - Record validation results for each phase
+- **Maintain phase artifacts** - Keep Dockerfiles, K8s manifests, and configs
+- **Test rollback procedures** - Ensure you can rollback at each phase
+
+### 2. Validation Requirements
+- **Comprehensive testing** - Test all functionality at each phase
+- **Performance validation** - Ensure performance meets requirements
+- **Security validation** - Verify security measures work correctly
+- **Monitoring validation** - Confirm logging and monitoring work
+
+### 3. Quality Assurance
+- **No phase skipping** - Complete each phase fully
+- **Documentation updated** - Keep deployment docs current
+- **Team training** - Ensure team knows each phase
+- **Automation where possible** - Automate validation where feasible
+
+## Success Metrics
+
+### Phase Completion KPIs
+- **100% phase validation** - All phases fully validated
+- **0% phase skipping** - No phases skipped
+- **Complete documentation** - All phases documented
+- **Successful rollbacks** - Rollback procedures tested
+
+### Quality Metrics
+- **Deployment success rate** - 95%+ successful deployments
+- **Rollback success rate** - 100% successful rollbacks
+- **Performance targets met** - All performance requirements met
+- **Security compliance** - All security requirements met
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before advancing to the next phase, verify:
+- [ ] Current phase 100% validated
+- [ ] All success criteria met
+- [ ] Documentation updated
+- [ ] Team trained on phase
+- [ ] Rollback procedures tested
+- [ ] Performance requirements met
+- [ ] Security requirements met
+
+### Quality Assurance
+- [ ] No phase skipping
+- [ ] Complete validation
+- [ ] Proper documentation
+- [ ] Team readiness
+- [ ] Rollback capability
+
+## Conclusion
+
+This rule ensures systematic deployment progression with mandatory validation at each phase, preventing deployment failures and ensuring production readiness.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all deployment work  
+**Purpose**: Ensure systematic deployment progression with validation

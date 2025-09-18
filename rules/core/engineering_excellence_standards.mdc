@@ -1,0 +1,243 @@
+---
+ruleId: "ENG-01"
+title: "Engineering Excellence Standards"
+alwaysApply: true
+---
+
+When generating or reviewing code, ensure that solutions meet critical engineering standards. Every code change must be evaluated against these dimensions:
+
+## Core Engineering Dimensions
+
+### Performance
+- Respect time and space complexity requirements
+- Identify and highlight bottlenecks
+- Use efficient data structures and algorithms
+
+### Distributed Systems
+- Design for concurrency, scalability, and fault tolerance
+- Handle network partitions and service failures gracefully
+- Implement proper retry logic with exponential backoff
+
+### Microservices
+- Follow clean service boundaries and versioned APIs
+- Use modular patterns that support independent deployment
+- Maintain clear contracts between services
+
+### Security
+- Apply least privilege principle
+- Validate all inputs at boundaries
+- Use secure defaults and safe cryptographic practices
+- Generate cryptographically secure IDs using `secrets.token_urlsafe()`
+
+### Reliability & Fault Tolerance
+- Ensure idempotency for all operations
+- Implement graceful error handling with structured logging
+- Design for graceful degradation under load
+
+### Observability
+- Add structured logging with meaningful context
+- Include metrics and tracing hooks
+- Log all error conditions with sufficient detail for debugging
+
+### Maintainability & Testability
+- Write clean, well-structured code with clear separation of concerns
+- Design for testability in CI/CD pipelines
+- Include comprehensive documentation of assumptions
+
+### Type Safety & Data Modeling
+- Never mix incompatible types (date/datetime, float/decimal)
+- Use precise numeric types (Decimal) for financial data
+- Implement proper timezone handling with UTC defaults
+- Validate field types at model boundaries
+
+## Systematic Debugging Methodology
+
+When encountering errors:
+
+1. **IDENTIFY**: Read complete error message and stack trace
+2. **LOCATE**: Find exact line and file where error occurs
+3. **TRACE**: Follow data flow from input to error point
+4. **ANALYZE**: Compare expected vs actual types/values at each step
+5. **ROOT CAUSE**: Identify fundamental design issue
+6. **DESIGN**: Create robust solution addressing root cause
+7. **IMPLEMENT**: Apply fix with proper error handling
+8. **VERIFY**: Test complete flow including edge cases
+
+## Required Patterns
+
+### Type-Safe Date Handling
+```python
+# Use separate fields for dates vs timestamps
+work_date: date = Field(..., description="Date work performed")
+created_at: datetime = Field(default_factory=lambda: datetime.now(ZoneInfo("UTC")))
+
+@field_validator('work_date', mode='before')
+@classmethod
+def parse_work_date(cls, v) -> date:
+    if isinstance(v, date):
+        return v
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, str):
+        return datetime.fromisoformat(v.split('T')[0]).date()
+    raise TypeError(f"Cannot convert {type(v)} to date")
+```
+
+### Structured Logging
+```python
+import structlog
+logger = structlog.get_logger()
+
+# Log with context
+logger.info("operation_started", user_id=user_id, operation="time_log")
+logger.error("validation_failed", field="work_date", input=str(v), error=str(e))
+```
+
+### Input Validation
+```python
+@field_validator('work_item_id')
+@classmethod
+def validate_work_item_id(cls, v: str) -> str:
+    if not re.match(r'^[a-f0-9-]+$', v):
+        raise ValueError(f"Invalid work item ID format: {v}")
+    return v
+```
+
+## Prohibited Patterns
+
+- Quick fixes without root cause analysis
+- Mixed date/datetime types in same context
+- Silent error handling without logging
+- Hardcoded values or magic numbers
+- Predictable ID generation
+- Float types for monetary values
+
+## Code Review Requirements
+
+Before submitting code, verify:
+- [ ] All types are consistent and safe
+- [ ] Input validation is comprehensive  
+- [ ] Error handling includes structured logging
+- [ ] Security best practices applied
+- [ ] Performance implications considered
+- [ ] Edge cases are tested
+- [ ] Documentation explains design decisions# Engineering Excellence Standards
+
+When generating or reviewing code, ensure that solutions meet critical engineering standards. Every code change must be evaluated against these dimensions:
+
+## Core Engineering Dimensions
+
+### Performance
+- Respect time and space complexity requirements
+- Identify and highlight bottlenecks
+- Use efficient data structures and algorithms
+
+### Distributed Systems
+- Design for concurrency, scalability, and fault tolerance
+- Handle network partitions and service failures gracefully
+- Implement proper retry logic with exponential backoff
+
+### Microservices
+- Follow clean service boundaries and versioned APIs
+- Use modular patterns that support independent deployment
+- Maintain clear contracts between services
+
+### Security
+- Apply least privilege principle
+- Validate all inputs at boundaries
+- Use secure defaults and safe cryptographic practices
+- Generate cryptographically secure IDs using `secrets.token_urlsafe()`
+
+### Reliability & Fault Tolerance
+- Ensure idempotency for all operations
+- Implement graceful error handling with structured logging
+- Design for graceful degradation under load
+
+### Observability
+- Add structured logging with meaningful context
+- Include metrics and tracing hooks
+- Log all error conditions with sufficient detail for debugging
+
+### Maintainability & Testability
+- Write clean, well-structured code with clear separation of concerns
+- Design for testability in CI/CD pipelines
+- Include comprehensive documentation of assumptions
+
+### Type Safety & Data Modeling
+- Never mix incompatible types (date/datetime, float/decimal)
+- Use precise numeric types (Decimal) for financial data
+- Implement proper timezone handling with UTC defaults
+- Validate field types at model boundaries
+
+## Systematic Debugging Methodology
+
+When encountering errors:
+
+1. **IDENTIFY**: Read complete error message and stack trace
+2. **LOCATE**: Find exact line and file where error occurs
+3. **TRACE**: Follow data flow from input to error point
+4. **ANALYZE**: Compare expected vs actual types/values at each step
+5. **ROOT CAUSE**: Identify fundamental design issue
+6. **DESIGN**: Create robust solution addressing root cause
+7. **IMPLEMENT**: Apply fix with proper error handling
+8. **VERIFY**: Test complete flow including edge cases
+
+## Required Patterns
+
+### Type-Safe Date Handling
+```python
+# Use separate fields for dates vs timestamps
+work_date: date = Field(..., description="Date work performed")
+created_at: datetime = Field(default_factory=lambda: datetime.now(ZoneInfo("UTC")))
+
+@field_validator('work_date', mode='before')
+@classmethod
+def parse_work_date(cls, v) -> date:
+    if isinstance(v, date):
+        return v
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, str):
+        return datetime.fromisoformat(v.split('T')[0]).date()
+    raise TypeError(f"Cannot convert {type(v)} to date")
+```
+
+### Structured Logging
+```python
+import structlog
+logger = structlog.get_logger()
+
+# Log with context
+logger.info("operation_started", user_id=user_id, operation="time_log")
+logger.error("validation_failed", field="work_date", input=str(v), error=str(e))
+```
+
+### Input Validation
+```python
+@field_validator('work_item_id')
+@classmethod
+def validate_work_item_id(cls, v: str) -> str:
+    if not re.match(r'^[a-f0-9-]+$', v):
+        raise ValueError(f"Invalid work item ID format: {v}")
+    return v
+```
+
+## Prohibited Patterns
+
+- Quick fixes without root cause analysis
+- Mixed date/datetime types in same context
+- Silent error handling without logging
+- Hardcoded values or magic numbers
+- Predictable ID generation
+- Float types for monetary values
+
+## Code Review Requirements
+
+Before submitting code, verify:
+- [ ] All types are consistent and safe
+- [ ] Input validation is comprehensive  
+- [ ] Error handling includes structured logging
+- [ ] Security best practices applied
+- [ ] Performance implications considered
+- [ ] Edge cases are tested
+- [ ] Documentation explains design decisions

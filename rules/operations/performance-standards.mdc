@@ -1,0 +1,843 @@
+---
+ruleId: "PERF-01"
+title: "Performance Standards"
+status: "active"
+compliance: "mandatory"
+description: "Performance standards for optimal system performance through baseline establishment, resource optimization, and capacity planning"
+globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/api/**", "**/services/**", "**/database/**", "**/monitoring/**", "**/metrics/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "operations"
+---
+
+# PERF-01: Performance Standards
+
+**Rule Type**: Performance Standards
+**Priority**: IMPORTANT
+**Scope**: All performance-critical applications and infrastructure
+**Integration**: Complements CN-04 Monitoring Standards, INF-01 Infrastructure Standards
+
+## PURPOSE & SCOPE
+
+Performance Standards ensure optimal system performance through comprehensive baseline establishment, resource optimization, auto-scaling configuration, and capacity planning. This rule establishes requirements for performance monitoring, optimization, and scaling strategies.
+
+## Rule Triggers
+
+### When to Apply Operational Excellence Considerations
+```yaml
+triggers:
+  operational_excellence:
+    when: "Performance issues detected or performance optimization needed"
+    reference: "OPEX-01: Operational Excellence Standards"
+    action: "Apply operational excellence procedures for performance issues"
+    conditions:
+      - "Performance degradation detected"
+      - "Resource utilization issues"
+      - "Scaling requirements"
+      - "Capacity planning needed"
+  
+  monitoring_integration:
+    when: "Setting up performance monitoring or metrics"
+    reference: "MONITOR-01: Monitoring & Observability Standards"
+    action: "Integrate with monitoring standards for performance tracking"
+    conditions:
+      - "Performance metrics setup"
+      - "Alerting configuration"
+      - "Dashboard creation"
+      - "SLA monitoring"
+```
+
+## CORE STANDARDS
+
+### 1. Performance Baseline Establishment
+
+#### MANDATORY Performance Baseline Requirements
+- **Performance baseline establishment for all services**
+- **Resource usage optimization**
+- **Performance regression detection**
+- **Capacity planning documentation**
+
+#### Performance Baseline Configuration
+```yaml
+# operations/performance-baselines.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: performance-baselines
+  namespace: operations
+data:
+  performance-baselines.yaml: |
+    # Performance Baseline Configuration
+    performanceBaselines:
+      # Application Performance Baselines
+      applications:
+        api-gateway:
+          response_time:
+            p50: 50ms
+            p95: 150ms
+            p99: 300ms
+          throughput:
+            requests_per_second: 1000
+            concurrent_connections: 500
+          resource_usage:
+            cpu_request: 100m
+            cpu_limit: 500m
+            memory_request: 128Mi
+            memory_limit: 512Mi
+
+        user-service:
+          response_time:
+            p50: 30ms
+            p95: 100ms
+            p99: 200ms
+          throughput:
+            requests_per_second: 500
+            concurrent_connections: 200
+          resource_usage:
+            cpu_request: 50m
+            cpu_limit: 200m
+            memory_request: 64Mi
+            memory_limit: 256Mi
+
+        payment-service:
+          response_time:
+            p50: 20ms
+            p95: 80ms
+            p99: 150ms
+          throughput:
+            requests_per_second: 200
+            concurrent_connections: 100
+          resource_usage:
+            cpu_request: 100m
+            cpu_limit: 400m
+            memory_request: 128Mi
+            memory_limit: 512Mi
+
+      # Infrastructure Performance Baselines
+      infrastructure:
+        k3s_cluster:
+          node_performance:
+            cpu_utilization: 70
+            memory_utilization: 80
+            disk_utilization: 75
+            network_bandwidth: 1Gbps
+
+          cluster_capacity:
+            max_pods_per_node: 110
+            max_services: 500
+            max_namespaces: 100
+
+        cilium_network:
+          network_performance:
+            latency: 1ms
+            throughput: 10Gbps
+            packet_loss: 0.001
+
+          service_mesh:
+            proxy_latency: 0.5ms
+            connection_pool_size: 1000
+            circuit_breaker_threshold: 0.5
+
+      # Database Performance Baselines
+      databases:
+        postgresql:
+          query_performance:
+            avg_query_time: 10ms
+            slow_query_threshold: 100ms
+            connection_pool_size: 100
+
+          resource_usage:
+            cpu_utilization: 60
+            memory_utilization: 70
+            disk_iops: 1000
+            disk_throughput: 100MB/s
+
+        redis:
+          cache_performance:
+            hit_rate: 95
+            avg_response_time: 1ms
+            max_memory_usage: 80
+
+          resource_usage:
+            cpu_utilization: 40
+            memory_utilization: 80
+            network_bandwidth: 100MB/s
+```
+
+#### Performance Monitoring Implementation
+```yaml
+# operations/performance-monitoring.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: performance-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: performance-alerts
+    rules:
+    # Response Time Alerts
+    - alert: HighResponseTime
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+      for: 5m
+      labels:
+        severity: warning
+        performance_type: response_time
+      annotations:
+        summary: "High response time detected"
+        description: "95th percentile response time is {{ $value }}s for {{ $labels.service }}"
+
+    - alert: CriticalResponseTime
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+      for: 2m
+      labels:
+        severity: critical
+        performance_type: response_time
+      annotations:
+        summary: "Critical response time detected"
+        description: "95th percentile response time is {{ $value }}s for {{ $labels.service }}"
+
+    # Throughput Alerts
+    - alert: LowThroughput
+      expr: rate(http_requests_total[5m]) < 10
+      for: 10m
+      labels:
+        severity: warning
+        performance_type: throughput
+      annotations:
+        summary: "Low throughput detected"
+        description: "Request rate is {{ $value }} req/s for {{ $labels.service }}"
+
+    # Resource Usage Alerts
+    - alert: HighCPUUsage
+      expr: (rate(container_cpu_usage_seconds_total[5m]) * 100) > 80
+      for: 5m
+      labels:
+        severity: warning
+        performance_type: resource_usage
+      annotations:
+        summary: "High CPU usage detected"
+        description: "CPU usage is {{ $value }}% for {{ $labels.pod }}"
+
+    - alert: HighMemoryUsage
+      expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes * 100) > 85
+      for: 5m
+      labels:
+        severity: warning
+        performance_type: resource_usage
+      annotations:
+        summary: "High memory usage detected"
+        description: "Memory usage is {{ $value }}% for {{ $labels.pod }}"
+```
+
+### 2. Resource Usage Optimization
+
+#### MANDATORY Resource Optimization Requirements
+- **Resource usage optimization for all components**
+- **Efficient resource allocation**
+- **Resource quota management**
+- **Performance tuning and optimization**
+
+#### Resource Optimization Configuration
+```yaml
+# operations/resource-optimization.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-optimization
+  namespace: operations
+data:
+  resource-optimization.yaml: |
+    # Resource Optimization Configuration
+    resourceOptimization:
+      # K3S Resource Optimization
+      k3s:
+        node_optimization:
+          # CPU optimization
+          cpu:
+            request_ratio: 0.7  # 70% of available CPU for requests
+            limit_ratio: 0.9    # 90% of available CPU for limits
+            burst_allowance: 0.2 # 20% burst allowance
+
+          # Memory optimization
+          memory:
+            request_ratio: 0.8  # 80% of available memory for requests
+            limit_ratio: 0.95   # 95% of available memory for limits
+            swap_usage: false   # Disable swap usage
+
+          # Storage optimization
+          storage:
+            local_storage_usage: 0.8  # 80% of local storage
+            ephemeral_storage_limit: 10Gi
+            volume_claim_templates: true
+
+          # Network optimization
+          network:
+            bandwidth_limit: 1Gbps
+            connection_pool_size: 1000
+            tcp_keepalive: true
+
+      # Application Resource Optimization
+      applications:
+        # Resource allocation strategies
+        allocation_strategy:
+          cpu:
+            # Conservative allocation for single-node K3S
+            base_request: 50m
+            base_limit: 200m
+            scaling_factor: 1.5
+
+          memory:
+            # Memory allocation with overhead
+            base_request: 64Mi
+            base_limit: 256Mi
+            overhead_ratio: 0.1  # 10% overhead
+
+          storage:
+            # Storage optimization
+            base_request: 1Gi
+            base_limit: 5Gi
+            compression_enabled: true
+
+        # Performance tuning
+        performance_tuning:
+          # JVM tuning for Java applications
+          jvm:
+            heap_size_ratio: 0.7
+            gc_type: "G1GC"
+            gc_parameters:
+              - "-XX:+UseG1GC"
+              - "-XX:MaxGCPauseMillis=200"
+              - "-XX:G1HeapRegionSize=16m"
+
+          # Python tuning
+          python:
+            worker_processes: 4
+            max_requests: 1000
+            max_requests_jitter: 100
+
+          # Node.js tuning
+          nodejs:
+            max_old_space_size: 512
+            gc_interval: 1000
+            event_loop_lag_threshold: 100
+```
+
+#### Resource Quota Management
+```yaml
+# operations/resource-quotas.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: namespace-quota
+  namespace: applications
+spec:
+  hard:
+    # CPU quotas
+    requests.cpu: "4"
+    limits.cpu: "8"
+
+    # Memory quotas
+    requests.memory: 8Gi
+    limits.memory: 16Gi
+
+    # Storage quotas
+    requests.storage: 100Gi
+    limits.storage: 200Gi
+
+    # Object quotas
+    pods: "20"
+    services: "50"
+    persistentvolumeclaims: "10"
+    configmaps: "100"
+    secrets: "50"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: namespace-limits
+  namespace: applications
+spec:
+  limits:
+  # Default limits for containers
+  - default:
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    type: Container
+
+  # Default limits for pods
+  - default:
+      cpu: 1000m
+      memory: 1Gi
+    defaultRequest:
+      cpu: 200m
+      memory: 256Mi
+    type: Pod
+```
+
+### 3. Auto-scaling Configuration
+
+#### MANDATORY Auto-scaling Requirements
+- **Auto-scaling configuration for all services**
+- **Horizontal Pod Autoscaling (HPA)**
+- **Vertical Pod Autoscaling (VPA)**
+- **Cluster autoscaling for K3S**
+
+#### Auto-scaling Implementation
+```yaml
+# operations/auto-scaling.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: applications
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics scaling
+  - type: Object
+    object:
+      metric:
+        name: requests-per-second
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: api-gateway-ingress
+      target:
+        type: Value
+        value: 1000
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: user-service-vpa
+  namespace: applications
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user-service
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: '*'
+      minAllowed:
+        cpu: 50m
+        memory: 64Mi
+      maxAllowed:
+        cpu: 500m
+        memory: 512Mi
+      controlledValues: RequestsAndLimits
+```
+
+#### K3S Cluster Autoscaling
+```yaml
+# operations/cluster-autoscaling.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      serviceAccountName: cluster-autoscaler
+      containers:
+      - name: cluster-autoscaler
+        image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.28.0
+        command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --stderrthreshold=info
+        - --cloud-provider=aws
+        - --skip-nodes-with-local-storage=false
+        - --expander=least-waste
+        - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/goldschmidt-platform
+        - --balance-similar-node-groups
+        - --skip-nodes-with-system-pods=false
+        - --scale-down-delay-after-add=300s
+        - --scale-down-unneeded-time=300s
+        - --max-node-provision-time=900s
+        - --ok-total-unready-count=3
+        - --max-total-unready-percentage=45
+        - --scale-down-delay-after-failure=300s
+        - --max-failed-time=15m
+        resources:
+          limits:
+            cpu: 100m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 300Mi
+```
+
+### 4. Capacity Planning Documentation
+
+#### MANDATORY Capacity Planning Requirements
+- **Capacity planning documentation for all components**
+- **Growth projections and scaling strategies**
+- **Resource forecasting and planning**
+- **Performance testing and validation**
+
+#### Capacity Planning Framework
+```yaml
+# operations/capacity-planning.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capacity-planning
+  namespace: operations
+data:
+  capacity-planning.yaml: |
+    # Capacity Planning Configuration
+    capacityPlanning:
+      # Current Capacity Assessment
+      currentCapacity:
+        infrastructure:
+          k3s_cluster:
+            nodes: 1
+            cpu_cores: 8
+            memory_gb: 16
+            storage_gb: 500
+            network_bandwidth: "1Gbps"
+
+        applications:
+          total_services: 10
+          total_pods: 25
+          total_requests_per_second: 2000
+          average_response_time_ms: 150
+
+        databases:
+          postgresql:
+            connections: 100
+            storage_gb: 50
+            backup_size_gb: 10
+          redis:
+            memory_gb: 2
+            connections: 200
+
+      # Growth Projections
+      growthProjections:
+        # 6-month projection
+        six_months:
+          user_growth: 50
+          traffic_growth: 100
+          data_growth: 75
+          service_growth: 25
+
+        # 12-month projection
+        twelve_months:
+          user_growth: 150
+          traffic_growth: 300
+          data_growth: 200
+          service_growth: 50
+
+        # 24-month projection
+        twenty_four_months:
+          user_growth: 400
+          traffic_growth: 800
+          data_growth: 500
+          service_growth: 100
+
+      # Scaling Strategy
+      scalingStrategy:
+        # Horizontal scaling
+        horizontal:
+          trigger_threshold: 70
+          scale_up_factor: 1.5
+          scale_down_factor: 0.7
+          max_nodes: 5
+          min_nodes: 1
+
+        # Vertical scaling
+        vertical:
+          cpu_upgrade_threshold: 80
+          memory_upgrade_threshold: 85
+          storage_upgrade_threshold: 80
+          upgrade_increment: 1.5
+
+        # Application scaling
+        application:
+          auto_scaling_enabled: true
+          min_replicas: 2
+          max_replicas: 10
+          target_cpu_utilization: 70
+          target_memory_utilization: 80
+```
+
+#### Performance Testing Framework
+```python
+# operations/performance-testing/load_testing.py
+import asyncio
+import aiohttp
+import time
+import statistics
+from typing import Dict, List, Any
+import logging
+
+class PerformanceTester:
+    """Performance testing framework for K3S applications"""
+
+    def __init__(self, base_url: str, concurrency: int = 10):
+        self.base_url = base_url
+        self.concurrency = concurrency
+        self.logger = logging.getLogger(__name__)
+        self.results = []
+
+    async def run_load_test(self, endpoint: str, duration: int = 300) -> Dict[str, Any]:
+        """Run load test against specified endpoint"""
+        start_time = time.time()
+        tasks = []
+
+        # Create concurrent requests
+        for _ in range(self.concurrency):
+            task = asyncio.create_task(self._make_requests(endpoint, duration))
+            tasks.append(task)
+
+        # Wait for all tasks to complete
+        await asyncio.gather(*tasks)
+
+        end_time = time.time()
+
+        # Calculate statistics
+        response_times = [result['response_time'] for result in self.results]
+        status_codes = [result['status_code'] for result in self.results]
+
+        return {
+            'endpoint': endpoint,
+            'duration': duration,
+            'total_requests': len(self.results),
+            'successful_requests': len([r for r in self.results if r['status_code'] == 200]),
+            'failed_requests': len([r for r in self.results if r['status_code'] != 200]),
+            'response_time_stats': {
+                'mean': statistics.mean(response_times),
+                'median': statistics.median(response_times),
+                'p95': self._percentile(response_times, 95),
+                'p99': self._percentile(response_times, 99),
+                'min': min(response_times),
+                'max': max(response_times)
+            },
+            'throughput': len(self.results) / duration,
+            'error_rate': len([r for r in self.results if r['status_code'] != 200]) / len(self.results)
+        }
+
+    async def _make_requests(self, endpoint: str, duration: int):
+        """Make concurrent requests for specified duration"""
+        async with aiohttp.ClientSession() as session:
+            end_time = time.time() + duration
+
+            while time.time() < end_time:
+                start_time = time.time()
+
+                try:
+                    async with session.get(f"{self.base_url}{endpoint}") as response:
+                        response_time = (time.time() - start_time) * 1000  # Convert to ms
+
+                        self.results.append({
+                            'timestamp': start_time,
+                            'response_time': response_time,
+                            'status_code': response.status,
+                            'endpoint': endpoint
+                        })
+
+                except Exception as e:
+                    self.logger.error(f"Request failed: {e}")
+                    self.results.append({
+                        'timestamp': start_time,
+                        'response_time': -1,
+                        'status_code': 0,
+                        'endpoint': endpoint,
+                        'error': str(e)
+                    })
+
+    def _percentile(self, data: List[float], percentile: int) -> float:
+        """Calculate percentile of data"""
+        if not data:
+            return 0
+
+        sorted_data = sorted(data)
+        index = (percentile / 100) * (len(sorted_data) - 1)
+
+        if index.is_integer():
+            return sorted_data[int(index)]
+        else:
+            lower = sorted_data[int(index)]
+            upper = sorted_data[int(index) + 1]
+            return lower + (upper - lower) * (index - int(index))
+
+    async def run_baseline_test(self) -> Dict[str, Any]:
+        """Run baseline performance test"""
+        return await self.run_load_test('/health', duration=60)
+
+    async def run_stress_test(self) -> Dict[str, Any]:
+        """Run stress test to determine breaking point"""
+        return await self.run_load_test('/api/test', duration=600)
+
+    async def run_endurance_test(self) -> Dict[str, Any]:
+        """Run endurance test for long-term stability"""
+        return await self.run_load_test('/api/test', duration=3600)
+```
+
+## INTEGRATION REQUIREMENTS
+
+### Cross-Rule Dependencies
+```yaml
+dependencies:
+  PERF-01:
+    depends_on:
+      - CN-04: Monitoring Standards
+      - INF-01: Infrastructure Standards
+      - OPS-01: Operational Excellence Standards
+    integrates_with:
+      - K8S-01: Kubernetes Standards
+      - MI-08: Microservices Governance
+      - QC-01: Testing Standards
+```
+
+### Quality Gates
+```yaml
+quality_gates:
+  performance_standards:
+    - "Performance baselines established for all services"
+    - "Resource optimization implemented"
+    - "Auto-scaling configured for all applications"
+    - "Capacity planning documentation complete"
+    - "Performance testing framework implemented"
+```
+
+## IMPLEMENTATION CHECKLIST
+
+### Phase 1: Baseline Establishment (Week 1-2)
+- [ ] Establish performance baselines for all services
+- [ ] Implement performance monitoring
+- [ ] Set up performance alerting
+- [ ] Create performance dashboards
+
+### Phase 2: Resource Optimization (Week 3-4)
+- [ ] Implement resource optimization strategies
+- [ ] Configure resource quotas and limits
+- [ ] Set up performance tuning
+- [ ] Optimize K3S cluster resources
+
+### Phase 3: Auto-scaling and Planning (Week 5+)
+- [ ] Configure auto-scaling for all services
+- [ ] Implement cluster autoscaling
+- [ ] Create capacity planning documentation
+- [ ] Set up performance testing framework
+
+## SUCCESS METRICS
+
+### Performance Standards Metrics
+```yaml
+metrics:
+  performance_baselines: "100% services have established baselines"
+  resource_optimization: ">90% resource utilization efficiency"
+  auto_scaling: "100% services have auto-scaling configured"
+  capacity_planning: "Complete capacity planning documentation"
+```
+
+### K3S Project Integration Metrics
+```yaml
+project_metrics:
+  response_time: "<200ms 95th percentile response time"
+  throughput: ">1000 requests per second"
+  resource_efficiency: ">80% resource utilization"
+  scaling_performance: "<30 seconds scale-up time"
+```
+
+## COMPLIANCE VALIDATION
+
+### Automated Compliance Checks
+```bash
+#!/bin/bash
+# scripts/performance-compliance-check.sh
+
+echo "🔍 Running PERF-01 compliance checks..."
+
+# Check performance baselines
+if ! find operations/ -name "*baseline*" | grep -q .; then
+    echo "❌ No performance baselines found"
+    exit 1
+fi
+
+# Check auto-scaling configuration
+if ! kubectl get hpa --all-namespaces | grep -q .; then
+    echo "❌ No HorizontalPodAutoscaler found"
+    exit 1
+fi
+
+# Check resource quotas
+if ! kubectl get resourcequota --all-namespaces | grep -q .; then
+    echo "❌ No ResourceQuota found"
+    exit 1
+fi
+
+# Check performance monitoring
+if ! kubectl get prometheusrule -n monitoring | grep performance | grep -q .; then
+    echo "❌ No performance monitoring rules found"
+    exit 1
+fi
+
+echo "✅ PERF-01 compliance checks passed"
+```
+
+### Manual Compliance Validation
+- [ ] Performance baselines established for all services
+- [ ] Resource optimization implemented
+- [ ] Auto-scaling configured for all applications
+- [ ] Capacity planning documentation complete
+- [ ] Performance testing framework implemented
+- [ ] Performance monitoring and alerting configured
+
+## CONCLUSION
+
+PERF-01 Performance Standards establish comprehensive requirements for performance optimization, resource management, and capacity planning. These standards ensure optimal system performance while supporting efficient resource utilization and scalable growth.
+
+**Integration Note**: This rule complements CN-04 monitoring standards with performance-specific requirements and integrates with INF-01 infrastructure standards to provide complete performance governance.
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,437 @@
+---
+ruleId: "INT-DECISION-01"
+title: "Rule Application Decision Tree"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive decision tree and workflow for determining which rules to apply in different contexts and scenarios"
+globs: ["**/*.mdc", "**/.cursor/rules/**"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "integration"
+---
+
+# INT-DECISION-01: Rule Application Decision Tree
+
+## Purpose & Scope
+
+This rule provides a comprehensive decision tree and workflow for determining which rules to apply in different contexts, ensuring consistent and appropriate rule application across all development scenarios.
+
+## Rule Application Decision Framework
+
+### 1. Initial Context Assessment
+```yaml
+context_assessment:
+  project_phase:
+    planning: "Requirements gathering, architecture design, initial setup"
+    development: "Active coding, feature implementation, testing"
+    testing: "QA testing, performance testing, security testing"
+    deployment: "Release preparation, deployment, go-live"
+    maintenance: "Bug fixes, updates, ongoing support"
+  
+  work_type:
+    new_feature: "Implementing new functionality"
+    bug_fix: "Fixing existing issues"
+    refactoring: "Improving code without changing functionality"
+    optimization: "Performance or resource optimization"
+    maintenance: "Routine maintenance and updates"
+  
+  team_context:
+    individual_work: "Single developer working independently"
+    team_collaboration: "Multiple developers working together"
+    cross_team: "Work involving multiple teams"
+    external_integration: "Work with external partners or vendors"
+```
+
+### 2. File Type and Domain Analysis
+```yaml
+file_domain_analysis:
+  frontend_files:
+    patterns: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss"]
+    primary_rules: ["FE-01: Frontend Development Standards"]
+    integration_rules: ["INT-SEC-01", "INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: ["MB-03: Cross-Platform Consistency"]
+  
+  backend_files:
+    patterns: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/api/**"]
+    primary_rules: ["API-01: API Development Standards", "ENG-01: Engineering Excellence Standards"]
+    integration_rules: ["INT-SEC-01", "INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+  
+  database_files:
+    patterns: ["**/*.sql", "**/migrations/**", "**/database/**", "**/*.db.*"]
+    primary_rules: ["DP-01: Database Standards"]
+    integration_rules: ["INT-SEC-01", "INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+  
+  mobile_files:
+    patterns: ["**/ios/**", "**/android/**", "**/*.swift", "**/*.kt", "**/*.xml"]
+    primary_rules: ["MB-01: iOS Development Standards", "MB-02: Android Development Standards"]
+    integration_rules: ["INT-SEC-01", "INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: ["MB-03: Cross-Platform Consistency", "MB-04: Mobile Testing Standards"]
+  
+  infrastructure_files:
+    patterns: ["**/*.yaml", "**/*.yml", "**/k8s/**", "**/kubernetes/**", "**/*.tf"]
+    primary_rules: ["K8S-01: Kubernetes Standards", "INF-01: Infrastructure Standards"]
+    integration_rules: ["INT-SEC-01", "INT-PERF-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+  
+  test_files:
+    patterns: ["**/*.test.*", "**/*.spec.*", "**/tests/**", "**/test/**"]
+    primary_rules: ["QC-01: Comprehensive Testing Standards"]
+    integration_rules: ["INT-TEST-01"]
+    manual_triggers: ["MB-04: Mobile Testing Standards"]
+```
+
+## Decision Tree Workflow
+
+### 1. Always Apply Rules (Level 1)
+```yaml
+always_apply_rules:
+  mandatory_application:
+    - "GLOBAL-01: Comprehensive Rule Reading Protocol"
+    - "SEC-01: Universal Security Standards"
+    - "INT-SEC-01: Security Integration Standards"
+    - "QC-13: Project Management Standards"
+    - "QC-14: Document Synchronization & Cross-Reference Management"
+    - "QC-15: Systematic Debugging Methodology"
+    - "GIT-01: Git Branching Strategy"
+    - "INT-CONFLICT-01: Rule Conflict Resolution Standards"
+  
+  application_criteria:
+    - "Applied to ALL interactions regardless of context"
+    - "No exceptions or overrides allowed"
+    - "Must be considered in every decision"
+    - "Foundation for all other rule applications"
+```
+
+### 2. Intelligent Application Rules (Level 2)
+```yaml
+intelligent_application_rules:
+  glob_pattern_matching:
+    - "Check file path against rule glob patterns"
+    - "Apply rules that match current file context"
+    - "Consider file type and domain requirements"
+    - "Evaluate rule relevance and applicability"
+  
+  context_aware_application:
+    - "Consider project phase and work type"
+    - "Evaluate team context and collaboration needs"
+    - "Assess technical complexity and requirements"
+    - "Balance multiple rule requirements"
+  
+  integration_rule_application:
+    - "Apply relevant integration rules"
+    - "Consider cross-cutting concerns"
+    - "Ensure comprehensive coverage"
+    - "Maintain consistency across domains"
+```
+
+### 3. Manual Trigger Rules (Level 3)
+```yaml
+manual_trigger_rules:
+  trigger_conditions:
+    - "Explicit user instruction or request"
+    - "Specific context or scenario requirements"
+    - "Cross-domain or cross-platform work"
+    - "Specialized or advanced use cases"
+  
+  trigger_evaluation:
+    - "Assess trigger conditions and requirements"
+    - "Evaluate rule relevance and applicability"
+    - "Consider user intent and context"
+    - "Apply appropriate manual rules"
+  
+  application_guidance:
+    - "Provide clear guidance on when to apply"
+    - "Explain rule benefits and requirements"
+    - "Offer implementation assistance"
+    - "Monitor application effectiveness"
+```
+
+## Rule Application Decision Tree
+
+### 1. Start: New Work Item or File Change
+```mermaid
+graph TD
+    A[New Work Item or File Change] --> B{File Type?}
+    B -->|Frontend| C[Apply FE-01 + Integration Rules]
+    B -->|Backend/API| D[Apply API-01 + Integration Rules]
+    B -->|Database| E[Apply DP-01 + Integration Rules]
+    B -->|Mobile| F[Apply MB-01/MB-02 + Integration Rules]
+    B -->|Infrastructure| G[Apply K8S-01/INF-01 + Integration Rules]
+    B -->|Test| H[Apply QC-01 + Integration Rules]
+    B -->|Other| I[Apply ENG-01 + Integration Rules]
+```
+
+### 2. Always Apply Rules Check
+```mermaid
+graph TD
+    A[File Change Detected] --> B[Apply GLOBAL-01: Read All Rules]
+    B --> C[Apply SEC-01: Security Standards]
+    C --> D[Apply INT-SEC-01: Security Integration]
+    D --> E[Apply QC-13: Project Management]
+    E --> F[Apply QC-14: Document Sync]
+    F --> G[Apply QC-15: Debugging Methodology]
+    G --> H[Apply GIT-01: Git Branching]
+    H --> I[Apply INT-CONFLICT-01: Conflict Resolution]
+    I --> J[Check File-Specific Rules]
+```
+
+### 3. File-Specific Rule Application
+```mermaid
+graph TD
+    A[File-Specific Rules] --> B{File Matches Globs?}
+    B -->|Yes| C[Apply Matching Rules]
+    B -->|No| D[Check Manual Triggers]
+    C --> E[Apply Integration Rules]
+    D --> F{Manual Trigger Needed?}
+    F -->|Yes| G[Apply Manual Rules]
+    F -->|No| H[Apply Default Rules]
+    E --> I[Check for Conflicts]
+    G --> I
+    H --> I
+    I --> J[Resolve Conflicts if Any]
+    J --> K[Apply Final Rule Set]
+```
+
+### 4. Integration Rule Application
+```mermaid
+graph TD
+    A[Integration Rules] --> B[Apply INT-SEC-01: Security Integration]
+    B --> C[Apply INT-TEST-01: Testing Integration]
+    C --> D[Apply INT-PERF-01: Performance Integration]
+    D --> E[Apply INT-CONFLICT-01: Conflict Resolution]
+    E --> F[Check Cross-Domain Requirements]
+    F --> G[Apply Domain-Specific Integration]
+    G --> H[Validate Rule Consistency]
+    H --> I[Finalize Rule Application]
+```
+
+## Context-Specific Decision Guidelines
+
+### 1. Development Phase Decisions
+```yaml
+development_phase_decisions:
+  planning_phase:
+    primary_focus: "Architecture, security, and compliance rules"
+    key_rules: ["SEC-01", "API-01", "DP-01", "FE-01", "K8S-01"]
+    integration_rules: ["INT-SEC-01", "INT-PERF-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+  
+  implementation_phase:
+    primary_focus: "Code quality, testing, and performance rules"
+    key_rules: ["ENG-01", "QC-01", "PERF-01", "API-01", "DP-01", "FE-01"]
+    integration_rules: ["INT-TEST-01", "INT-PERF-01", "INT-SEC-01"]
+    manual_triggers: ["MB-03: Cross-Platform Consistency", "MB-04: Mobile Testing"]
+  
+  testing_phase:
+    primary_focus: "Testing, quality assurance, and validation rules"
+    key_rules: ["QC-01", "BUG-01", "PERF-01"]
+    integration_rules: ["INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: ["MB-04: Mobile Testing Standards"]
+  
+  deployment_phase:
+    primary_focus: "Infrastructure, monitoring, and operational rules"
+    key_rules: ["K8S-01", "INF-01", "MONITOR-01", "OPEX-01"]
+    integration_rules: ["INT-PERF-01", "INT-SEC-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+  
+  maintenance_phase:
+    primary_focus: "Monitoring, debugging, and operational excellence rules"
+    key_rules: ["MONITOR-01", "QC-15", "OPEX-01", "SEC-01"]
+    integration_rules: ["INT-SEC-01", "INT-PERF-01"]
+    manual_triggers: ["OPEX-01: Operational Excellence"]
+```
+
+### 2. Work Type Decisions
+```yaml
+work_type_decisions:
+  new_feature_development:
+    primary_rules: ["ENG-01", "QC-01", "SEC-01", "PERF-01"]
+    domain_rules: "Based on file type and domain"
+    integration_rules: ["INT-SEC-01", "INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: "Based on cross-platform or operational needs"
+  
+  bug_fix_work:
+    primary_rules: ["QC-15", "QC-01", "SEC-01"]
+    domain_rules: "Based on affected file types"
+    integration_rules: ["INT-SEC-01", "INT-TEST-01"]
+    manual_triggers: "Based on bug severity and impact"
+  
+  refactoring_work:
+    primary_rules: ["ENG-01", "QC-01", "PERF-01"]
+    domain_rules: "Based on refactored file types"
+    integration_rules: ["INT-TEST-01", "INT-PERF-01"]
+    manual_triggers: "Based on refactoring scope and impact"
+  
+  optimization_work:
+    primary_rules: ["PERF-01", "QC-01", "MONITOR-01"]
+    domain_rules: "Based on optimized file types"
+    integration_rules: ["INT-PERF-01", "INT-SEC-01"]
+    manual_triggers: "Based on optimization scope and impact"
+  
+  maintenance_work:
+    primary_rules: ["OPEX-01", "MONITOR-01", "SEC-01"]
+    domain_rules: "Based on maintained file types"
+    integration_rules: ["INT-SEC-01", "INT-PERF-01"]
+    manual_triggers: "Based on maintenance scope and requirements"
+```
+
+### 3. Team Context Decisions
+```yaml
+team_context_decisions:
+  individual_work:
+    rule_application: "Standard rule application based on file type"
+    collaboration_rules: "Minimal collaboration-specific rules"
+    communication_rules: "Basic documentation and communication"
+    quality_rules: "Standard quality and testing requirements"
+  
+  team_collaboration:
+    rule_application: "Standard rule application with collaboration considerations"
+    collaboration_rules: "QC-13: Project Management Standards"
+    communication_rules: "Enhanced documentation and communication"
+    quality_rules: "Standard quality and testing requirements"
+  
+  cross_team_work:
+    rule_application: "Comprehensive rule application with integration focus"
+    collaboration_rules: "QC-13: Project Management Standards + enhanced collaboration"
+    communication_rules: "Comprehensive documentation and communication"
+    quality_rules: "Enhanced quality and testing requirements"
+    integration_rules: "All relevant integration rules"
+  
+  external_integration:
+    rule_application: "Comprehensive rule application with security focus"
+    collaboration_rules: "QC-13: Project Management Standards + external collaboration"
+    communication_rules: "Comprehensive documentation and communication"
+    quality_rules: "Enhanced quality and testing requirements"
+    security_rules: "Enhanced security requirements and compliance"
+    integration_rules: "All relevant integration rules"
+```
+
+## Rule Application Validation
+
+### 1. Rule Consistency Check
+```yaml
+consistency_check:
+  rule_conflicts:
+    - "Check for conflicting rule requirements"
+    - "Apply conflict resolution procedures"
+    - "Document resolution decisions"
+    - "Monitor for unintended consequences"
+  
+  coverage_validation:
+    - "Ensure all relevant rules are applied"
+    - "Verify integration rule coverage"
+    - "Check for missing manual triggers"
+    - "Validate comprehensive coverage"
+  
+  quality_assurance:
+    - "Verify rule application quality"
+    - "Check for proper rule implementation"
+    - "Validate rule effectiveness"
+    - "Monitor rule compliance"
+```
+
+### 2. Rule Effectiveness Monitoring
+```yaml
+effectiveness_monitoring:
+  application_metrics:
+    - "Rule application frequency and patterns"
+    - "Rule compliance rates and trends"
+    - "Rule effectiveness measurements"
+    - "Rule improvement opportunities"
+  
+  quality_metrics:
+    - "Code quality improvements"
+    - "Bug reduction rates"
+    - "Performance improvements"
+    - "Security enhancement measures"
+  
+  team_metrics:
+    - "Team productivity and efficiency"
+    - "Knowledge sharing and collaboration"
+    - "Rule adoption and compliance"
+    - "Continuous improvement initiatives"
+```
+
+## Rule Application Signals
+
+When you encounter decision-making scenarios, reference these additional rules:
+
+### Decision Making Signals
+- **Rule Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution in decision making
+- **Security Decisions** → Reference `.cursor/rules/integration/security-integration.mdc` for security considerations in decisions
+- **Testing Decisions** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing requirements in decisions
+- **Performance Decisions** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance considerations in decisions
+
+### Decision Analysis Signals
+- **Rule Effectiveness Analysis** → Reference `.cursor/rules/integration/rule-effectiveness-metrics.mdc` for measuring decision effectiveness
+- **Rule Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for analyzing decision impacts
+- **Rule Learning** → Reference `.cursor/rules/integration/rule-learning-system.mdc` for learning from decision patterns
+
+### Decision Escalation Signals
+- **Complex Decisions** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning considerations in decisions
+- **Decision Performance** → Reference `.cursor/rules/integration/rule-performance-monitoring.mdc` for monitoring decision performance
+- **Decision Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for resolving decision conflicts
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  global_rule:
+    rule: "GLOBAL-01: Comprehensive Rule Reading Protocol"
+    integration: "Foundation for all rule application decisions"
+  
+  conflict_resolution:
+    rule: "INT-CONFLICT-01: Rule Conflict Resolution Standards"
+    integration: "Conflict resolution in rule application decisions"
+  
+  security_integration:
+    rule: "INT-SEC-01: Security Integration Standards"
+    integration: "Security considerations in rule application"
+  
+  testing_integration:
+    rule: "INT-TEST-01: Testing Integration Standards"
+    integration: "Testing requirements in rule application"
+  
+  performance_integration:
+    rule: "INT-PERF-01: Performance Integration Standards"
+    integration: "Performance considerations in rule application"
+```
+
+## Implementation Guidelines
+
+### 1. Decision Tree Usage
+- **Follow decision tree systematically** for consistent rule application
+- **Document decision rationale** for transparency and learning
+- **Regular review and update** of decision tree based on experience
+- **Team training** on decision tree usage and best practices
+
+### 2. Rule Application Best Practices
+- **Always apply always-apply rules** regardless of context
+- **Use glob patterns intelligently** for file-specific rules
+- **Consider manual triggers** when appropriate
+- **Apply integration rules** for comprehensive coverage
+
+### 3. Continuous Improvement
+- **Monitor rule application effectiveness** and outcomes
+- **Collect feedback** from team members and stakeholders
+- **Regular review** and update of decision tree
+- **Share lessons learned** and best practices
+
+## Success Metrics
+
+### Decision Tree KPIs
+- **Rule application consistency** across team members
+- **Decision accuracy** and appropriateness
+- **Rule coverage** completeness and effectiveness
+- **Conflict resolution** success rates
+- **Team productivity** and efficiency improvements
+
+### Quality Gates
+- **All relevant rules applied** for each work item
+- **No rule conflicts** unresolved
+- **Decision rationale documented** for all applications
+- **Rule effectiveness monitored** and measured
+- **Continuous improvement** processes active

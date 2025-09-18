@@ -1,0 +1,684 @@
+---
+ruleId: "K8S-01"
+title: "Kubernetes Manifest Standards"
+status: "active"
+compliance: "mandatory"
+description: "Kubernetes manifest standards for security, performance, and operational best practices"
+globs: ["**/*.yaml", "**/*.yml", "**/k8s/**", "**/kubernetes/**", "**/manifests/**", "**/deployments/**", "**/helm/**", "**/charts/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "infrastructure"
+---
+
+# K8S-01: Kubernetes Manifest Standards
+
+**Rule Type**: Kubernetes Standards
+**Priority**: CRITICAL
+**Scope**: All Kubernetes manifests and deployments
+**Integration**: Extends CN-02 Container Standards, INF-01 Infrastructure Standards
+
+## PURPOSE & SCOPE
+
+Kubernetes manifest standards ensure all K3S platform deployments follow security best practices, resource optimization, and operational excellence. This rule establishes comprehensive requirements for pod security, resource management, health checks, and Cilium service mesh integration.
+
+## Rule Triggers
+
+### When to Apply Operational Excellence Considerations
+```yaml
+triggers:
+  operational_excellence:
+    when: "Deploying to Kubernetes or managing K8s infrastructure"
+    reference: "OPEX-01: Operational Excellence Standards"
+    action: "Apply operational excellence procedures for K8s deployments"
+    conditions:
+      - "Production deployments"
+      - "Infrastructure changes"
+      - "Service scaling"
+      - "Incident response"
+  
+  performance_integration:
+    when: "Configuring K8s resources or scaling"
+    reference: "PERF-01: Performance Standards"
+    action: "Apply performance standards for K8s resource configuration"
+    conditions:
+      - "Resource limit configuration"
+      - "Auto-scaling setup"
+      - "Performance optimization"
+      - "Capacity planning"
+  
+  monitoring_integration:
+    when: "Setting up K8s monitoring or observability"
+    reference: "MONITOR-01: Monitoring & Observability Standards"
+    action: "Integrate K8s monitoring with observability standards"
+    conditions:
+      - "Metrics collection setup"
+      - "Health check configuration"
+      - "Alerting setup"
+      - "Log aggregation"
+```
+
+## CORE STANDARDS
+
+### 1. Resource Limits and Requests
+
+#### MANDATORY Resource Requirements
+- **Resource limits mandatory on all pods**
+- **Resource requests required for all containers**
+- **CPU and memory limits must be defined**
+- **Storage limits for persistent volumes**
+- **Network bandwidth limits where applicable**
+
+#### Resource Configuration Patterns
+```yaml
+# Standard resource configuration for K3S workloads
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-service
+  namespace: applications
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example-service
+  template:
+    metadata:
+      labels:
+        app: example-service
+    spec:
+      containers:
+      - name: main
+        image: example-service:latest
+        resources:
+          requests:
+            cpu: "100m"      # Minimum CPU allocation
+            memory: "128Mi"  # Minimum memory allocation
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "500m"      # Maximum CPU allocation
+            memory: "512Mi"  # Maximum memory allocation
+            ephemeral-storage: "2Gi"
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+```
+
+#### K3S-Specific Resource Optimization
+```yaml
+# K3S single-node cluster optimization
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k3s-optimized-service
+  namespace: applications
+spec:
+  replicas: 1  # Single replica for single-node K3S
+  selector:
+    matchLabels:
+      app: k3s-optimized-service
+  template:
+    metadata:
+      labels:
+        app: k3s-optimized-service
+    spec:
+      # K3S-specific node affinity
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - k3s-node-1
+      containers:
+      - name: main
+        image: k3s-optimized-service:latest
+        resources:
+          requests:
+            cpu: "50m"       # Conservative for single-node
+            memory: "64Mi"   # Conservative for single-node
+          limits:
+            cpu: "200m"      # Conservative for single-node
+            memory: "256Mi"  # Conservative for single-node
+        # K3S storage optimization
+        volumeMounts:
+        - name: local-storage
+          mountPath: /data
+          subPath: service-data
+      volumes:
+      - name: local-storage
+        hostPath:
+          path: /opt/k3s/data
+          type: DirectoryOrCreate
+```
+
+### 2. Security Contexts
+
+#### MANDATORY Security Requirements
+- **Security contexts on all deployments**
+- **Non-root user execution mandatory**
+- **Read-only root filesystem where possible**
+- **Capability restrictions**
+- **SELinux/AppArmor profiles**
+
+#### Security Context Implementation
+```yaml
+# Comprehensive security context for K3S workloads
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-service
+  namespace: applications
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: secure-service
+  template:
+    metadata:
+      labels:
+        app: secure-service
+    spec:
+      # Pod-level security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        supplementalGroups: [1001]
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+        privileged: false
+      containers:
+      - name: main
+        image: secure-service:latest
+        # Container-level security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: varlog
+          mountPath: /var/log
+          readOnly: false
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: varlog
+        emptyDir: {}
+```
+
+### 3. Health Checks
+
+#### MANDATORY Health Check Requirements
+- **Health checks required for all deployments**
+- **Liveness probes for container health**
+- **Readiness probes for service availability**
+- **Startup probes for slow-starting containers**
+- **Health check endpoints must be implemented**
+
+#### Health Check Implementation
+```yaml
+# Comprehensive health check configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-checked-service
+  namespace: applications
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: health-checked-service
+  template:
+    metadata:
+      labels:
+        app: health-checked-service
+    spec:
+      containers:
+      - name: main
+        image: health-checked-service:latest
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        # Startup probe for slow-starting applications
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        # Liveness probe for container health
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            httpHeaders:
+            - name: X-Custom-Header
+              value: health-check
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        # Readiness probe for service availability
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        # Graceful shutdown
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "sleep 10 && kill -TERM 1"
+```
+
+### 4. Network Policies
+
+#### MANDATORY Network Policy Requirements
+- **Network policies explicit for all services**
+- **Default deny policies**
+- **Service-to-service communication policies**
+- **Ingress and egress traffic control**
+- **Cilium L7 policy integration**
+
+#### Cilium Network Policy Implementation
+```yaml
+# Cilium network policy for service communication
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: service-network-policy
+  namespace: applications
+spec:
+  endpointSelector:
+    matchLabels:
+      app: example-service
+  ingress:
+  # Allow health check traffic
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s:app: kube-proxy
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/health"
+  # Allow service-to-service communication
+  - fromEndpoints:
+    - matchLabels:
+        app: frontend-service
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/*"
+        - method: "POST"
+          path: "/api/*"
+  egress:
+  # Allow DNS resolution
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s:app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # Allow metrics collection
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        k8s:app: prometheus
+    toPorts:
+    - ports:
+      - port: "9090"
+        protocol: TCP
+```
+
+#### Default Deny Network Policy
+```yaml
+# Default deny policy for all namespaces
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: applications
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  # No ingress or egress rules = deny all
+```
+
+### 5. Service Mesh Integration
+
+#### MANDATORY Service Mesh Requirements
+- **Cilium service mesh integration**
+- **mTLS for all inter-service communication**
+- **Traffic management and splitting**
+- **Observability integration with Hubble**
+
+#### Cilium Service Mesh Configuration
+```yaml
+# Cilium service mesh configuration
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: service-mesh-policy
+spec:
+  endpointSelector: {}
+  ingress:
+  - authentication:
+      mode: required
+    fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: applications
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/*"
+        - method: "POST"
+          path: "/api/*"
+        - method: "PUT"
+          path: "/api/*"
+        - method: "DELETE"
+          path: "/api/*"
+```
+
+#### Traffic Management with Cilium
+```yaml
+# Traffic splitting for blue-green deployments
+apiVersion: cilium.io/v2
+kind: CiliumTrafficPolicy
+metadata:
+  name: traffic-splitting
+  namespace: applications
+spec:
+  destination:
+    matchLabels:
+      app: example-service
+  rules:
+  - name: "traffic-splitting"
+    http:
+    - match:
+      - headers:
+        - name: "x-version"
+          value: "v2"
+      forwardTo:
+      - service:
+          name: example-service-v2
+          weight: 100
+    - match:
+      - headers:
+        - name: "x-version"
+          value: "v1"
+      forwardTo:
+      - service:
+          name: example-service-v1
+          weight: 100
+    - forwardTo:
+      - service:
+          name: example-service-v1
+          weight: 80
+      - service:
+          name: example-service-v2
+          weight: 20
+```
+
+### 6. Storage and Persistence
+
+#### MANDATORY Storage Requirements
+- **Persistent volume claims for data persistence**
+- **Storage class specifications**
+- **Backup and recovery procedures**
+- **Storage security policies**
+
+#### K3S Storage Configuration
+```yaml
+# K3S local storage configuration
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-pvc
+  namespace: applications
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path  # K3S default storage class
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-service
+  namespace: applications
+spec:
+  replicas: 1  # Single replica for storage
+  selector:
+    matchLabels:
+      app: storage-service
+  template:
+    metadata:
+      labels:
+        app: storage-service
+    spec:
+      containers:
+      - name: main
+        image: storage-service:latest
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+          subPath: service-data
+        - name: app-logs
+          mountPath: /app/logs
+          subPath: service-logs
+      volumes:
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: app-data-pvc
+      - name: app-logs
+        persistentVolumeClaim:
+          claimName: app-logs-pvc
+```
+
+## INTEGRATION REQUIREMENTS
+
+### Cross-Rule Dependencies
+```yaml
+dependencies:
+  K8S-01:
+    depends_on:
+      - INF-01: Infrastructure Standards
+      - SEC-01: Security Standards
+      - CN-02: Container Standards
+    integrates_with:
+      - MI-08: Microservices Governance
+      - CN-04: Monitoring Standards
+      - QC-14: Document Synchronization
+```
+
+### Quality Gates
+```yaml
+quality_gates:
+  kubernetes_deployment:
+    - "All pods have resource limits and requests"
+    - "Security contexts configured on all deployments"
+    - "Health checks implemented for all services"
+    - "Network policies defined for all namespaces"
+    - "Service mesh integration configured"
+    - "Storage policies implemented"
+```
+
+## IMPLEMENTATION CHECKLIST
+
+### Phase 1: Core Kubernetes Standards (Week 1-2)
+- [ ] Implement resource limits and requests on all deployments
+- [ ] Configure security contexts for all pods
+- [ ] Add health checks to all services
+- [ ] Define network policies for all namespaces
+
+### Phase 2: Service Mesh Integration (Week 3-4)
+- [ ] Configure Cilium service mesh policies
+- [ ] Implement mTLS for inter-service communication
+- [ ] Set up traffic management and splitting
+- [ ] Integrate with Hubble observability
+
+### Phase 3: Storage and Optimization (Week 5+)
+- [ ] Configure persistent storage for applications
+- [ ] Optimize resource usage for K3S single-node
+- [ ] Implement backup and recovery procedures
+- [ ] Set up storage security policies
+
+## SUCCESS METRICS
+
+### Kubernetes Quality Metrics
+```yaml
+metrics:
+  resource_compliance: "100% pods have resource limits"
+  security_compliance: "100% pods have security contexts"
+  health_check_coverage: "100% services have health checks"
+  network_policy_coverage: "100% namespaces have network policies"
+  service_mesh_coverage: "100% services integrated with Cilium"
+```
+
+### K3S Project Integration Metrics
+```yaml
+project_metrics:
+  pod_security: "Zero privileged pods"
+  resource_efficiency: "Optimal resource utilization"
+  service_availability: ">99.9% service uptime"
+  network_security: "Zero unauthorized network access"
+```
+
+## COMPLIANCE VALIDATION
+
+### Automated Compliance Checks
+```bash
+#!/bin/bash
+# scripts/k8s-compliance-check.sh
+
+echo "🔍 Running K8S-01 compliance checks..."
+
+# Check resource limits
+if ! kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.spec.containers[] | .resources.limits == null) | .metadata.name' | wc -l | grep -q "0"; then
+    echo "❌ Pods found without resource limits"
+    exit 1
+fi
+
+# Check security contexts
+if ! kubectl get pods --all-namespaces -o json | jq -r '.items[] | select(.spec.securityContext.runAsNonRoot != true) | .metadata.name' | wc -l | grep -q "0"; then
+    echo "❌ Pods found without non-root security context"
+    exit 1
+fi
+
+# Check health checks
+if ! kubectl get deployments --all-namespaces -o json | jq -r '.items[] | select(.spec.template.spec.containers[] | .livenessProbe == null) | .metadata.name' | wc -l | grep -q "0"; then
+    echo "❌ Deployments found without liveness probes"
+    exit 1
+fi
+
+# Check network policies
+if ! kubectl get networkpolicies --all-namespaces | grep -q .; then
+    echo "❌ No network policies found"
+    exit 1
+fi
+
+echo "✅ K8S-01 compliance checks passed"
+```
+
+### Manual Compliance Validation
+- [ ] All pods have resource limits and requests defined
+- [ ] Security contexts configured on all deployments
+- [ ] Health checks implemented for all services
+- [ ] Network policies defined for all namespaces
+- [ ] Service mesh integration configured
+- [ ] Storage policies implemented
+- [ ] Cilium L7 policies configured
+
+## Rule Application Signals
+
+When you encounter Kubernetes development work, reference these additional rules:
+
+### Kubernetes Implementation Signals
+- **Kubernetes Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **Kubernetes Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **Kubernetes Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **Kubernetes Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Kubernetes Quality Signals
+- **Kubernetes Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Kubernetes Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Kubernetes Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for Kubernetes monitoring patterns
+- **Operational Excellence** → Reference `.cursor/rules/operations/operational-excellence.mdc` for operational procedures
+
+### Kubernetes Issue Resolution Signals
+- **Kubernetes Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Kubernetes Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Kubernetes Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## CONCLUSION
+
+K8S-01 Kubernetes Manifest Standards establish comprehensive requirements for secure, efficient, and operational Kubernetes deployments on the K3S platform. These standards ensure all workloads follow security best practices, resource optimization, and service mesh integration patterns.
+
+**Integration Note**: This rule extends CN-02 container standards with Kubernetes-specific requirements and integrates with INF-01 infrastructure standards to provide complete K3S platform governance.
+description:
+globs:
+alwaysApply: false
+---

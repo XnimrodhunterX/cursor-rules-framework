@@ -1,0 +1,579 @@
+---
+ruleId: "GIT-01"
+title: "Git Branching Strategy & Version Control Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive Git branching strategy and version control standards based on GitFlow methodology"
+globs: ["**/.git/**", "**/.gitignore", "**/.gitattributes", "**/git/**", "**/.github/**", "**/.gitlab-ci.yml", "**/Jenkinsfile", "**/azure-pipelines.yml", "**/deploy/**", "**/release/**", "**/version/**"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "development"
+---
+
+# GIT-01: Git Branching Strategy & Version Control Standards
+
+## Purpose & Scope
+
+Comprehensive Git branching strategy and version control standards based on GitFlow methodology, adapted for modern development workflows with K3s deployment environments. This rule establishes mandatory branching patterns, deployment mappings, and version control practices for consistent project delivery.
+
+## Core Standards
+
+### 1. Branch Structure & Deployment Mapping
+
+#### MANDATORY Branch Hierarchy
+```yaml
+branch_structure:
+  main:
+    purpose: "Production-ready code"
+    deployment_target: "k3s prod namespace"
+    protection: "REQUIRED - No direct pushes"
+    merge_strategy: "Squash and merge only"
+    auto_deploy: true
+  
+  preproduction:
+    purpose: "Staging and pre-production testing"
+    deployment_target: "k3s preprod namespace"
+    protection: "REQUIRED - No direct pushes"
+    merge_strategy: "Squash and merge only"
+    auto_deploy: true
+  
+  development:
+    purpose: "Integration and local development testing"
+    deployment_target: "Local development environment"
+    protection: "RECOMMENDED - Code review required"
+    merge_strategy: "Squash and merge preferred"
+    auto_deploy: false
+  
+  feature/*:
+    purpose: "New feature development"
+    source_branch: "development"
+    target_branch: "development"
+    naming: "feature/descriptive-feature-name"
+    protection: "OPTIONAL - Self-review allowed"
+    merge_strategy: "Squash and merge"
+    auto_deploy: false
+  
+  hotfix/*:
+    purpose: "Critical production fixes"
+    source_branch: "main"
+    target_branch: ["development", "preproduction", "main"]
+    naming: "hotfix/issue-description"
+    protection: "REQUIRED - Code review mandatory"
+    merge_strategy: "Squash and merge"
+    auto_deploy: true
+  
+  release/*:
+    purpose: "Release preparation and final testing"
+    source_branch: "development"
+    target_branch: ["preproduction", "main"]
+    naming: "release/version-number"
+    protection: "REQUIRED - Code review mandatory"
+    merge_strategy: "Squash and merge"
+    auto_deploy: true
+```
+
+#### Deployment Environment Mapping
+```yaml
+deployment_mapping:
+  main:
+    environment: "production"
+    k3s_namespace: "prod"
+    auto_deploy: true
+    health_checks: required
+    monitoring: comprehensive
+    rollback_strategy: "blue-green or canary"
+  
+  preproduction:
+    environment: "staging"
+    k3s_namespace: "preprod"
+    auto_deploy: true
+    health_checks: required
+    monitoring: standard
+    rollback_strategy: "quick rollback"
+  
+  development:
+    environment: "development"
+    k3s_namespace: "dev"
+    auto_deploy: false
+    health_checks: basic
+    monitoring: basic
+    rollback_strategy: "manual"
+```
+
+### 2. Branch Protection & Security
+
+#### MANDATORY Protection Rules
+```yaml
+branch_protection:
+  main:
+    required_status_checks:
+      - "ci/cd-pipeline"
+      - "security-scan"
+      - "code-coverage"
+      - "dependency-check"
+    required_reviews: 2
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: true
+    require_linear_history: true
+    allow_force_pushes: false
+    allow_deletions: false
+    enforce_admins: true
+  
+  preproduction:
+    required_status_checks:
+      - "ci/cd-pipeline"
+      - "security-scan"
+      - "code-coverage"
+    required_reviews: 1
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: false
+    require_linear_history: true
+    allow_force_pushes: false
+    allow_deletions: false
+    enforce_admins: true
+  
+  development:
+    required_status_checks:
+      - "ci/cd-pipeline"
+      - "code-coverage"
+    required_reviews: 1
+    dismiss_stale_reviews: false
+    require_code_owner_reviews: false
+    require_linear_history: false
+    allow_force_pushes: false
+    allow_deletions: false
+    enforce_admins: false
+```
+
+### 3. Branch Naming Conventions
+
+#### MANDATORY Naming Standards
+```yaml
+branch_naming:
+  feature_branches:
+    pattern: "feature/descriptive-name"
+    examples:
+      - "feature/user-authentication"
+      - "feature/api-rate-limiting"
+      - "feature/dashboard-analytics"
+    forbidden:
+      - "feature/feature"
+      - "feature/new"
+      - "feature/update"
+      - "feature/fix"
+  
+  hotfix_branches:
+    pattern: "hotfix/issue-description"
+    examples:
+      - "hotfix/security-vulnerability-fix"
+      - "hotfix/critical-database-connection"
+      - "hotfix/authentication-bypass"
+    forbidden:
+      - "hotfix/hotfix"
+      - "hotfix/fix"
+      - "hotfix/update"
+  
+  release_branches:
+    pattern: "release/version-number"
+    examples:
+      - "release/v1.2.0"
+      - "release/v2.0.0-beta"
+      - "release/v1.1.5-patch"
+    version_format: "v{major}.{minor}.{patch}[-{prerelease}]"
+    forbidden:
+      - "release/release"
+      - "release/version"
+      - "release/v1"
+```
+
+### 4. Workflow Standards
+
+#### Feature Development Workflow
+```yaml
+feature_workflow:
+  steps:
+    1:
+      action: "Create feature branch from development"
+      command: "git checkout -b feature/feature-name development"
+      validation: "Branch name follows naming convention"
+    
+    2:
+      action: "Develop and commit frequently"
+      command: "git add . && git commit -m 'descriptive message'"
+      validation: "Commit messages follow conventional commits"
+    
+    3:
+      action: "Push and create pull request"
+      command: "git push origin feature/feature-name"
+      validation: "PR targets development branch"
+    
+    4:
+      action: "Code review and testing"
+      validation: "All CI checks pass, code review approved"
+    
+    5:
+      action: "Merge into development"
+      strategy: "Squash and merge"
+      validation: "Feature branch deleted after merge"
+```
+
+#### Hotfix Workflow
+```yaml
+hotfix_workflow:
+  steps:
+    1:
+      action: "Create hotfix branch from main"
+      command: "git checkout -b hotfix/issue-description main"
+      validation: "Branch name follows naming convention"
+    
+    2:
+      action: "Fix the critical issue"
+      command: "git add . && git commit -m 'fix: critical issue description'"
+      validation: "Commit message follows conventional commits"
+    
+    3:
+      action: "Create pull request to main"
+      command: "git push origin hotfix/issue-description"
+      validation: "PR targets main branch, requires 2 reviews"
+    
+    4:
+      action: "Merge into main"
+      strategy: "Squash and merge"
+      validation: "Hotfix deployed to production"
+    
+    5:
+      action: "Merge into development and preproduction"
+      command: "git checkout development && git merge main"
+      validation: "Hotfix propagated to all branches"
+    
+    6:
+      action: "Cleanup"
+      validation: "Hotfix branch deleted"
+```
+
+#### Release Workflow
+```yaml
+release_workflow:
+  steps:
+    1:
+      action: "Create release branch from development"
+      command: "git checkout -b release/v1.2.0 development"
+      validation: "Branch name follows versioning convention"
+    
+    2:
+      action: "Final testing and bug fixes"
+      validation: "All tests pass, no critical issues"
+    
+    3:
+      action: "Update version numbers and changelog"
+      files:
+        - "package.json"
+        - "CHANGELOG.md"
+        - "version.txt"
+      validation: "Version numbers updated consistently"
+    
+    4:
+      action: "Create pull request to preproduction"
+      validation: "PR targets preproduction, requires review"
+    
+    5:
+      action: "Deploy to staging"
+      validation: "Staging deployment successful"
+    
+    6:
+      action: "Create pull request to main"
+      validation: "PR targets main, requires 2 reviews"
+    
+    7:
+      action: "Merge into main"
+      strategy: "Squash and merge"
+      validation: "Release deployed to production"
+    
+    8:
+      action: "Merge into development"
+      validation: "Release changes propagated to development"
+    
+    9:
+      action: "Create git tag"
+      command: "git tag -a v1.2.0 -m 'Release v1.2.0'"
+      validation: "Tag created and pushed"
+    
+    10:
+      action: "Cleanup"
+      validation: "Release branch deleted"
+```
+
+### 5. Commit Message Standards
+
+#### MANDATORY Commit Convention
+```yaml
+commit_convention:
+  format: "<type>(<scope>): <description>"
+  types:
+    - "feat: new feature"
+    - "fix: bug fix"
+    - "docs: documentation changes"
+    - "style: formatting, missing semicolons, etc."
+    - "refactor: code refactoring"
+    - "test: adding or updating tests"
+    - "chore: build process or auxiliary tool changes"
+  
+  examples:
+    - "feat(auth): add OAuth2 authentication"
+    - "fix(api): resolve database connection timeout"
+    - "docs(readme): update installation instructions"
+    - "refactor(utils): simplify date formatting function"
+    - "test(auth): add unit tests for login validation"
+    - "chore(deps): update dependencies to latest versions"
+  
+  forbidden:
+    - "update"
+    - "change"
+    - "modify"
+    - "fix bug"
+    - "new feature"
+```
+
+### 6. Version Control Best Practices
+
+#### MANDATORY Practices
+```yaml
+version_control_practices:
+  commits:
+    - "Commit frequently with descriptive messages"
+    - "Use conventional commit format"
+    - "Keep commits atomic and focused"
+    - "Never commit directly to main or preproduction"
+  
+  branches:
+    - "Delete feature branches after merge"
+    - "Keep branches short-lived (max 2 weeks)"
+    - "Regularly sync with parent branches"
+    - "Use descriptive branch names"
+  
+  pull_requests:
+    - "Create PR for all changes"
+    - "Include clear description and acceptance criteria"
+    - "Link to issues or user stories"
+    - "Request appropriate reviewers"
+    - "Ensure all CI checks pass"
+  
+  code_review:
+    - "Review for functionality and security"
+    - "Check for code quality and standards"
+    - "Verify test coverage"
+    - "Ensure documentation is updated"
+```
+
+### 7. CI/CD Integration
+
+#### MANDATORY Pipeline Requirements
+```yaml
+cicd_integration:
+  required_checks:
+    - "code-quality-scan"
+    - "security-vulnerability-scan"
+    - "dependency-audit"
+    - "test-coverage"
+    - "build-verification"
+    - "deployment-test"
+  
+  branch_specific_checks:
+    main:
+      - "production-deployment-test"
+      - "performance-testing"
+      - "security-penetration-test"
+    
+    preproduction:
+      - "staging-deployment-test"
+      - "integration-testing"
+      - "load-testing"
+    
+    development:
+      - "unit-testing"
+      - "integration-testing"
+      - "code-coverage"
+  
+  deployment_strategy:
+    main:
+      strategy: "blue-green or canary"
+      rollback: "automatic on failure"
+      monitoring: "comprehensive"
+    
+    preproduction:
+      strategy: "rolling update"
+      rollback: "quick rollback"
+      monitoring: "standard"
+    
+    development:
+      strategy: "direct deployment"
+      rollback: "manual"
+      monitoring: "basic"
+```
+
+### 8. Tagging Strategy & Version Control
+
+#### MANDATORY Tagging Conventions
+```yaml
+tagging_strategy:
+  release_tags:
+    format: "v{major}.{minor}.{patch}"
+    examples: ["v1.0.0", "v1.1.0", "v1.0.1"]
+    purpose: "Production releases"
+    creation: "From main branch after successful deployment"
+  
+  date_based_tags:
+    format: "release-{YYYY-MM-DD}"
+    examples: ["release-2025-08-02", "release-2025-08-15"]
+    purpose: "Date-based releases for tracking"
+    creation: "From main branch for milestone tracking"
+  
+  hotfix_tags:
+    format: "hotfix-{YYYY-MM-DD}-{issue}"
+    examples: ["hotfix-2025-08-02-security-patch", "hotfix-2025-08-02-critical-fix"]
+    purpose: "Critical fixes and security patches"
+    creation: "From hotfix branches after verification"
+  
+  phase_tags:
+    format: "phase-{phase-number}-{YYYY-MM-DD}"
+    examples: ["phase-0-2025-08-02", "phase-1-2025-08-15"]
+    purpose: "Phase completion milestones"
+    creation: "From development branch when phase is complete"
+```
+
+#### Tag Creation Commands
+```bash
+# Release tag
+git tag -a v1.0.0 -m "Release v1.0.0: Initial K3S platform deployment"
+git push origin v1.0.0
+
+# Date-based release tag
+git tag -a release-2025-08-02 -m "Release 2025-08-02: Phase 0 completion"
+git push origin release-2025-08-02
+
+# Hotfix tag
+git tag -a hotfix-2025-08-02-security-patch -m "Hotfix: Security vulnerability patch"
+git push origin hotfix-2025-08-02-security-patch
+
+# Phase completion tag
+git tag -a phase-0-2025-08-02 -m "Phase 0: Foundation complete"
+git push origin phase-0-2025-08-02
+```
+
+#### Version Management
+```yaml
+version_management:
+  semantic_versioning:
+    major: "Breaking changes, incompatible API changes"
+    minor: "New features, backward compatible"
+    patch: "Bug fixes, backward compatible"
+  
+  version_file:
+    location: "VERSION"
+    format: "v{major}.{minor}.{patch}"
+    auto_update: "On release tag creation"
+  
+  changelog:
+    location: "CHANGELOG.md"
+    format: "Keep a Changelog"
+    required: "For all releases"
+```
+
+### 10. Quality Gates
+
+#### Definition of Done for Branching
+```yaml
+quality_gates:
+  feature_branch:
+    - "All tests passing"
+    - "Code review approved"
+    - "No merge conflicts"
+    - "Documentation updated"
+    - "Security scan passed"
+  
+  hotfix_branch:
+    - "Critical issue verified fixed"
+    - "All tests passing"
+    - "Code review approved (2 reviewers)"
+    - "Security scan passed"
+    - "Production deployment tested"
+  
+  release_branch:
+    - "All features tested"
+    - "Performance benchmarks met"
+    - "Security audit passed"
+    - "Documentation complete"
+    - "Staging deployment successful"
+    - "Production deployment ready"
+  
+  main_branch:
+    - "All quality gates passed"
+    - "Production deployment successful"
+    - "Monitoring alerts configured"
+    - "Rollback plan tested"
+    - "Release notes published"
+```
+
+### 11. Implementation Guidance
+
+#### MANDATORY Setup Steps
+```bash
+# Step 1: Configure branch protection
+# Enable branch protection for main, preproduction, development
+
+# Step 2: Set up CI/CD pipelines
+# Configure required status checks for each branch
+
+# Step 3: Create deployment environments
+# Set up k3s namespaces: prod, preprod, dev
+
+# Step 4: Configure auto-deployment
+# Set up automatic deployment for main and preproduction
+
+# Step 5: Set up monitoring
+# Configure monitoring and alerting for each environment
+```
+
+#### Branch Creation Commands
+```bash
+# Feature branch
+git checkout development
+git pull origin development
+git checkout -b feature/descriptive-feature-name
+
+# Hotfix branch
+git checkout main
+git pull origin main
+git checkout -b hotfix/issue-description
+
+# Release branch
+git checkout development
+git pull origin development
+git checkout -b release/v1.2.0
+```
+
+### 12. Validation Criteria
+
+#### Branch Compliance Requirements
+```yaml
+validation_criteria:
+  branch_naming:
+    feature_branches: "feature/descriptive-name"
+    hotfix_branches: "hotfix/issue-description"
+    release_branches: "release/version-number"
+  
+  commit_messages:
+    format: "conventional commits"
+    types: ["feat", "fix", "docs", "style", "refactor", "test", "chore"]
+  
+  branch_protection:
+    main: "fully protected"
+    preproduction: "partially protected"
+    development: "basic protection"
+  
+  deployment_mapping:
+    main: "k3s prod namespace"
+    preproduction: "k3s preprod namespace"
+    development: "local development"
+```
+

@@ -1,0 +1,150 @@
+---
+ruleId: "QC-16"
+title: "No Assumptions Rule"
+status: "active"
+compliance: "mandatory"
+description: "Prohibits making assumptions and requires asking for guidance when directions are unclear or unknown"
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "core"
+---
+
+# QC-16: No Assumptions Rule
+
+## Purpose & Scope
+
+This rule prohibits making assumptions and requires asking for guidance when directions are unclear or when the AI assistant doesn't know what to do. It ensures clarity, accuracy, and prevents errors from incorrect assumptions.
+
+## MANDATORY No-Assumptions Protocol
+
+### 1. When to Ask for Guidance
+
+#### Unclear Instructions
+- **Vague requirements** - When instructions lack specific details
+- **Ambiguous language** - When terms could have multiple meanings
+- **Missing context** - When background information is needed
+- **Unclear scope** - When boundaries or limits are not defined
+- **Conflicting information** - When different sources contradict each other
+
+#### Unknown Information
+- **Unfamiliar concepts** - When encountering new or complex topics
+- **Missing dependencies** - When required information is not available
+- **Technical uncertainties** - When unsure about technical implementation
+- **Process questions** - When workflow or procedure is unclear
+- **Resource constraints** - When limitations are not specified
+
+### 2. How to Ask for Guidance
+
+#### Clear Question Format
+```yaml
+guidance_request:
+  context: "Brief description of current situation"
+  specific_question: "What exactly needs clarification"
+  options_considered: "What alternatives were considered"
+  impact_of_assumption: "What could go wrong if I assume incorrectly"
+  suggested_approach: "Proposed way forward (if any)"
+```
+
+#### Examples of Good Guidance Requests
+- "I need clarification on the API endpoint structure. Should I use REST or GraphQL?"
+- "The requirements mention 'user authentication' but don't specify the method. Should I implement OAuth, JWT, or session-based auth?"
+- "I see conflicting information about the database schema. Which version should I use as the source of truth?"
+
+### 3. Prohibited Assumptions
+
+#### Technical Assumptions
+- **Architecture decisions** - Don't assume system design choices
+- **Technology stack** - Don't assume specific tools or frameworks
+- **Data structures** - Don't assume data formats or schemas
+- **API contracts** - Don't assume endpoint specifications
+- **Security requirements** - Don't assume security implementations
+
+#### Process Assumptions
+- **Workflow steps** - Don't assume development processes
+- **Review requirements** - Don't assume approval processes
+- **Testing procedures** - Don't assume testing approaches
+- **Deployment methods** - Don't assume deployment strategies
+- **Documentation needs** - Don't assume documentation requirements
+
+#### Business Assumptions
+- **User requirements** - Don't assume user needs or preferences
+- **Business rules** - Don't assume business logic
+- **Priority levels** - Don't assume task importance
+- **Timeline constraints** - Don't assume deadlines
+- **Resource allocation** - Don't assume resource availability
+
+## Implementation Guidelines
+
+### 1. Question Formulation
+- **Be specific** - Ask precise questions, not general ones
+- **Provide context** - Explain the situation and why clarification is needed
+- **Offer options** - Suggest possible approaches when appropriate
+- **Explain impact** - Describe what could go wrong with assumptions
+
+### 2. Response Handling
+- **Wait for clarification** - Don't proceed until guidance is received
+- **Document decisions** - Record the guidance received for future reference
+- **Ask follow-up questions** - Seek additional clarification if needed
+- **Confirm understanding** - Verify that the guidance is understood correctly
+
+### 3. Escalation Procedures
+- **When to escalate** - If guidance is not received within reasonable time
+- **How to escalate** - Clear escalation path and communication
+- **What to include** - Essential information for escalation
+- **Follow-up process** - How to track and resolve escalations
+
+## Rule Application Signals
+
+When you encounter unclear or unknown situations, reference these additional rules:
+
+### Clarification Signals
+- **Technical Clarification** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for communication standards
+- **Process Clarification** → Reference `.cursor/rules/core/project-management-standards.mdc` for project management guidance
+- **Security Clarification** → Reference `.cursor/rules/integration/security-integration.mdc` for security requirements clarification
+
+### Documentation Signals
+- **Documentation Needs** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation requirements
+- **Knowledge Management** → Reference `.cursor/rules/core/document-synchronization-cross-reference.mdc` for knowledge management
+
+### Quality Assurance Signals
+- **Quality Standards** → Reference `.cursor/rules/core/comprehensive-testing-standards.mdc` for quality requirements
+- **Code Standards** → Reference `.cursor/rules/core/engineering-excellence-standards.mdc` for code quality standards
+
+## Success Metrics
+
+### Clarity Metrics
+- **100% clarification rate** - All unclear items are clarified before proceeding
+- **0% assumption errors** - No errors caused by incorrect assumptions
+- **Clear communication** - All guidance requests are clear and actionable
+- **Timely responses** - Guidance is received within reasonable timeframes
+
+### Quality Metrics
+- **Accurate implementation** - Work matches clarified requirements
+- **Reduced rework** - Fewer corrections needed due to assumptions
+- **Better outcomes** - Higher quality results from clear guidance
+- **Stakeholder satisfaction** - Positive feedback on communication
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before proceeding with any work, verify:
+- [ ] All requirements are clear and unambiguous
+- [ ] No assumptions have been made about unclear items
+- [ ] Guidance has been requested for all unknown areas
+- [ ] All clarifications have been received and understood
+- [ ] No critical information is missing
+
+### Quality Assurance
+- [ ] All questions are specific and actionable
+- [ ] Context is provided for all guidance requests
+- [ ] Impact of assumptions is clearly explained
+- [ ] Follow-up questions are asked when needed
+- [ ] Understanding is confirmed before proceeding
+
+## Conclusion
+
+This rule ensures that work is done with complete clarity and understanding, preventing errors and rework caused by incorrect assumptions. It promotes better communication, higher quality outcomes, and more successful project delivery.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all work  
+**Purpose**: Prevent errors from assumptions and ensure clear guidance

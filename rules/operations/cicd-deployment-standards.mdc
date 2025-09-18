@@ -1,0 +1,799 @@
+---
+alwaysApply: false
+---
+# CN-04: CI/CD & Deployment Standards
+
+## Purpose & Scope
+
+Comprehensive CI/CD pipeline standards ensuring automated, secure, and reliable software delivery. This rule establishes pipeline architecture, deployment strategies, release management, and DevSecOps integration for consistent and high-quality software releases.
+
+## Core Standards
+
+### 1. Pipeline Architecture Standards
+
+#### MANDATORY CI/CD Requirements
+- **AUTOMATE:** Complete build, test, and deployment pipeline
+- **IMPLEMENT:** Multi-stage environments with progressive deployment
+- **ENFORCE:** Quality gates and security scanning at each stage
+- **ENSURE:** Rollback capability and deployment monitoring
+
+#### CI/CD Pipeline Template
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  # Use latest secure versions - update these regularly
+  NODE_VERSION: 'latest'
+  PNPM_VERSION: 'latest'
+
+jobs:
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should-deploy: ${{ steps.deploy-check.outputs.should-deploy }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint check
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Security audit
+        run: pnpm audit --audit-level moderate
+
+      - name: License check
+        run: pnpm license-checker --onlyAllow 'MIT;Apache-2.0;ISC;BSD;BSD-2-Clause;BSD-3-Clause'
+
+      - name: Generate version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${{ github.event.release.tag_name }}
+          else
+            VERSION=$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Check deployment conditions
+        id: deploy-check
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Testing jobs are implemented according to testing-standards.mdc
+  # See development/testing-standards.mdc for detailed testing implementation
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run unit tests (see testing-standards.mdc for implementation)
+        run: |
+          # Implementation follows testing-standards.mdc requirements
+          # - Minimum 90% coverage required
+          # - Conventional test structure
+          # - Coverage reporting to Codecov
+          echo "Running unit tests according to testing standards..."
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run integration tests (see testing-standards.mdc for implementation)
+        run: |
+          # Implementation follows testing-standards.mdc requirements
+          # - Test containers for external dependencies
+          # - API endpoint testing
+          # - Database integration testing
+          echo "Running integration tests according to testing standards..."
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+          outputFormat: sarif
+          outputFile: semgrep-results.sarif
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload security scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: semgrep-results.sarif
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    needs: [quality-gates, test-unit, test-integration, security-scan]
+    if: needs.quality-gates.outputs.should-deploy == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.quality-gates.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+            *.tar.gz
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment"
+          # Add your staging deployment logic here
+          # Example: kubectl apply, helm upgrade, etc.
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against staging"
+          # Add smoke test logic here
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment"
+          # Add your production deployment logic here
+
+      - name: Run post-deployment tests
+        run: |
+          echo "Running post-deployment tests"
+          # Add post-deployment test logic here
+
+      - name: Notify deployment success
+        run: |
+          echo "Production deployment successful"
+          # Add notification logic here
+```
+
+### 2. Release Management Standards
+
+#### MANDATORY Release Requirements
+- **MUST** follow semantic versioning (SemVer) for all releases
+- **MUST** maintain release notes with breaking changes, new features, and bug fixes
+- **MUST** implement feature flags for gradual feature rollouts
+- **MUST** coordinate releases across dependent services
+
+#### Release Types & Cadence
+```yaml
+# release-strategy.yaml
+release_strategy:
+  types:
+    hotfix:
+      description: "Critical bug fixes requiring immediate deployment"
+      cadence: "as_needed"
+      approval_required: "engineering_lead"
+      testing_requirements: ["smoke_tests"] # See testing-standards.mdc for implementation
+      rollback_plan: "automatic"
+      
+    patch:
+      description: "Bug fixes and minor improvements"
+      cadence: "weekly"
+      approval_required: "team_lead"
+      testing_requirements: ["unit_tests", "integration_tests", "smoke_tests"] # See testing-standards.mdc
+      rollback_plan: "automatic"
+      
+    minor:
+      description: "New features and non-breaking changes"
+      cadence: "bi_weekly"
+      approval_required: "product_manager"
+      testing_requirements: ["full_test_suite", "performance_tests", "security_scans"] # See testing-standards.mdc
+      rollback_plan: "manual_approval"
+      
+    major:
+      description: "Breaking changes and major feature releases"
+      cadence: "quarterly"
+      approval_required: "architecture_committee"
+      testing_requirements: ["full_test_suite", "performance_tests", "security_scans", "user_acceptance_tests"] # See testing-standards.mdc
+      rollback_plan: "manual_approval"
+
+  coordination:
+    dependency_check: true
+    cross_team_notification: true
+    release_train_alignment: true
+    maintenance_window_scheduling: true
+```
+
+#### Release Planning Template
+```markdown
+# Release Plan: [Service Name] v[Version]
+
+## 📋 Release Information
+- **Release Type**: [Major/Minor/Patch/Hotfix]
+- **Target Date**: [YYYY-MM-DD]
+- **Release Manager**: [@username]
+- **Engineering Lead**: [@username]
+
+## 🎯 Release Goals
+- [ ] Goal 1: Description
+- [ ] Goal 2: Description
+- [ ] Goal 3: Description
+
+## 🚀 Features & Changes
+### New Features
+- [ ] Feature 1: Description (Issue #123)
+- [ ] Feature 2: Description (Issue #456)
+
+### Bug Fixes
+- [ ] Fix 1: Description (Issue #789)
+- [ ] Fix 2: Description (Issue #101)
+
+### Breaking Changes
+- [ ] Breaking Change 1: Description and migration guide
+- [ ] Breaking Change 2: Description and migration guide
+
+## 🔗 Dependencies
+### Upstream Dependencies
+- [ ] Service A v1.2.0 (required)
+- [ ] Service B v2.1.0 (recommended)
+
+### Downstream Impact
+- [ ] Service C (requires update)
+- [ ] Service D (compatibility check needed)
+
+## 🧪 Testing Plan
+- [ ] Unit tests (>90% coverage) - See testing-standards.mdc for requirements
+- [ ] Integration tests - See testing-standards.mdc for implementation
+- [ ] Performance tests - See testing-standards.mdc for standards
+- [ ] Security scans - See security-standards.mdc for requirements
+- [ ] Load testing - See testing-standards.mdc for performance testing
+- [ ] User acceptance testing - See testing-standards.mdc for E2E testing
+
+## 📊 Feature Flags
+- [ ] `new_payment_flow` - Gradual rollout (0% → 5% → 25% → 100%)
+- [ ] `enhanced_search` - A/B testing (50/50 split)
+- [ ] `legacy_api_deprecation` - Sunset timeline (6 months)
+
+## 🚨 Rollback Plan
+- **Automated Rollback Triggers**: Error rate >2%, P99 latency >3s
+- **Manual Rollback**: Available within 2 minutes
+- **Data Migration Rollback**: [Describe if applicable]
+
+## 📅 Timeline
+- **Code Freeze**: [Date]
+- **QA Testing**: [Date Range]
+- **Staging Deployment**: [Date]
+- **Production Deployment**: [Date]
+- **Go-Live**: [Date]
+
+## 🔔 Communication Plan
+- [ ] Engineering team notification (1 week prior)
+- [ ] Stakeholder notification (3 days prior)
+- [ ] Customer communication (if user-facing changes)
+- [ ] Post-release summary
+
+## ✅ Release Checklist
+- [ ] All tests passing
+- [ ] Security scans completed
+- [ ] Documentation updated
+- [ ] Release notes prepared
+- [ ] Rollback plan tested
+- [ ] Feature flags configured
+- [ ] Monitoring dashboards updated
+```
+
+### 3. Semantic Versioning Standards
+
+#### Version Number Format
+- **MUST** use format: `MAJOR.MINOR.PATCH` (e.g., `2.1.3`)
+- **MUST** increment MAJOR for breaking changes
+- **MUST** increment MINOR for new features (backward compatible)
+- **MUST** increment PATCH for bug fixes (backward compatible)
+
+#### Automated Version Management
+```typescript
+// scripts/version-manager.ts
+export class VersionManager {
+  private readonly packageJsonPath: string;
+  private readonly changelogPath: string;
+  
+  constructor(projectRoot: string) {
+    this.packageJsonPath = path.join(projectRoot, 'package.json');
+    this.changelogPath = path.join(projectRoot, 'CHANGELOG.md');
+  }
+
+  async determineNextVersion(currentVersion: string, changes: ChangeSet): Promise<string> {
+    const current = semver.parse(currentVersion);
+    if (!current) {
+      throw new Error(`Invalid current version: ${currentVersion}`);
+    }
+
+    // Determine version bump based on changes
+    if (changes.hasBreakingChanges()) {
+      return semver.inc(currentVersion, 'major')!;
+    } else if (changes.hasNewFeatures()) {
+      return semver.inc(currentVersion, 'minor')!;
+    } else if (changes.hasBugFixes()) {
+      return semver.inc(currentVersion, 'patch')!;
+    } else {
+      throw new Error('No changes detected that warrant a version bump');
+    }
+  }
+
+  async analyzeCommitsSinceLastRelease(): Promise<ChangeSet> {
+    const lastTag = await this.getLastReleaseTag();
+    const commits = await this.getCommitsSince(lastTag);
+    
+    const changes = new ChangeSet();
+    
+    for (const commit of commits) {
+      if (this.isBreakingChange(commit)) {
+        changes.addBreakingChange(commit);
+      } else if (this.isFeature(commit)) {
+        changes.addFeature(commit);
+      } else if (this.isBugFix(commit)) {
+        changes.addBugFix(commit);
+      }
+    }
+    
+    return changes;
+  }
+
+  private isBreakingChange(commit: Commit): boolean {
+    return commit.message.includes('BREAKING CHANGE') || 
+           commit.message.includes('!feat') ||
+           commit.message.includes('!fix');
+  }
+
+  private isFeature(commit: Commit): boolean {
+    return commit.message.startsWith('feat:') ||
+           commit.message.startsWith('feat(');
+  }
+
+  private isBugFix(commit: Commit): boolean {
+    return commit.message.startsWith('fix:') ||
+           commit.message.startsWith('fix(');
+  }
+}
+```
+
+### 4. Deployment Strategies
+
+#### Blue-Green Deployment
+```yaml
+# deployment-strategies/blue-green.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: myapp-rollout
+spec:
+  replicas: 5
+  strategy:
+    blueGreen:
+      activeService: myapp-active
+      previewService: myapp-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: myapp-preview
+      postPromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: myapp-active
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        ports:
+        - containerPort: 8080
+```
+
+#### Canary Deployment
+```yaml
+# deployment-strategies/canary.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: myapp-canary
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+      - setWeight: 10
+      - pause: {duration: 1m}
+      - setWeight: 20
+      - pause: {duration: 1m}
+      - setWeight: 50
+      - pause: {duration: 1m}
+      - setWeight: 100
+      analysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: myapp-canary
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        ports:
+        - containerPort: 8080
+```
+
+### 5. Feature Flag Management
+
+#### Feature Flag Implementation
+```typescript
+// services/feature-flags.ts
+export interface FeatureFlag {
+  name: string;
+  enabled: boolean;
+  rolloutPercentage: number;
+  targetAudience?: string[];
+  dependencies?: string[];
+  metadata: {
+    description: string;
+    owner: string;
+    created: Date;
+    expires?: Date;
+  };
+}
+
+export class FeatureFlagService {
+  private flags: Map<string, FeatureFlag> = new Map();
+  private userContext: UserContext;
+
+  constructor(userContext: UserContext) {
+    this.userContext = userContext;
+  }
+
+  isEnabled(flagName: string): boolean {
+    const flag = this.flags.get(flagName);
+    if (!flag) {
+      return false;
+    }
+
+    if (!flag.enabled) {
+      return false;
+    }
+
+    // Check rollout percentage
+    if (flag.rolloutPercentage < 100) {
+      const userHash = this.hashUser(this.userContext.userId);
+      const percentage = (userHash % 100) + 1;
+      return percentage <= flag.rolloutPercentage;
+    }
+
+    return true;
+  }
+
+  async getFlagValue<T>(flagName: string, defaultValue: T): Promise<T> {
+    if (!this.isEnabled(flagName)) {
+      return defaultValue;
+    }
+
+    // Fetch flag value from configuration service
+    const flagValue = await this.fetchFlagValue(flagName);
+    return flagValue || defaultValue;
+  }
+
+  private hashUser(userId: string): number {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      const char = userId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }
+}
+```
+
+### 6. DevSecOps Integration
+
+#### Security Scanning Pipeline
+```yaml
+# .github/workflows/security-scan.yml
+name: Security Scanning
+on: [push, pull_request]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run SAST scan
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript, python
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+    
+    - name: Run dependency scan
+      run: |
+        npm audit --audit-level moderate
+        pip-audit --format json --output pip-audit-results.json
+    
+    - name: Run container scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'myapp:latest'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload security results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: trivy-results.sarif
+```
+
+#### Infrastructure as Code Security
+```yaml
+# .github/workflows/iac-security.yml
+name: Infrastructure Security
+on: [push, pull_request]
+
+jobs:
+  iac-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Checkov
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: terraform/
+        framework: terraform
+        output_format: sarif
+        output_file_path: checkov-results.sarif
+    
+    - name: Run Trivy config scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        scan-ref: 'terraform/'
+        format: 'sarif'
+        output: 'trivy-config-results.sarif'
+    
+    - name: Upload IAC security results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: checkov-results.sarif
+```
+
+### 7. Monitoring and Observability
+
+#### Deployment Monitoring
+```yaml
+# monitoring/deployment-monitoring.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: deployment-monitor
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: deployment-alerts
+spec:
+  groups:
+  - name: deployment.rules
+    rules:
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is {{ $value }} errors per second"
+    
+    - alert: HighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency detected"
+        description: "95th percentile latency is {{ $value }} seconds"
+```
+
+### 8. Rollback Strategies
+
+#### Automated Rollback Triggers
+```yaml
+# rollback/automated-rollback.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: myapp-rollout
+spec:
+  replicas: 5
+  strategy:
+    blueGreen:
+      activeService: myapp-active
+      previewService: myapp-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: myapp-preview
+        - name: failure-threshold
+          value: "0.1"
+        - name: minimum-success-rate
+          value: "0.9"
+      postPromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: myapp-active
+        - name: failure-threshold
+          value: "0.05"
+        - name: minimum-success-rate
+          value: "0.95"
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        ports:
+        - containerPort: 8080
+```
+
+### 9. Quality Gates
+
+#### Definition of Done for CI/CD
+- [ ] **Code Quality**: Linting, type checking, and code coverage >90% (see testing-standards.mdc)
+- [ ] **Security**: All security scans passing with no high/critical vulnerabilities (see security-standards.mdc)
+- [ ] **Testing**: Unit, integration, and end-to-end tests passing (see testing-standards.mdc)
+- [ ] **Performance**: Performance tests meeting SLA requirements (see testing-standards.mdc)
+- [ ] **Documentation**: Release notes and documentation updated (see documentation-standards.mdc)
+- [ ] **Deployment**: Successful deployment to staging and production
+- [ ] **Monitoring**: Monitoring and alerting configured (see monitoring-observability-standards.mdc)
+- [ ] **Rollback**: Rollback plan tested and ready
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all CI/CD and deployment processes  
+**Purpose**: Ensure automated, secure, and reliable software delivery
+description: "CI/CD and deployment standards covering automation, security, and operational excellence"
+globs: ["**/.github/**", "**/ci/**", "**/cd/**", "**/.gitlab-ci.yml", "**/Jenkinsfile", "**/azure-pipelines.yml", "**/deploy/**", "**/infrastructure/**"]
+alwaysApply: false
+---

@@ -1,0 +1,268 @@
+---
+ruleId: "QC-15"
+title: "Systematic Debugging Methodology"
+status: "active"
+compliance: "mandatory"
+description: "Prevent circular debugging through systematic analysis, pattern recognition, and root cause focus"
+globs: ["**/*.py", "**/commands/**", "**/services/**", "**/models/**", "**/tests/**"]
+alwaysApply: true
+lastUpdated: "2025-01-15"
+category: "development"
+---
+
+# QC-15: Systematic Debugging Methodology
+
+## Purpose & Scope
+
+Prevent circular debugging and ensure systematic problem-solving through pattern recognition, root cause analysis, and mandatory pre-flight checklists. This rule enforces the systematic debugging methodology learned from cursor development experience to avoid repeated mistakes and ensure efficient problem resolution.
+
+## Core Principles
+
+### 1. Root Cause Over Symptoms
+- **NEVER apply quick fixes** without understanding the fundamental issue
+- **ALWAYS trace the complete data flow** from input to error point
+- **IDENTIFY the root cause** before proposing any solution
+- **DESIGN minimal fixes** that address the fundamental problem
+
+### 2. Pattern Recognition First
+- **CHECK for similar patterns** from previous debugging sessions
+- **RECOGNIZE anti-patterns** immediately to avoid common mistakes
+- **APPLY lessons learned** from documented debugging experiences
+- **AVOID repeating identical mistakes** across different tasks
+
+### 3. Systematic Analysis Mandatory
+- **READ complete context** before making any changes
+- **UNDERSTAND the full system** architecture and data flow
+- **TRACE the exact error path** from creation to failure point
+- **ANALYZE type/class mismatches** systematically
+
+## Mandatory Pre-Flight Checklist
+
+Before making ANY code changes, you MUST complete this checklist:
+
+```markdown
+□ Have I seen this exact error pattern before? (Check lessons learned)
+□ Am I about to change field names or add complexity?
+□ Is this a type mismatch that can be fixed with a validator?
+□ Am I applying the minimal fix or over-engineering?
+□ Have I traced the complete data flow?
+□ Will my fix break existing data compatibility?
+□ Have I read ALL related files completely?
+□ Do I understand the root cause, not just the symptoms?
+□ Am I following established patterns in the codebase?
+□ Have I considered the impact on other parts of the system?
+```
+
+## Systematic Debugging Process
+
+### PHASE 1: COMPREHENSIVE ANALYSIS (MANDATORY)
+
+Before writing ANY code:
+
+1. **Full Codebase Context Reading**
+   - Read ALL related model files completely
+   - Read ALL service files that will be modified
+   - Read existing CLI command patterns
+   - Understand the complete data flow architecture
+
+2. **Pattern Recognition**
+   - Identify existing implementation patterns
+   - Check for consistency across similar features
+   - Note any deviations or potential issues
+   - Understand the established conventions
+
+3. **Dependency Mapping**
+   - Map all imports and dependencies
+   - Understand how models interact with services
+   - Trace data flow from CLI → Service → Model → Storage
+   - Identify potential integration points and conflicts
+
+### PHASE 2: ROOT CAUSE FOCUSED PROBLEM SOLVING
+
+When encountering ANY error:
+
+1. **DO NOT APPLY QUICK FIXES**
+2. Read the complete error stack trace
+3. Identify the exact line and file where error occurs
+4. Trace backwards to understand what data/object is being passed
+5. Compare expected vs actual types/classes
+6. Find the ROOT CAUSE of the type/class mismatch
+7. Design a fix that addresses the fundamental issue
+8. Verify the fix doesn't create cascade problems
+
+### PHASE 3: SYSTEMATIC IMPLEMENTATION
+- Follow established patterns exactly
+- Test each component in isolation
+- Test complete integration flow
+- Verify no existing functionality is broken
+
+## Anti-Patterns to Immediately Recognize
+
+### 1. Click DateTime Defaults
+```python
+# RED FLAG - This WILL cause type errors:
+default=datetime.now().date()  # Returns date object
+type=click.DateTime()          # Expects datetime
+
+# CORRECT pattern:
+default=datetime.now().strftime('%Y-%m-%d')  # Returns string
+```
+
+### 2. Field Name Changes
+```python
+# RED FLAG - Never change field names without strong justification:
+date: datetime = Field(...)  # Existing field
+work_date: date = Field(...) # New field name - DANGEROUS
+
+# CORRECT: Fix the validator, keep the field name
+```
+
+### 3. Enum Inheritance Anti-Patterns
+```python
+# RED FLAG - This causes Pydantic serialization issues:
+class Status(str, Enum):  # str + Enum inheritance
+    VALUE = "value"
+
+# CORRECT pattern:
+class Status(Enum):  # Simple Enum inheritance only
+    VALUE = "value"
+
+# With proper Pydantic configuration:
+model_config = ConfigDict(use_enum_values=False)
+```
+
+### 4. Assumption-Based Fixes
+```python
+# RED FLAG - Guessing at service layer fixes:
+# "Maybe the service needs different date handling..."
+
+# CORRECT: Trace the exact error location first
+```
+
+## Required Error Analysis Template
+
+When encountering ANY error, you MUST follow this template:
+
+```
+1. EXACT ERROR MESSAGE: [Copy complete error text]
+2. ERROR LOCATION: [File:line where error occurs] 
+3. DATA FLOW TRACE: [What data flows from where to where]
+4. TYPE ANALYSIS: [Expected type vs actual type]
+5. SIMILAR PATTERN CHECK: [Have we seen this pattern before?]
+6. MINIMAL FIX DESIGN: [Smallest change to fix root cause]
+7. IMPACT ANALYSIS: [What else might this change affect?]
+```
+
+## Cognitive Biases to Avoid
+
+### Bias 1: "Solution Complexity = Problem Complexity"
+- **Wrong Thinking**: "Complex error = needs complex fix"
+- **Reality**: Most errors have simple root causes requiring minimal fixes
+
+### Bias 2: "Field Names Must Be Perfect"  
+- **Wrong Thinking**: "Better field names will solve the issue"
+- **Reality**: Changing field names creates migration complexity
+
+### Bias 3: "Service Layer Must Be Wrong"
+- **Wrong Thinking**: "Error in CLI = fix the service"
+- **Reality**: CLI type handling is often the actual issue
+
+## Engineering Standards Violations to Avoid
+
+### Violation 1: Not Reading Lessons Learned
+- **Problem**: Having access to documented patterns but not applying them
+- **Fix Required**: MANDATORY reading of lessons learned before any debugging
+
+### Violation 2: Ignoring Minimal Change Principle
+- **Problem**: Making multiple unnecessary changes instead of targeted fixes
+- **Fix Required**: Explicit justification required for any field/structure changes
+
+### Violation 3: Pattern Blindness
+- **Problem**: Not recognizing identical patterns across tasks
+- **Fix Required**: Pattern matching must be first debugging step
+
+## Banned Approaches
+
+- Changing field names without data migration strategy
+- Applying fixes without understanding root cause  
+- Making assumptions about error locations
+- Adding complexity when simple fixes exist
+- Quick fixes without systematic analysis
+- Over-engineering solutions to simple problems
+
+## Required Evidence
+
+For every debugging session, you must provide:
+- Complete error stack trace analysis
+- Data flow documentation
+- Pattern matching with previous issues
+- Justification for chosen approach over alternatives
+- Impact analysis of proposed changes
+
+## Success Metrics
+
+You will be considered successful when you:
+- Recognize patterns from previous tasks immediately
+- Apply minimal fixes that address root causes
+- Avoid unnecessary complexity and structural changes
+- Follow the documented systematic methodology consistently
+- Document your reasoning process clearly
+
+## Key Technical Patterns to Reinforce
+
+### 1. Pydantic Enum Best Practices
+```python
+# CORRECT pattern for PM Tool
+class Status(Enum):  # Simple Enum inheritance only
+    VALUE = "value"
+
+# With proper model config
+model_config = ConfigDict(use_enum_values=False)
+```
+
+### 2. Mixin Integration Pattern
+```python
+# CORRECT model configuration for mixins
+class MyModel(BaseModel, TimestampMixin, IdentifiableMixin):
+    model_config = ConfigDict(extra='allow')  # Allow mixin fields
+```
+
+### 3. Service Layer Pattern
+```python
+# CORRECT: Let models handle their own serialization
+data = model.model_dump_yaml()  # Don't manually convert enums
+```
+
+### 4. Type-Safe Date Handling
+```python
+# Use separate fields for dates vs timestamps
+work_date: date = Field(..., description="Date work performed")
+created_at: datetime = Field(default_factory=lambda: datetime.now(ZoneInfo("UTC")))
+
+@field_validator('work_date', mode='before')
+@classmethod
+def parse_work_date(cls, v) -> date:
+    if isinstance(v, date):
+        return v
+    if isinstance(v, datetime):
+        return v.date()
+    if isinstance(v, str):
+        return datetime.fromisoformat(v.split('T')[0]).date()
+    raise TypeError(f"Cannot convert {type(v)} to date")
+```
+
+## Critical Success Factors
+
+- **Context over speed**: Take time to understand the full system
+- **Root cause analysis over quick fixes**: Address fundamental issues
+- **Systematic methodology over ad-hoc solutions**: Follow the process
+- **Complete testing over partial validation**: Verify end-to-end functionality
+- **Pattern recognition over assumption**: Learn from previous experiences
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all debugging and problem-solving work  
+**Purpose**: Prevent circular debugging and ensure systematic, efficient problem resolution
+
+**The goal is not just working code, but LEARNING from previous mistakes and applying systematic engineering practices consistently.**

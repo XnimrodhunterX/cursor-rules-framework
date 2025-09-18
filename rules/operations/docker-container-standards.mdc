@@ -1,0 +1,367 @@
+---
+alwaysApply: false
+---
+# External Secrets Operator
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: security-api-external-secrets
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: security-api-secrets
+    type: Opaque
+  data:
+  - secretKey: database-url
+    remoteRef:
+      key: security-api/database-url
+  - secretKey: api-key
+    remoteRef:
+      key: security-api/api-key
+```
+
+### 7. Monitoring and Observability
+
+#### MANDATORY Monitoring Requirements
+- **Health checks** for container status
+- **Metrics collection** for performance monitoring
+- **Log aggregation** with structured logging
+- **Distributed tracing** for request flows
+- **Alerting** for container failures
+
+#### Health Check Implementation
+```dockerfile
+# Health check with proper timeout and retry logic
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+```
+
+```yaml
+# Kubernetes health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+### 8. Performance Optimization
+
+#### MANDATORY Performance Requirements
+- **Resource limits** to prevent resource exhaustion
+- **Horizontal scaling** configuration
+- **Load balancing** strategies
+- **Caching** for frequently accessed data
+- **Database connection pooling**
+
+#### Resource Management
+```yaml
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+```
+
+#### Horizontal Pod Autoscaling
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: security-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: security-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+### 9. CI/CD Integration
+
+#### MANDATORY CI/CD Requirements
+- **Automated builds** with security scanning
+- **Image signing** in build pipeline
+- **Multi-environment** deployment support
+- **Rollback procedures** for failed deployments
+- **Compliance scanning** for regulatory requirements
+
+#### CI/CD Pipeline Example
+```yaml
+# .github/workflows/container-build.yml
+name: Container Build and Deploy
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and scan
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        tags: myapp:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'myapp:latest'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: trivy-results.sarif
+```
+
+### 10. K3S-Specific Container Requirements
+
+#### MANDATORY K3S Container Requirements
+- **Containerd compatibility mandatory**
+- **Conservative resource limits for single-node**
+- **Efficient storage usage**
+- **Cilium CNI integration**
+
+#### K3S Container Optimization
+```dockerfile
+# K3S-optimized Dockerfile
+FROM python:3.11-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for K3S security
+RUN useradd --create-home --shell /bin/bash --uid 1001 appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
+
+# Health check for K3S
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Start application
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+#### K3S Resource Configuration
+```yaml
+# K3S container resource configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k3s-container
+  namespace: applications
+spec:
+  replicas: 1  # Single replica for single-node K3S
+  selector:
+    matchLabels:
+      app: k3s-container
+  template:
+    metadata:
+      labels:
+        app: k3s-container
+    spec:
+      containers:
+      - name: main
+        image: k3s-container:latest
+        # Conservative resource limits for single-node K3S
+        resources:
+          requests:
+            cpu: "50m"       # Conservative CPU request
+            memory: "64Mi"   # Conservative memory request
+            ephemeral-storage: "100Mi"
+          limits:
+            cpu: "200m"      # Conservative CPU limit
+            memory: "256Mi"  # Conservative memory limit
+            ephemeral-storage: "500Mi"
+
+        # K3S storage optimization
+        volumeMounts:
+        - name: app-data
+          mountPath: /app/data
+          subPath: service-data
+        - name: app-logs
+          mountPath: /app/logs
+          subPath: service-logs
+
+        # Health checks for K3S
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+      volumes:
+      - name: app-data
+        hostPath:
+          path: /opt/k3s/data
+          type: DirectoryOrCreate
+      - name: app-logs
+        hostPath:
+          path: /opt/k3s/logs
+          type: DirectoryOrCreate
+```
+
+### 11. Cilium Network Integration
+
+#### MANDATORY Cilium Network Requirements
+- **CNI compatibility with Cilium**
+- **Container network policy requirements**
+- **Service mesh integration patterns**
+
+#### Cilium Network Configuration
+```yaml
+# Cilium network policy for containers
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: container-network-policy
+  namespace: applications
+spec:
+  endpointSelector:
+    matchLabels:
+      app: k3s-container
+  ingress:
+  # Allow health check traffic
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s:app: kube-proxy
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/health"
+  # Allow service-to-service communication
+  - fromEndpoints:
+    - matchLabels:
+        app: frontend-service
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/*"
+        - method: "POST"
+          path: "/api/*"
+  egress:
+  # Allow DNS resolution
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s:app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # Allow metrics collection
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+        k8s:app: prometheus
+    toPorts:
+    - ports:
+      - port: "9090"
+        protocol: TCP
+```
+
+### 12. Quality Gates
+
+#### Definition of Done for Containers
+- [ ] **Security Scanning**: No high/critical vulnerabilities
+- [ ] **Resource Limits**: CPU and memory limits configured
+- [ ] **Health Checks**: Liveness and readiness probes implemented
+- [ ] **Non-Root User**: Container runs as non-root user
+- [ ] **Image Signing**: Container image signed and verified
+- [ ] **Monitoring**: Metrics and logging configured
+- [ ] **Documentation**: Container usage documented
+- [ ] **K3S Optimization**: Single-node resource optimization
+- [ ] **Cilium Integration**: Network policies configured
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all containerized applications
+**Purpose**: Ensure secure, scalable, and maintainable container deployments
+description: "Docker and container standards covering security, performance, and operational excellence"
+globs: ["**/Dockerfile*", "**/docker-compose*", "**/containers/**", "**/kubernetes/**", "**/*.yaml", "**/*.yml"]
+alwaysApply: false
+---

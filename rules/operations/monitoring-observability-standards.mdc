@@ -1,0 +1,788 @@
+---
+ruleId: "MONITOR-01"
+title: "Monitoring & Observability Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive monitoring and observability framework covering metrics collection, structured logging, distributed tracing, security monitoring, and alerting"
+globs: ["**/monitoring/**", "**/observability/**", "**/metrics/**", "**/logging/**", "**/tracing/**", "**/prometheus/**", "**/grafana/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "operations"
+---
+
+# MONITOR-01: Monitoring & Observability Standards
+
+## Rule Triggers
+
+### When to Apply Operational Excellence Considerations
+```yaml
+triggers:
+  operational_excellence:
+    when: "Monitoring alerts triggered or incident response needed"
+    reference: "OPEX-01: Operational Excellence Standards"
+    action: "Apply operational excellence procedures for incident response"
+    conditions:
+      - "Critical alerts triggered"
+      - "Service degradation detected"
+      - "Incident response required"
+      - "Post-mortem analysis needed"
+  
+  performance_integration:
+    when: "Setting up performance monitoring or metrics"
+    reference: "PERF-01: Performance Standards"
+    action: "Integrate performance monitoring with observability standards"
+    conditions:
+      - "Performance metrics collection"
+      - "SLA monitoring setup"
+      - "Performance alerting"
+      - "Capacity monitoring"
+```
+
+## Purpose & Scope
+
+Comprehensive monitoring and observability framework covering metrics collection, structured logging, distributed tracing, security monitoring, and alerting. This rule establishes unified standards for complete system observability, SRE practices, log aggregation, security event monitoring, and incident response to ensure production reliability and security visibility.
+
+## Core Standards
+
+### 1. Metrics Collection & Instrumentation Framework
+
+#### MANDATORY Monitoring Requirements
+- **RED Methodology**: Rate, Errors, Duration for request-driven services
+- **USE Methodology**: Utilization, Saturation, Errors for resource monitoring
+- **SLI/SLO Framework**: Service Level Indicators and Objectives with error budgets
+- **Distributed Tracing**: End-to-end request flow visibility
+
+#### Comprehensive Metrics Collection
+```typescript
+// services/monitoring/metrics-collector.ts
+import prometheus from 'prom-client';
+import { Request, Response, NextFunction } from 'express';
+
+export interface MetricsConfig {
+  serviceName: string;
+  version: string;
+  environment: string;
+  instanceId?: string;
+  customLabels?: Record<string, string>;
+}
+
+export class ComprehensiveMetricsCollector {
+  private static instance: ComprehensiveMetricsCollector;
+  private registry: prometheus.Registry;
+  private config: MetricsConfig;
+  
+  // RED Metrics (Rate, Errors, Duration)
+  private httpRequestsTotal: prometheus.Counter;
+  private httpRequestDuration: prometheus.Histogram;
+  private httpRequestsErrors: prometheus.Counter;
+  
+  // USE Metrics (Utilization, Saturation, Errors)
+  private cpuUtilization: prometheus.Gauge;
+  private memoryUtilization: prometheus.Gauge;
+  private diskUtilization: prometheus.Gauge;
+  private networkConnections: prometheus.Gauge;
+  private queueDepth: prometheus.Gauge;
+  
+  // Business & Application Metrics
+  private businessMetrics: Map<string, prometheus.Counter | prometheus.Gauge | prometheus.Histogram>;
+  private customMetrics: Map<string, any>;
+  
+  // Security Metrics
+  private securityEvents: prometheus.Counter;
+  private authenticationAttempts: prometheus.Counter;
+  private authorizationFailures: prometheus.Counter;
+
+  constructor(config: MetricsConfig) {
+    this.config = config;
+    this.registry = new prometheus.Registry();
+    this.businessMetrics = new Map();
+    this.customMetrics = new Map();
+    this.setupDefaultMetrics();
+    this.setupApplicationMetrics();
+    this.setupSecurityMetrics();
+  }
+
+  static getInstance(config?: MetricsConfig): ComprehensiveMetricsCollector {
+    if (!ComprehensiveMetricsCollector.instance) {
+      if (!config) {
+        throw new Error('MetricsConfig required for first initialization');
+      }
+      ComprehensiveMetricsCollector.instance = new ComprehensiveMetricsCollector(config);
+    }
+    return ComprehensiveMetricsCollector.instance;
+  }
+
+  private setupDefaultMetrics(): void {
+    // Default Node.js metrics with custom labels
+    prometheus.collectDefaultMetrics({ 
+      register: this.registry,
+      labels: {
+        service: this.config.serviceName,
+        version: this.config.version,
+        environment: this.config.environment,
+        ...this.config.customLabels
+      }
+    });
+  }
+
+  private setupApplicationMetrics(): void {
+    const defaultLabels = {
+      service: this.config.serviceName,
+      version: this.config.version,
+      environment: this.config.environment
+    };
+
+    // HTTP Request metrics (RED)
+    this.httpRequestsTotal = new prometheus.Counter({
+      name: 'http_requests_total',
+      help: 'Total number of HTTP requests',
+      labelNames: ['method', 'route', 'status_code', 'service', 'version', 'environment'],
+      registers: [this.registry]
+    });
+
+    this.httpRequestDuration = new prometheus.Histogram({
+      name: 'http_request_duration_seconds',
+      help: 'Duration of HTTP requests in seconds',
+      labelNames: ['method', 'route', 'status_code', 'service', 'version', 'environment'],
+      buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30],
+      registers: [this.registry]
+    });
+
+    this.httpRequestsErrors = new prometheus.Counter({
+      name: 'http_requests_errors_total',
+      help: 'Total number of HTTP request errors',
+      labelNames: ['method', 'route', 'error_type', 'error_code', 'service', 'version', 'environment'],
+      registers: [this.registry]
+    });
+
+    // System metrics (USE)
+    this.cpuUtilization = new prometheus.Gauge({
+      name: 'system_cpu_utilization_percent',
+      help: 'CPU utilization percentage',
+      labelNames: ['service', 'version', 'environment', 'instance'],
+      registers: [this.registry]
+    });
+
+    this.memoryUtilization = new prometheus.Gauge({
+      name: 'system_memory_utilization_percent',
+      help: 'Memory utilization percentage',
+      labelNames: ['service', 'version', 'environment', 'instance'],
+      registers: [this.registry]
+    });
+
+    this.diskUtilization = new prometheus.Gauge({
+      name: 'system_disk_utilization_percent',
+      help: 'Disk utilization percentage',
+      labelNames: ['service', 'version', 'environment', 'instance', 'mount_point'],
+      registers: [this.registry]
+    });
+
+    this.networkConnections = new prometheus.Gauge({
+      name: 'network_connections_active',
+      help: 'Number of active network connections',
+      labelNames: ['service', 'version', 'environment', 'instance', 'connection_type'],
+      registers: [this.registry]
+    });
+
+    this.queueDepth = new prometheus.Gauge({
+      name: 'queue_depth_current',
+      help: 'Current queue depth',
+      labelNames: ['service', 'version', 'environment', 'queue_name', 'queue_type'],
+      registers: [this.registry]
+    });
+  }
+
+  private setupSecurityMetrics(): void {
+    this.securityEvents = new prometheus.Counter({
+      name: 'security_events_total',
+      help: 'Total number of security events',
+      labelNames: ['event_type', 'severity', 'source', 'service', 'version', 'environment'],
+      registers: [this.registry]
+    });
+
+    this.authenticationAttempts = new prometheus.Counter({
+      name: 'authentication_attempts_total',
+      help: 'Total number of authentication attempts',
+      labelNames: ['outcome', 'method', 'source_ip', 'user_agent', 'service', 'version', 'environment'],
+      registers: [this.registry]
+    });
+
+    this.authorizationFailures = new prometheus.Counter({
+      name: 'authorization_failures_total',
+      help: 'Total number of authorization failures',
+      labelNames: ['resource', 'action', 'user_id', 'reason', 'service', 'version', 'environment'],
+      registers: [this.registry]
+    });
+  }
+
+  // HTTP Metrics Recording
+  recordHttpRequest(method: string, route: string, statusCode: number, duration: number, errorDetails?: any): void {
+    const baseLabels = {
+      method,
+      route,
+      status_code: statusCode.toString(),
+      service: this.config.serviceName,
+      version: this.config.version,
+      environment: this.config.environment
+    };
+    
+    this.httpRequestsTotal.inc(baseLabels);
+    this.httpRequestDuration.observe(baseLabels, duration / 1000); // Convert to seconds
+    
+    if (statusCode >= 400) {
+      this.httpRequestsErrors.inc({
+        ...baseLabels,
+        error_type: this.getErrorType(statusCode),
+        error_code: statusCode.toString()
+      });
+    }
+  }
+
+  // Business Metrics Recording
+  recordBusinessMetric(name: string, value: number, labels: Record<string, string> = {}): void {
+    const metric = this.businessMetrics.get(name);
+    if (metric) {
+      if (metric instanceof prometheus.Counter) {
+        metric.inc(labels, value);
+      } else if (metric instanceof prometheus.Gauge) {
+        metric.set(labels, value);
+      } else if (metric instanceof prometheus.Histogram) {
+        metric.observe(labels, value);
+      }
+    }
+  }
+
+  // Security Metrics Recording
+  recordSecurityEvent(eventType: string, severity: string, source: string): void {
+    this.securityEvents.inc({
+      event_type: eventType,
+      severity,
+      source,
+      service: this.config.serviceName,
+      version: this.config.version,
+      environment: this.config.environment
+    });
+  }
+
+  recordAuthenticationAttempt(outcome: string, method: string, sourceIp: string, userAgent: string): void {
+    this.authenticationAttempts.inc({
+      outcome,
+      method,
+      source_ip: sourceIp,
+      user_agent: userAgent,
+      service: this.config.serviceName,
+      version: this.config.version,
+      environment: this.config.environment
+    });
+  }
+
+  // Metrics Export
+  async getMetrics(): Promise<string> {
+    return await this.registry.metrics();
+  }
+
+  private getErrorType(statusCode: number): string {
+    if (statusCode >= 500) return 'server_error';
+    if (statusCode >= 400) return 'client_error';
+    return 'unknown';
+  }
+}
+```
+
+### 2. Structured Logging Framework
+
+#### MANDATORY Logging Standards
+- **Structured JSON logging** with consistent schema across all services
+- **Log levels**: ERROR, WARN, INFO, DEBUG with appropriate usage
+- **Correlation IDs** for request tracing across services
+- **Contextual information** including user, session, and request details
+- **Log aggregation** with centralized collection and analysis
+- **Log retention** policies for compliance and debugging
+
+#### Structured Logging Implementation
+```typescript
+// services/logging/structured-logger.ts
+export interface LogContext {
+  correlationId: string;
+  userId?: string;
+  sessionId?: string;
+  requestId?: string;
+  service: string;
+  version: string;
+  environment: string;
+  [key: string]: any;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
+  message: string;
+  context: LogContext;
+  error?: ErrorDetails;
+  metadata?: Record<string, any>;
+}
+
+export interface ErrorDetails {
+  name: string;
+  message: string;
+  stack?: string;
+  code?: string;
+  cause?: ErrorDetails;
+}
+
+export class StructuredLogger {
+  private context: LogContext;
+  private logLevel: string;
+
+  constructor(serviceName: string, version: string, environment: string) {
+    this.context = {
+      correlationId: this.generateCorrelationId(),
+      service: serviceName,
+      version,
+      environment
+    };
+    this.logLevel = process.env.LOG_LEVEL || 'INFO';
+  }
+
+  setCorrelationId(correlationId: string): void {
+    this.context.correlationId = correlationId;
+  }
+
+  setUserId(userId: string): void {
+    this.context.userId = userId;
+  }
+
+  setSessionId(sessionId: string): void {
+    this.context.sessionId = sessionId;
+  }
+
+  setRequestId(requestId: string): void {
+    this.context.requestId = requestId;
+  }
+
+  error(message: string, error?: Error, metadata?: Record<string, any>): void {
+    this.log('ERROR', message, error, metadata);
+  }
+
+  warn(message: string, metadata?: Record<string, any>): void {
+    this.log('WARN', message, undefined, metadata);
+  }
+
+  info(message: string, metadata?: Record<string, any>): void {
+    this.log('INFO', message, undefined, metadata);
+  }
+
+  debug(message: string, metadata?: Record<string, any>): void {
+    this.log('DEBUG', message, undefined, metadata);
+  }
+
+  private log(level: string, message: string, error?: Error, metadata?: Record<string, any>): void {
+    if (!this.shouldLog(level)) return;
+
+    const logEntry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      level: level as any,
+      message,
+      context: { ...this.context },
+      metadata
+    };
+
+    if (error) {
+      logEntry.error = {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: (error as any).code
+      };
+    }
+
+    console.log(JSON.stringify(logEntry));
+  }
+
+  private shouldLog(level: string): boolean {
+    const levels = { ERROR: 0, WARN: 1, INFO: 2, DEBUG: 3 };
+    return levels[level as keyof typeof levels] <= levels[this.logLevel as keyof typeof levels];
+  }
+
+  private generateCorrelationId(): string {
+    return `corr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+```
+
+### 3. Distributed Tracing
+
+#### MANDATORY Tracing Standards
+- **End-to-end request tracing** across all services
+- **Correlation IDs** for request linking
+- **Span context propagation** through service boundaries
+- **Performance analysis** with latency breakdowns
+- **Error tracking** with full stack traces
+- **Trace sampling** for production efficiency
+
+#### Distributed Tracing Implementation
+```typescript
+// services/tracing/distributed-tracer.ts
+export interface TraceSpan {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  name: string;
+  startTime: number;
+  endTime?: number;
+  duration?: number;
+  tags: Record<string, string>;
+  logs: TraceLog[];
+  error?: ErrorDetails;
+}
+
+export interface TraceLog {
+  timestamp: number;
+  level: string;
+  message: string;
+  fields: Record<string, any>;
+}
+
+export class DistributedTracer {
+  private currentSpan?: TraceSpan;
+  private traceId: string;
+  private spans: TraceSpan[] = [];
+
+  constructor() {
+    this.traceId = this.generateTraceId();
+  }
+
+  startSpan(name: string, parentSpanId?: string): TraceSpan {
+    const span: TraceSpan = {
+      traceId: this.traceId,
+      spanId: this.generateSpanId(),
+      parentSpanId,
+      name,
+      startTime: Date.now(),
+      tags: {},
+      logs: []
+    };
+
+    this.currentSpan = span;
+    this.spans.push(span);
+    return span;
+  }
+
+  endSpan(spanId: string, error?: Error): void {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (span) {
+      span.endTime = Date.now();
+      span.duration = span.endTime - span.startTime;
+      
+      if (error) {
+        span.error = {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        };
+      }
+    }
+  }
+
+  addTag(spanId: string, key: string, value: string): void {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (span) {
+      span.tags[key] = value;
+    }
+  }
+
+  addLog(spanId: string, level: string, message: string, fields: Record<string, any> = {}): void {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (span) {
+      span.logs.push({
+        timestamp: Date.now(),
+        level,
+        message,
+        fields
+      });
+    }
+  }
+
+  getTrace(): TraceSpan[] {
+    return this.spans;
+  }
+
+  getTraceId(): string {
+    return this.traceId;
+  }
+
+  private generateTraceId(): string {
+    return `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private generateSpanId(): string {
+    return `span_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+```
+
+### 4. Service Level Objectives (SLOs) & Indicators (SLIs)
+
+#### MANDATORY SLO/SLI Framework
+- **Availability SLOs**: 99.9% uptime for critical services
+- **Latency SLOs**: 95th percentile response time <200ms
+- **Error Rate SLOs**: <0.1% error rate for production services
+- **Throughput SLOs**: Request rate monitoring and alerting
+- **Error Budgets**: Monthly error budget tracking and management
+
+#### SLO Implementation
+```typescript
+// services/slo/slo-manager.ts
+export interface SLO {
+  name: string;
+  description: string;
+  target: number; // Target percentage (e.g., 99.9)
+  window: number; // Time window in seconds
+  sli: SLI;
+}
+
+export interface SLI {
+  type: 'availability' | 'latency' | 'error_rate' | 'throughput';
+  query: string; // Prometheus query
+  goodEvents: string; // Query for good events
+  totalEvents: string; // Query for total events
+}
+
+export class SLOManager {
+  private slos: SLO[] = [];
+  private prometheusClient: any;
+
+  constructor(prometheusClient: any) {
+    this.prometheusClient = prometheusClient;
+  }
+
+  addSLO(slo: SLO): void {
+    this.slos.push(slo);
+  }
+
+  async calculateSLO(sloName: string): Promise<SLOResult> {
+    const slo = this.slos.find(s => s.name === sloName);
+    if (!slo) {
+      throw new Error(`SLO ${sloName} not found`);
+    }
+
+    const now = Date.now();
+    const windowStart = now - (slo.window * 1000);
+
+    // Query Prometheus for good and total events
+    const goodEvents = await this.prometheusClient.query({
+      query: slo.sli.goodEvents,
+      start: new Date(windowStart),
+      end: new Date(now)
+    });
+
+    const totalEvents = await this.prometheusClient.query({
+      query: slo.sli.totalEvents,
+      start: new Date(windowStart),
+      end: new Date(now)
+    });
+
+    const goodCount = this.sumQueryResult(goodEvents);
+    const totalCount = this.sumQueryResult(totalEvents);
+    const sliValue = totalCount > 0 ? (goodCount / totalCount) * 100 : 0;
+
+    return {
+      sloName,
+      sliValue,
+      target: slo.target,
+      window: slo.window,
+      goodEvents: goodCount,
+      totalEvents: totalCount,
+      errorBudget: slo.target - sliValue
+    };
+  }
+
+  private sumQueryResult(queryResult: any): number {
+    if (!queryResult.data || !queryResult.data.result) return 0;
+    return queryResult.data.result.reduce((sum: number, point: any) => {
+      return sum + parseFloat(point.value[1] || 0);
+    }, 0);
+  }
+}
+```
+
+### 5. Alerting & Incident Response
+
+#### MANDATORY Alerting Standards
+- **Alert on SLO violations** with error budget burn rate
+- **Multi-level alerting** (warning, critical, emergency)
+- **Alert routing** based on service and severity
+- **On-call rotation** with escalation procedures
+- **Runbook integration** with alert notifications
+- **Alert fatigue prevention** with intelligent grouping
+
+#### Alerting Configuration
+```yaml
+# monitoring/alerting-rules.yaml
+groups:
+  - name: service-slos
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_errors_total[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate detected for {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+          runbook_url: "https://runbooks.example.com/high-error-rate"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High latency detected for {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.service }}"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Service {{ $labels.service }} has been down for more than 1 minute"
+
+  - name: infrastructure
+    rules:
+      - alert: HighCPUUsage
+        expr: system_cpu_utilization_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: system_memory_utilization_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: system_disk_utilization_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.instance }}"
+
+  - name: security
+    rules:
+      - alert: HighAuthFailures
+        expr: rate(authorization_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failures detected"
+          description: "{{ $value }} auth failures per second over 5 minutes"
+
+      - alert: SecurityEvent
+        expr: rate(security_events_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Security event detected"
+          description: "{{ $value }} security events per second over 5 minutes"
+```
+
+### 6. Dashboard & Visualization
+
+#### MANDATORY Dashboard Standards
+- **Service dashboards** with RED metrics and SLOs
+- **Infrastructure dashboards** with USE metrics
+- **Security dashboards** with threat monitoring
+- **Business dashboards** with key performance indicators
+- **Real-time monitoring** with live data feeds
+- **Historical analysis** with trend visualization
+
+#### Dashboard Configuration
+```yaml
+# monitoring/dashboards/service-dashboard.yaml
+apiVersion: 1
+providers:
+  - name: 'Service Dashboards'
+    orgId: 1
+    folder: 'Services'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+
+dashboards:
+  - name: 'Service Overview'
+    uid: service-overview
+    title: 'Service Overview'
+    tags: ['service', 'overview']
+    timezone: 'browser'
+    panels:
+      - title: 'Request Rate'
+        type: 'graph'
+        targets:
+          - expr: 'rate(http_requests_total[5m])'
+            legendFormat: '{{service}} - {{method}} {{route}}'
+      
+      - title: 'Error Rate'
+        type: 'graph'
+        targets:
+          - expr: 'rate(http_requests_errors_total[5m]) / rate(http_requests_total[5m])'
+            legendFormat: '{{service}} - {{error_type}}'
+      
+      - title: 'Response Time'
+        type: 'graph'
+        targets:
+          - expr: 'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))'
+            legendFormat: '{{service}} - 95th percentile'
+      
+      - title: 'SLO Status'
+        type: 'stat'
+        targets:
+          - expr: 'slo:availability:ratio'
+            legendFormat: 'Availability SLO'
+      
+      - title: 'Error Budget'
+        type: 'gauge'
+        targets:
+          - expr: 'slo:error_budget:remaining'
+            legendFormat: 'Error Budget Remaining'
+```
+
+### 7. Quality Gates
+
+#### Definition of Done for Monitoring
+- [ ] **Metrics Collection**: All RED and USE metrics implemented
+- [ ] **Structured Logging**: JSON logging with correlation IDs
+- [ ] **Distributed Tracing**: End-to-end request tracing
+- [ ] **SLOs Defined**: Service level objectives documented
+- [ ] **Alerting Configured**: Alerts for SLO violations and incidents
+- [ ] **Dashboards Created**: Service and infrastructure dashboards
+- [ ] **Runbooks Available**: Incident response procedures documented
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all production services  
+**Purpose**: Ensure comprehensive system observability and operational excellence
+description: "Monitoring and observability standards covering metrics, logging, tracing, and alerting"
+globs: ["**/monitoring/**", "**/observability/**", "**/metrics/**", "**/logging/**", "**/tracing/**", "**/prometheus/**", "**/grafana/**"]
+alwaysApply: false
+---

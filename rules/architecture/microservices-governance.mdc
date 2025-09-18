@@ -1,0 +1,458 @@
+---
+alwaysApply: false
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: user-service
+spec:
+  host: user-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 1024
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+```
+
+### 6. Data Management (Database-Per-Service)
+
+#### MANDATORY Data Management Standards
+- **Implement database-per-service pattern** - each service owns its data store
+- **Use event sourcing for complex business logic** with append-only event stores
+- **Apply CQRS where read/write patterns differ** with separate read models
+- **Implement eventual consistency strategies** - avoid distributed transactions
+- **Data synchronization via domain events** - no direct database access
+- **Database migrations per service** - independent deployment capability
+
+#### Event Sourcing Pattern
+```typescript
+// data/event-sourcing.ts
+export interface EventStore {
+  append(streamId: string, event: DomainEvent): Promise<void>;
+  getEvents(streamId: string, fromVersion?: number): Promise<DomainEvent[]>;
+  getSnapshot(streamId: string): Promise<AggregateSnapshot | null>;
+  saveSnapshot(streamId: string, snapshot: AggregateSnapshot): Promise<void>;
+}
+
+export class EventSourcedAggregate {
+  private events: DomainEvent[] = [];
+  private version: number = 0;
+
+  constructor(private eventStore: EventStore) {}
+
+  async load(streamId: string): Promise<void> {
+    const events = await this.eventStore.getEvents(streamId);
+    this.events = events;
+    this.version = events.length;
+
+    // Replay events to rebuild state
+    for (const event of events) {
+      this.apply(event);
+    }
+  }
+
+  async save(streamId: string): Promise<void> {
+    const newEvents = this.events.slice(this.version);
+
+    for (const event of newEvents) {
+      await this.eventStore.append(streamId, event);
+    }
+
+    this.version = this.events.length;
+  }
+
+  protected apply(event: DomainEvent): void {
+    // Override in subclasses to handle specific events
+  }
+
+  protected raise(event: DomainEvent): void {
+    this.events.push(event);
+    this.apply(event);
+  }
+}
+```
+
+### 7. Container Security & Operations
+
+#### MANDATORY Container Standards
+- **Use container orchestration (Kubernetes)** for service deployment and scaling
+- **Implement proper health checks and readiness probes** for service lifecycle
+- **Apply blue-green or canary deployment strategies** with automated testing
+- **Use infrastructure as code** for service provisioning and configuration
+- **All containers run as non-root users** with minimal privileges
+- **Container images scanned for vulnerabilities** before deployment
+- **Secrets managed externally** - no hardcoded credentials in containers
+
+#### Secure Container Template
+```dockerfile
+# Example secure Dockerfile pattern
+# Use latest secure Python version - update regularly for security
+FROM python:latest-slim as builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Use latest secure Python version - update regularly for security
+FROM python:latest-slim as runtime
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+WORKDIR /app
+
+# Copy from builder stage
+# Use dynamic Python path - adjust based on actual Python version
+COPY --from=builder /usr/local/lib/python*/site-packages /usr/local/lib/python*/site-packages
+COPY --chown=appuser:appuser services/ ./services/
+COPY --chown=appuser:appuser shared/ ./shared/
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+EXPOSE 8080
+CMD ["python", "-m", "uvicorn", "services.main:app", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+### 8. Zero Trust Architecture
+
+#### MANDATORY Security Standards
+```yaml
+zero_trust_principles:
+  service_communication:
+    - mTLS_required: "All inter-service communication encrypted"
+    - authentication: "JWT tokens for all API calls"
+    - authorization: "RBAC/ABAC for fine-grained permissions"
+    - network_policies: "Deny-all default with explicit allow rules"
+
+  data_protection:
+    - encryption_at_rest: "All databases encrypted"
+    - encryption_in_transit: "TLS 1.3 minimum"
+    - data_classification: "PII/sensitive data marked and protected"
+    - access_logging: "All data access logged and auditable"
+
+  container_security:
+    - minimal_images: "Distroless or alpine-based images"
+    - non_root_users: "UID > 1000 for all application processes"
+    - read_only_filesystems: "Immutable container filesystems"
+    - security_scanning: "Vulnerability scans in CI/CD pipeline"
+```
+
+### 9. Monitoring & Observability
+
+#### MANDATORY Observability Standards
+- **Implement distributed tracing across all service calls** with correlation IDs
+- **Use structured logging** with consistent log formats across services
+- **Apply proper metrics collection** (RED: Rate, Error, Duration)
+- **Implement service-level monitoring and alerting** with SLOs/SLIs
+- **Health endpoints for all services** returning detailed status information
+- **Audit logging for all business operations** with immutable audit trails
+
+#### Observability Implementation
+```typescript
+// observability/monitoring.ts
+export class ServiceMonitor {
+  private metrics: MetricsCollector;
+  private tracer: Tracer;
+  private logger: Logger;
+
+  constructor(serviceName: string) {
+    this.metrics = new MetricsCollector(serviceName);
+    this.tracer = new Tracer(serviceName);
+    this.logger = new Logger(serviceName);
+  }
+
+  async recordRequest(
+    method: string,
+    path: string,
+    duration: number,
+    statusCode: number,
+    correlationId: string
+  ): Promise<void> {
+    // Record metrics
+    this.metrics.recordHttpRequest(method, path, duration, statusCode);
+
+    // Record trace
+    this.tracer.recordSpan(method, path, duration, statusCode, correlationId);
+
+    // Log request
+    this.logger.info('HTTP Request', {
+      method,
+      path,
+      duration,
+      statusCode,
+      correlationId
+    });
+  }
+
+  async recordError(
+    error: Error,
+    context: Record<string, any>,
+    correlationId: string
+  ): Promise<void> {
+    // Record error metrics
+    this.metrics.recordError(error.name);
+
+    // Record error trace
+    this.tracer.recordError(error, correlationId);
+
+    // Log error
+    this.logger.error('Service Error', {
+      error: error.message,
+      stack: error.stack,
+      context,
+      correlationId
+    });
+  }
+}
+```
+
+### 10. Cilium Service Mesh Integration
+
+#### MANDATORY Cilium Service Mesh Requirements
+- **Cilium service mesh integration mandatory**
+- **L7 policy per service mandatory**
+- **mTLS for all inter-service communication**
+- **Traffic management with Cilium**
+- **Hubble observability integration**
+
+#### Cilium Service Mesh Patterns
+```yaml
+# architecture/cilium-service-mesh.yaml
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: service-mesh-policy
+spec:
+  endpointSelector: {}
+  ingress:
+  # Require mTLS for all inter-service communication
+  - authentication:
+      mode: required
+    fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: applications
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/*"
+        - method: "POST"
+          path: "/api/*"
+        - method: "PUT"
+          path: "/api/*"
+        - method: "DELETE"
+          path: "/api/*"
+
+  # Allow observability traffic
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/metrics"
+        - method: "GET"
+          path: "/health"
+        - method: "GET"
+          path: "/trace"
+```
+
+#### Traffic Management with Cilium
+```yaml
+# architecture/traffic-management.yaml
+apiVersion: cilium.io/v2
+kind: CiliumTrafficPolicy
+metadata:
+  name: traffic-management
+  namespace: applications
+spec:
+  destination:
+    matchLabels:
+      app: example-service
+  rules:
+  - name: "blue-green-deployment"
+    http:
+    - match:
+      - headers:
+        - name: "x-version"
+          value: "v2"
+      forwardTo:
+      - service:
+          name: example-service-v2
+          weight: 100
+    - match:
+      - headers:
+        - name: "x-version"
+          value: "v1"
+      forwardTo:
+      - service:
+          name: example-service-v1
+          weight: 100
+    - forwardTo:
+      - service:
+          name: example-service-v1
+          weight: 80
+      - service:
+          name: example-service-v2
+          weight: 20
+```
+
+#### Hubble Observability Integration
+```yaml
+# architecture/hubble-observability.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hubble-config
+  namespace: kube-system
+data:
+  hubble-config.yaml: |
+    # Hubble observability configuration
+    hubble:
+      enabled: true
+      metrics:
+        - dns
+        - drop
+        - tcp
+        - flow
+        - icmp
+        - http
+      ui:
+        enabled: true
+        ingress:
+          enabled: true
+          className: nginx
+          hosts:
+          - host: hubble.goldschmidt-platform.local
+            paths:
+            - path: /
+              pathType: Prefix
+      relay:
+        enabled: true
+        metrics:
+          enabled: true
+          port: 9091
+```
+
+### 11. K3S-Specific Deployment Patterns
+
+#### MANDATORY K3S Deployment Requirements
+- **Single-node cluster optimization**
+- **Resource constraints for efficient utilization**
+- **Local storage optimization**
+- **Service mesh integration patterns**
+
+#### K3S Deployment Configuration
+```yaml
+# architecture/k3s-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k3s-optimized-service
+  namespace: applications
+spec:
+  replicas: 1  # Single replica for single-node K3S
+  selector:
+    matchLabels:
+      app: k3s-optimized-service
+  template:
+    metadata:
+      labels:
+        app: k3s-optimized-service
+    spec:
+      # K3S-specific node affinity
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - k3s-node-1
+
+      # Resource optimization for single-node
+      containers:
+      - name: main
+        image: k3s-optimized-service:latest
+        resources:
+          requests:
+            cpu: "50m"       # Conservative for single-node
+            memory: "64Mi"   # Conservative for single-node
+          limits:
+            cpu: "200m"      # Conservative for single-node
+            memory: "256Mi"  # Conservative for single-node
+
+        # K3S storage optimization
+        volumeMounts:
+        - name: local-storage
+          mountPath: /data
+          subPath: service-data
+        - name: local-logs
+          mountPath: /logs
+          subPath: service-logs
+
+      volumes:
+      - name: local-storage
+        hostPath:
+          path: /opt/k3s/data
+          type: DirectoryOrCreate
+      - name: local-logs
+        hostPath:
+          path: /opt/k3s/logs
+          type: DirectoryOrCreate
+```
+
+### 12. Quality Gates & Compliance
+
+#### Definition of Done for Microservices
+- [ ] **API Contract**: OpenAPI specification complete and validated
+- [ ] **Security**: Threat model documented and controls implemented
+- [ ] **Testing**: Unit tests >80% coverage, integration tests complete
+- [ ] **Documentation**: Service documentation and deployment guides
+- [ ] **Monitoring**: Health checks, metrics, and alerting configured
+- [ ] **Security Scanning**: Container and dependency vulnerability scans passed
+- [ ] **Performance**: Load testing completed with SLO compliance
+- [ ] **Service Mesh**: Cilium integration and L7 policies configured
+- [ ] **K3S Optimization**: Single-node deployment patterns implemented
+
+#### Success Metrics
+- **Service Independence**: <3 direct dependencies per service
+- **Deployment Frequency**: Daily deployments per service capability
+- **Mean Time to Recovery**: <1 hour for service failures
+- **API Response Time**: 95th percentile <200ms
+- **Error Rate**: <0.1% for production services
+- **Service Mesh Coverage**: 100% services integrated with Cilium
+- **K3S Resource Efficiency**: Optimal resource utilization on single-node
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: CRITICAL for all microservices development
+**Purpose**: Ensure scalable, secure, and maintainable microservices architecture
+description: "Microservices governance and architecture standards covering service design, communication, and operational excellence"
+globs: ["**/services/**", "**/microservices/**", "**/*.service.*", "**/api/**"]
+alwaysApply: false
+---

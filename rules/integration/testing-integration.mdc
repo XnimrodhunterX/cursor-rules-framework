@@ -1,0 +1,402 @@
+---
+ruleId: "INT-TEST-01"
+title: "Testing Integration Standards"
+status: "active"
+compliance: "mandatory"
+description: "Cross-cutting testing integration standards that ensure comprehensive test coverage across all development domains"
+globs: ["**/*.test.*", "**/*.spec.*", "**/tests/**", "**/test/**", "**/__tests__/**", "**/*.test.js", "**/*.test.ts", "**/*.test.py", "**/*.test.swift", "**/*.test.kt"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "integration"
+---
+
+# INT-TEST-01: Testing Integration Standards
+
+## Purpose & Scope
+
+This integration rule ensures comprehensive testing standards are consistently applied across all development domains, providing a unified testing framework that bridges gaps between domain-specific testing requirements.
+
+## Cross-Domain Testing Strategy
+
+### 1. Test Pyramid Integration
+```yaml
+test_pyramid:
+  unit_tests:
+    coverage: "80% minimum"
+    scope: "Individual functions, methods, classes"
+    execution: "Fast (< 1ms per test)"
+    isolation: "No external dependencies"
+  
+  integration_tests:
+    coverage: "60% minimum"
+    scope: "Component interactions, API contracts"
+    execution: "Medium (< 100ms per test)"
+    dependencies: "Mocked external services"
+  
+  end_to_end_tests:
+    coverage: "40% minimum"
+    scope: "Complete user workflows"
+    execution: "Slow (< 10s per test)"
+    environment: "Production-like setup"
+```
+
+### 2. Test Data Management
+```yaml
+test_data:
+  fixtures:
+    - "Consistent test data across environments"
+    - "Minimal data sets for fast execution"
+    - "Anonymized production data for realistic testing"
+  
+  factories:
+    - "Dynamic test data generation"
+    - "Realistic data relationships"
+    - "Edge case data scenarios"
+  
+  cleanup:
+    - "Automatic test data cleanup"
+    - "Database state isolation"
+    - "File system cleanup"
+```
+
+### 3. Test Environment Management
+```yaml
+environments:
+  local_development:
+    - "Docker containers for dependencies"
+    - "In-memory databases for speed"
+    - "Mock services for external APIs"
+  
+  ci_cd_pipeline:
+    - "Isolated test environments"
+    - "Parallel test execution"
+    - "Test result reporting and notifications"
+  
+  staging:
+    - "Production-like configuration"
+    - "Integration with external services"
+    - "Performance testing capabilities"
+```
+
+## Domain-Specific Testing Integration
+
+### Frontend Testing (FE-01 Integration)
+```yaml
+frontend_testing:
+  unit_tests:
+    - "Component rendering tests"
+    - "Hook and utility function tests"
+    - "State management tests"
+  
+  integration_tests:
+    - "Component interaction tests"
+    - "API integration tests"
+    - "Routing and navigation tests"
+  
+  e2e_tests:
+    - "User journey tests"
+    - "Cross-browser compatibility"
+    - "Accessibility testing"
+  
+  visual_testing:
+    - "Screenshot comparison tests"
+    - "Visual regression detection"
+    - "Responsive design testing"
+```
+
+### API Testing (API-01 Integration)
+```yaml
+api_testing:
+  contract_tests:
+    - "OpenAPI specification validation"
+    - "Request/response schema validation"
+    - "API version compatibility"
+  
+  integration_tests:
+    - "Database integration tests"
+    - "External service integration"
+    - "Authentication and authorization"
+  
+  performance_tests:
+    - "Load testing for expected traffic"
+    - "Stress testing for capacity limits"
+    - "Latency and throughput testing"
+  
+  security_tests:
+    - "Input validation testing"
+    - "Authentication bypass attempts"
+    - "Rate limiting verification"
+```
+
+### Database Testing (DP-01 Integration)
+```yaml
+database_testing:
+  schema_tests:
+    - "Migration validation tests"
+    - "Constraint and index tests"
+    - "Data type validation"
+  
+  query_tests:
+    - "Query performance testing"
+    - "Query result accuracy"
+    - "Query optimization validation"
+  
+  data_integrity_tests:
+    - "Referential integrity tests"
+    - "Data consistency checks"
+    - "Backup and recovery tests"
+```
+
+### Mobile Testing (MB-01/MB-02 Integration)
+```yaml
+mobile_testing:
+  unit_tests:
+    - "Business logic testing"
+    - "Utility function testing"
+    - "Model and data structure tests"
+  
+  integration_tests:
+    - "API integration tests"
+    - "Database integration tests"
+    - "Third-party SDK integration"
+  
+  ui_tests:
+    - "Screen navigation tests"
+    - "User interaction tests"
+    - "Accessibility testing"
+  
+  device_tests:
+    - "Cross-device compatibility"
+    - "Performance on different hardware"
+    - "Network condition testing"
+```
+
+### Infrastructure Testing (K8S-01/INF-01 Integration)
+```yaml
+infrastructure_testing:
+  configuration_tests:
+    - "Kubernetes manifest validation"
+    - "Terraform plan validation"
+    - "Security policy compliance"
+  
+  deployment_tests:
+    - "Rolling deployment tests"
+    - "Rollback scenario tests"
+    - "Health check validation"
+  
+  scaling_tests:
+    - "Horizontal pod autoscaling"
+    - "Load balancer configuration"
+    - "Resource utilization testing"
+```
+
+## Test Automation Framework
+
+### 1. Continuous Integration Testing
+```yaml
+ci_testing:
+  triggers:
+    - "Pull request creation"
+    - "Code push to main branch"
+    - "Scheduled nightly runs"
+  
+  stages:
+    - "Unit tests (fast, required)"
+    - "Integration tests (medium, required)"
+    - "E2E tests (slow, optional for PRs)"
+    - "Performance tests (scheduled)"
+  
+  reporting:
+    - "Test result summaries"
+    - "Coverage reports"
+    - "Failed test notifications"
+    - "Performance regression alerts"
+```
+
+### 2. Test Quality Gates
+```yaml
+quality_gates:
+  coverage_thresholds:
+    unit_tests: "80% minimum"
+    integration_tests: "60% minimum"
+    e2e_tests: "40% minimum"
+  
+  performance_thresholds:
+    unit_test_execution: "< 5 minutes"
+    integration_test_execution: "< 15 minutes"
+    e2e_test_execution: "< 30 minutes"
+  
+  reliability_thresholds:
+    flaky_test_rate: "< 2%"
+    test_failure_rate: "< 5%"
+    false_positive_rate: "< 1%"
+```
+
+## Test Data and Environment Management
+
+### 1. Test Data Strategy
+```yaml
+test_data_strategy:
+  synthetic_data:
+    - "Generated test data for unit tests"
+    - "Realistic data patterns and relationships"
+    - "Edge case and boundary condition data"
+  
+  production_data:
+    - "Anonymized production data for integration tests"
+    - "Realistic data volumes and patterns"
+    - "Compliance with data privacy regulations"
+  
+  test_fixtures:
+    - "Consistent test data across environments"
+    - "Version-controlled test data sets"
+    - "Data cleanup and reset procedures"
+```
+
+### 2. Environment Isolation
+```yaml
+environment_isolation:
+  test_containers:
+    - "Docker containers for test dependencies"
+    - "Isolated database instances"
+    - "Mock external services"
+  
+  data_isolation:
+    - "Separate test databases"
+    - "Test data cleanup between runs"
+    - "Parallel test execution support"
+  
+  network_isolation:
+    - "Test-specific network configurations"
+    - "Mock external API endpoints"
+    - "Controlled network conditions"
+```
+
+## Test Reporting and Metrics
+
+### 1. Test Execution Metrics
+```yaml
+execution_metrics:
+  coverage_metrics:
+    - "Line coverage percentage"
+    - "Branch coverage percentage"
+    - "Function coverage percentage"
+    - "Coverage trends over time"
+  
+  performance_metrics:
+    - "Test execution time"
+    - "Test suite duration"
+    - "Parallel execution efficiency"
+    - "Resource utilization"
+  
+  quality_metrics:
+    - "Test pass rate"
+    - "Flaky test identification"
+    - "Test maintenance effort"
+    - "Bug detection effectiveness"
+```
+
+### 2. Test Reporting Dashboard
+```yaml
+reporting_dashboard:
+  real_time_metrics:
+    - "Current test execution status"
+    - "Recent test failures and trends"
+    - "Coverage metrics and trends"
+  
+  historical_analysis:
+    - "Test execution trends over time"
+    - "Coverage improvement tracking"
+    - "Performance regression analysis"
+  
+  team_metrics:
+    - "Test contribution by team member"
+    - "Test quality by component"
+    - "Test maintenance effort tracking"
+```
+
+## Rule Application Signals
+
+When you encounter testing-related work, reference these additional rules:
+
+### Testing Implementation Signals
+- **API Testing Implementation** → Reference `.cursor/rules/architecture/api-development-standards.mdc` for API-specific testing patterns
+- **Database Testing Implementation** → Reference `.cursor/rules/architecture/database-standards.mdc` for database-specific testing patterns
+- **Frontend Testing Implementation** → Reference `.cursor/rules/architecture/frontend-development-standards.mdc` for frontend-specific testing patterns
+- **Mobile Testing Implementation** → Reference `.cursor/rules/mobile/ios-development-standards.mdc`, `.cursor/rules/mobile/android-development-standards.mdc`, or `.cursor/rules/mobile/mobile-testing-standards.mdc` for mobile-specific testing patterns
+- **Infrastructure Testing Implementation** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` or `.cursor/rules/infrastructure/infrastructure-standards.mdc` for infrastructure-specific testing patterns
+
+### Testing Quality Signals
+- **Security Testing Required** → Reference `.cursor/rules/integration/security-integration.mdc` for security testing patterns
+- **Performance Testing Required** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance testing patterns
+- **Testing Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for testing monitoring patterns
+
+### Testing Issue Resolution Signals
+- **Testing Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for testing conflict resolution
+- **Testing Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for testing rule versioning
+- **Testing Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for testing change impact analysis
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  core_testing:
+    rule: "QC-01: Comprehensive Testing Standards"
+    integration: "Foundation testing principles and requirements"
+  
+  api_testing:
+    rule: "API-01: API Development Standards"
+    integration: "API-specific testing implementations"
+  
+  database_testing:
+    rule: "DP-01: Database Standards"
+    integration: "Database testing and validation"
+  
+  frontend_testing:
+    rule: "FE-01: Frontend Development Standards"
+    integration: "Frontend testing frameworks and patterns"
+  
+  mobile_testing:
+    rules: ["MB-01: iOS Development Standards", "MB-02: Android Development Standards", "MB-04: Mobile Testing Standards"]
+    integration: "Mobile platform testing requirements"
+  
+  infrastructure_testing:
+    rules: ["K8S-01: Kubernetes Standards", "INF-01: Infrastructure Standards"]
+    integration: "Infrastructure testing and validation"
+```
+
+## Implementation Guidelines
+
+### 1. Test-Driven Development
+- **Write tests first** for new features
+- **Refactor with confidence** using test coverage
+- **Maintain test quality** through regular reviews
+- **Document test strategies** for complex scenarios
+
+### 2. Test Maintenance
+- **Regular test cleanup** and optimization
+- **Flaky test identification** and resolution
+- **Test data management** and versioning
+- **Test environment** maintenance and updates
+
+### 3. Team Collaboration
+- **Test ownership** and responsibility
+- **Test review** processes
+- **Knowledge sharing** and training
+- **Continuous improvement** of testing practices
+
+## Success Metrics
+
+### Testing KPIs
+- **Test coverage** percentage by domain
+- **Test execution** time and reliability
+- **Bug detection** effectiveness
+- **Test maintenance** effort and cost
+- **Team testing** adoption and engagement
+
+### Quality Gates
+- **All tests pass** before deployment
+- **Coverage thresholds** met for all domains
+- **No flaky tests** in critical paths
+- **Test documentation** complete and current

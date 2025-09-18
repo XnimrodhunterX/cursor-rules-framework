@@ -1,0 +1,163 @@
+---
+ruleId: "QC-17"
+title: "Human-Like Writing Standards"
+status: "active"
+compliance: "mandatory"
+description: "Ensures writing does not sound like AI-generated content and maintains human-like quality and authenticity"
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "core"
+---
+
+# QC-17: Human-Like Writing Standards
+
+## Purpose & Scope
+
+This rule ensures that all written content maintains human-like quality and authenticity, avoiding patterns that make content sound AI-generated. It promotes natural, engaging, and authentic communication.
+
+## MANDATORY Human-Like Writing Protocol
+
+### 1. Voice and Perspective Requirements
+
+#### Unique Voice Development
+- **Personal perspective** - Include genuine viewpoints and opinions
+- **Authentic tone** - Match the appropriate level of formality for context
+- **Natural variation** - Vary sentence structure and length naturally
+- **Emotional connection** - Include appropriate emotional context when relevant
+- **Individual style** - Develop a consistent but natural writing style
+
+#### Avoid Generic Patterns
+- **No formulaic structures** - Avoid predictable, uniform transitions
+- **No overused phrases** - Eliminate AI-specific clichés like "delve," "synergy," "tapestry"
+- **No perfect symmetry** - Avoid unnaturally balanced argument structures
+- **No surface-level breadth** - Focus on depth rather than covering all angles superficially
+
+### 2. Content Quality Standards
+
+#### Depth Over Breadth
+- **Meaningful elaboration** - Provide substantial detail on key points
+- **Natural emphasis** - Give appropriate weight to important concepts
+- **Authentic completeness** - Cover topics naturally, not like checking boxes
+- **Genuine insights** - Include original thoughts and analysis
+- **Practical examples** - Use real-world, specific examples
+
+#### Natural Flow and Structure
+- **Organic transitions** - Use natural connecting phrases and ideas
+- **Appropriate digressions** - Include relevant side comments when appropriate
+- **Contextual formality** - Match formality level to the situation
+- **Natural paragraph breaks** - Organize content in logical, readable chunks
+- **Conversational elements** - Include appropriate casual elements when suitable
+
+### 3. Language and Style Requirements
+
+#### Natural Language Patterns
+- **Varied sentence length** - Mix short and long sentences naturally
+- **Diverse vocabulary** - Use appropriate word choice without over-formalization
+- **Natural punctuation** - Use punctuation that feels natural, not artificial
+- **Appropriate idioms** - Use idioms correctly and in proper context
+- **Cultural authenticity** - Include specific, relevant cultural references
+
+#### Avoid AI-Specific Patterns
+- **No repetitive phrasing** - Avoid restating the same idea multiple ways
+- **No circular reasoning** - Provide new insights, not redundant logic
+- **No overgeneralization** - Include nuance and specific details
+- **No logical jumps** - Provide clear reasoning between claims
+- **No excessive hedging** - Take appropriate stances without over-hedging
+
+### 4. Technical Writing Standards
+
+#### Code and Technical Content
+- **Practical examples** - Use real, working code examples
+- **Specific references** - Cite actual tools, libraries, and resources
+- **Contextual explanations** - Explain why, not just what
+- **Troubleshooting insights** - Include common issues and solutions
+- **Real-world applications** - Show how concepts apply in practice
+
+#### Documentation Quality
+- **User-focused content** - Write for the actual audience
+- **Practical guidance** - Provide actionable, specific instructions
+- **Real scenarios** - Use genuine use cases and examples
+- **Appropriate detail level** - Match detail to audience needs
+- **Clear organization** - Structure content logically and intuitively
+
+## Implementation Guidelines
+
+### 1. Writing Process
+- **Plan before writing** - Think about the audience and purpose
+- **Write naturally** - Use your own voice and perspective
+- **Review for authenticity** - Check that content sounds human
+- **Edit for clarity** - Ensure content is clear and engaging
+- **Test with audience** - Get feedback from real users when possible
+
+### 2. Quality Checks
+- **Read aloud** - Check that content flows naturally when spoken
+- **Check for patterns** - Look for repetitive or formulaic structures
+- **Verify examples** - Ensure all examples are real and relevant
+- **Test understanding** - Confirm that content is clear and actionable
+- **Assess engagement** - Ensure content is interesting and valuable
+
+### 3. Continuous Improvement
+- **Learn from feedback** - Incorporate user and stakeholder feedback
+- **Study good examples** - Learn from effective human-written content
+- **Practice regularly** - Develop writing skills through practice
+- **Stay authentic** - Maintain genuine voice and perspective
+- **Adapt to context** - Adjust style for different audiences and purposes
+
+## Rule Application Signals
+
+When you encounter writing tasks, reference these additional rules:
+
+### Writing Quality Signals
+- **Documentation Writing** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation quality standards
+- **Technical Writing** → Reference `.cursor/rules/core/engineering-excellence-standards.mdc` for technical writing standards
+- **Communication Standards** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for communication guidelines
+
+### Content Creation Signals
+- **Project Documentation** → Reference `.cursor/rules/core/project-management-standards.mdc` for project documentation
+- **Feature Documentation** → Reference `.cursor/rules/core/feature-documentation-sync.mdc` for feature documentation
+- **Cross-Reference Management** → Reference `.cursor/rules/core/document-synchronization-cross-reference.mdc` for content organization
+
+### Quality Assurance Signals
+- **Content Testing** → Reference `.cursor/rules/core/comprehensive-testing-standards.mdc` for content quality testing
+- **Review Processes** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for review and feedback processes
+
+## Success Metrics
+
+### Authenticity Metrics
+- **Natural flow** - Content reads naturally and engagingly
+- **Authentic voice** - Writing has genuine personality and perspective
+- **Appropriate tone** - Style matches context and audience
+- **Engaging content** - Readers find content interesting and valuable
+- **Clear communication** - Message is clear and actionable
+
+### Quality Metrics
+- **User feedback** - Positive feedback on content quality
+- **Engagement rates** - High reader engagement and interaction
+- **Comprehension scores** - High understanding and retention rates
+- **Actionability** - Content leads to successful implementation
+- **Reusability** - Content is referenced and reused by others
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before publishing any content, verify:
+- [ ] Content sounds natural and human-written
+- [ ] No AI-specific patterns or clichés are present
+- [ ] Examples are real and relevant
+- [ ] Language is appropriate for the audience
+- [ ] Content provides genuine value and insights
+
+### Quality Assurance
+- [ ] Content has been read aloud for natural flow
+- [ ] Examples have been verified for accuracy
+- [ ] Tone matches the intended audience
+- [ ] Content is engaging and valuable
+- [ ] No repetitive or formulaic patterns exist
+
+## Conclusion
+
+This rule ensures that all written content maintains human-like quality and authenticity, creating engaging, valuable, and natural communication that serves users effectively.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all writing  
+**Purpose**: Ensure authentic, human-like communication quality

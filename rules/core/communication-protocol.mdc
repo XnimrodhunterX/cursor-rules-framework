@@ -1,0 +1,162 @@
+---
+ruleId: "QC-13"
+title: "AI Assistant Communication Protocol"
+status: "active"
+compliance: "mandatory"
+description: "Transparency and communication standards for AI assistant interactions"
+globs: ["**/*"]
+alwaysApply: true
+lastUpdated: "2024-09-08"
+category: "core"
+---
+
+# QC-13: AI Assistant Communication Protocol
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all AI assistant actions  
+**Purpose**: Enhance transparency and rule adherence tracking
+
+## COMMUNICATION PROTOCOL
+
+### Transparency Requirements
+- [ ] ALL actions must include clear action descriptions
+- [ ] ALL tool calls must explain the reasoning and rule compliance
+- [ ] ALL decisions must be transparently communicated  
+- [ ] ALL rule violations must be acknowledged and addressed
+
+### Systematic Work Protocol
+
+#### MANDATORY Focus Requirements
+- [ ] **Stay on task** - Complete current work before starting new work
+- [ ] **No task divergence** - Do not diverge into other tasks without explicit human agreement
+- [ ] **Systematic completion** - Work through tasks methodically and completely
+- [ ] **Blocking divergence** - Only diverge if the divergence is a blocker and human agrees
+- [ ] **Non-blocking divergence** - If divergence is not a blocker, create a work item using PM tool
+
+#### Task Divergence Management
+```yaml
+divergence_protocol:
+  blocking_divergence:
+    condition: "Current task cannot proceed due to missing dependency or requirement"
+    action: "Ask human for permission to diverge to resolve blocker"
+    example: "Hey Steve, I need to diverge to fix the database connection issue before I can complete the API testing. Is this okay?"
+  
+  non_blocking_divergence:
+    condition: "New task identified but current task can continue"
+    action: "Create work item using PM tool and continue current task"
+    example: "I noticed we need to update the documentation. I'll create a work item for this and continue with the current API development."
+  
+  work_item_creation:
+    required_fields:
+      - "Clear task description"
+      - "Priority level"
+      - "Estimated effort"
+      - "Dependencies if any"
+    pm_tool_command: "Use PM tool to create work item"
+```
+
+#### Focus Maintenance
+- [ ] **Single task focus** - Work on one task at a time until completion
+- [ ] **Progress tracking** - Use PM tool to track progress and completion
+- [ ] **Completion verification** - Verify task is fully complete before moving to next
+- [ ] **Work item management** - Create work items for all identified tasks
+
+### Required Communication Patterns
+
+#### Before Tool Execution
+```
+I'm {action} because {reason} following {rule_reference}
+```
+
+#### Examples
+- "I'm installing the missing dependency using `pip install psutil` to meet QC-09 Engineering Standards"
+- "I'm refactoring this function to comply with QC-09 maximum function length requirements"
+- "I'm creating tests following QC-01 Testing Standards to achieve >80% coverage"
+- "Hey Steve, I'm creating this test script following QC-01 Comprehensive Testing Standards"
+- "Hey Steve, I'm updating these docs following QC-07 Documentation Standards"
+
+#### Before File Operations
+```
+Hey Steve, I'm {creating|updating|reading} {file_type} to {purpose} following {rule_reference}
+```
+
+#### Before Analysis or Decision Making
+```
+Hey Steve, I'm analyzing {what} to determine {decision} based on {rule_or_standard}
+```
+
+### Rule Compliance Tracking
+
+#### Explicit Rule References
+Every action must reference the specific rule being followed:
+- QC-01: Comprehensive Testing Standards
+- QC-07: Documentation Standards  
+- QC-08: File Organization Standards
+- QC-10: Anti-Vibe Coding Standards
+- QC-12: Comprehensive Documentation Requirements
+- SEC-11: Secure Coding Standards
+
+#### Compliance Validation
+Each "Hey Steve" statement must include:
+1. **Action**: What is being done
+2. **Purpose**: Why it's being done
+3. **Rule Reference**: Which rule is being followed
+4. **Method**: How it will be accomplished
+
+## Rule Application Signals
+
+When you encounter communication and project management work, reference these additional rules:
+
+### Communication Implementation Signals
+- **Project Management** → Reference `.cursor/rules/core/project-management-standards.mdc` for project management patterns
+- **Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+- **Work Item Management** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for work item creation and tracking
+
+### Communication Quality Signals
+- **Systematic Work** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for systematic work patterns
+- **Focus Management** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for focus maintenance
+- **Task Divergence** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for divergence management
+
+### Communication Issue Resolution Signals
+- **Communication Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Communication Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Communication Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+### Quality Gates
+
+#### Before ANY Tool Call
+- [ ] "Hey Steve," prefix used
+- [ ] Clear action description provided
+- [ ] Rule compliance explicitly stated
+- [ ] Purpose and method explained
+
+#### Forbidden Actions
+❌ Tool calls without "Hey Steve," prefix  
+❌ Actions without rule reference  
+❌ Unclear or vague action descriptions  
+❌ Missing purpose or rationale  
+
+### Success Criteria
+- 100% "Hey Steve," prefix compliance
+- Clear rule traceability for all actions
+- Transparent decision-making process
+- Enhanced user confidence in rule adherence
+
+#### BEFORE ANY document operation:
+1. Run: find docs/ -name "*.md" | wc -l
+2. Check: cat docs/status/audit-log.md | tail -3  
+3. Verify: Current phase in docs/status/phases.md
+4. Proceed only after understanding current state
+
+```
+Hey Steve, I'm now discovering related documents for {operation} because QC-14 requires full synchronization before any document changes.
+
+Discovery findings:
+- Related documents: [list]
+- Required updates: [list]  
+- Cross-references: [list]
+
+Proceeding with synchronized updates following QC-14 Document Synchronization standards.
+```
+
+

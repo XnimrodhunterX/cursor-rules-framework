@@ -1,0 +1,503 @@
+---
+ruleId: "QC-01"
+title: "Comprehensive Testing Standards & Automation"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive testing standards covering test strategy, TDD, and automation"
+globs: ["**/*.test.*", "**/*.spec.*", "**/tests/**", "**/test/**", "**/__tests__/**", "**/*.test.js", "**/*.test.ts", "**/*.test.py"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "development"
+---
+
+# QC-01: Comprehensive Testing Standards & Automation
+
+## Purpose & Scope
+
+Comprehensive testing standards covering the complete testing lifecycle from strategy through implementation to automation. This rule establishes unified standards for test pyramid strategy, test-driven development, implementation patterns for unit/integration/e2e tests, and full CI/CD automation to ensure high-quality, reliable software delivery.
+
+## Rule Triggers
+
+### When to Apply Mobile Testing Considerations
+```yaml
+triggers:
+  mobile_testing:
+    when: "Testing mobile applications or mobile-specific features"
+    reference: "MB-04: Mobile Testing Standards"
+    action: "Apply mobile-specific testing requirements and patterns"
+    conditions:
+      - "iOS application testing"
+      - "Android application testing"
+      - "Cross-platform mobile testing"
+      - "Mobile UI/UX testing"
+      - "Mobile device testing"
+  
+  api_testing:
+    when: "Testing API endpoints or services"
+    reference: "API-01: API Development Standards"
+    action: "Apply API-specific testing requirements"
+    conditions:
+      - "REST API testing"
+      - "GraphQL API testing"
+      - "API integration testing"
+      - "API performance testing"
+  
+  security_testing:
+    when: "Testing security-sensitive features"
+    reference: "SEC-01: Universal Security Standards"
+    action: "Apply security testing requirements"
+    conditions:
+      - "Authentication testing"
+      - "Authorization testing"
+      - "Data encryption testing"
+      - "Security vulnerability testing"
+```
+
+## Core Standards
+
+### 1. Testing Strategy & Architecture
+
+#### Test Pyramid Framework
+
+**Optimal Test Distribution:**
+```typescript
+// testing/test-pyramid-strategy.ts
+export interface TestPyramid {
+  unit: UnitTestStrategy;
+  integration: IntegrationTestStrategy;
+  e2e: E2ETestStrategy;
+  performance: PerformanceTestStrategy;
+  security: SecurityTestStrategy;
+}
+
+export interface TestDistribution {
+  unit: { target: number; minimum: number; description: string };
+  integration: { target: number; minimum: number; description: string };
+  e2e: { target: number; minimum: number; description: string };
+}
+
+export class TestStrategy {
+  private config: TestConfig;
+  
+  constructor(config: TestConfig) {
+    this.config = config;
+  }
+  
+  getTestDistribution(): TestDistribution {
+    return {
+      unit: {
+        target: 70,
+        minimum: 60,
+        description: 'Fast, isolated tests for individual functions/classes'
+      },
+      integration: {
+        target: 20,
+        minimum: 15,
+        description: 'Tests for component interactions and API contracts'
+      },
+      e2e: {
+        target: 10,
+        minimum: 5,
+        description: 'Full user journey tests through the UI'
+      }
+    };
+  }
+  
+  validateTestBalance(results: TestResults): ValidationResult {
+    const distribution = this.getTestDistribution();
+    const total = results.unit + results.integration + results.e2e;
+    
+    const actual = {
+      unit: (results.unit / total) * 100,
+      integration: (results.integration / total) * 100,
+      e2e: (results.e2e / total) * 100
+    };
+    
+    const violations: string[] = [];
+    
+    if (actual.unit < distribution.unit.minimum) {
+      violations.push(`Unit test coverage too low: ${actual.unit}% (minimum: ${distribution.unit.minimum}%)`);
+    }
+    
+    if (actual.e2e > 15) {
+      violations.push(`Too many E2E tests: ${actual.e2e}% (maximum: 15%)`);
+    }
+    
+    return {
+      valid: violations.length === 0,
+      violations,
+      recommendations: this.generateRecommendations(actual, distribution)
+    };
+  }
+}
+```
+
+#### Test Framework Configuration
+
+**Comprehensive Framework Setup:**
+```typescript
+// testing/framework-configuration.ts
+export interface TestFrameworkConfig {
+  unit: {
+    framework: 'jest' | 'vitest' | 'mocha';
+    runner: string;
+    coverage: CoverageConfig;
+    mocking: MockConfig;
+  };
+  integration: {
+    framework: 'jest' | 'supertest' | 'testcontainers';
+    database: DatabaseTestConfig;
+    external: ExternalServiceConfig;
+  };
+  e2e: {
+    framework: 'playwright' | 'cypress' | 'puppeteer';
+    browsers: string[];
+    environment: E2EEnvironmentConfig;
+  };
+}
+
+export const ENTERPRISE_TEST_CONFIG: TestFrameworkConfig = {
+  unit: {
+    framework: 'jest',
+    runner: 'jest',
+    coverage: {
+      threshold: {
+        global: {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
+        }
+      },
+      reporters: ['text', 'lcov', 'html', 'json-summary'],
+      collectCoverageFrom: [
+        'src/**/*.{ts,js}',
+        '!src/**/*.d.ts',
+        '!src/**/*.test.{ts,js}',
+        '!src/**/__tests__/**',
+        '!src/test-utils/**'
+      ]
+    },
+    mocking: {
+      mockImplementation: 'jest',
+      autoMock: false,
+      clearMocks: true,
+      resetMocks: true
+    }
+  },
+  integration: {
+    framework: 'supertest',
+    database: {
+      strategy: 'testcontainers',
+      cleanup: 'after-each',
+      isolation: 'transaction'
+    },
+    external: {
+      strategy: 'wiremock',
+      contracts: true,
+      fallback: 'real-service'
+    }
+  },
+  e2e: {
+    framework: 'playwright',
+    browsers: ['chromium', 'firefox', 'webkit'],
+    environment: {
+      baseUrl: 'http://localhost:3000',
+      parallel: true,
+      retries: 2,
+      timeout: 30000
+    }
+  }
+};
+```
+
+### 2. Test-Driven Development (TDD)
+
+#### TDD Implementation Framework
+
+**Red-Green-Refactor Cycle:**
+```typescript
+// testing/tdd-workflow.ts
+export class TDDWorkflow {
+  private testRunner: TestRunner;
+  private coverage: CoverageTracker;
+  
+  constructor(testRunner: TestRunner, coverage: CoverageTracker) {
+    this.testRunner = testRunner;
+    this.coverage = coverage;
+  }
+  
+  async executeRedGreenRefactorCycle(
+    feature: FeatureSpec
+  ): Promise<TDDCycleResult> {
+    const cycle: TDDCycleResult = {
+      steps: [],
+      finalState: 'unknown',
+      coverage: 0,
+      duration: 0
+    };
+    
+    const startTime = Date.now();
+    
+    try {
+      // RED: Write failing test first
+      const testResult = await this.writeFailingTest(feature);
+      cycle.steps.push({ phase: 'red', result: testResult });
+      
+      // GREEN: Write minimal code to pass
+      const implementationResult = await this.writeMinimalImplementation(feature);
+      cycle.steps.push({ phase: 'green', result: implementationResult });
+      
+      // REFACTOR: Improve code quality
+      const refactorResult = await this.refactorCode(feature);
+      cycle.steps.push({ phase: 'refactor', result: refactorResult });
+      
+      cycle.finalState = 'success';
+      cycle.coverage = await this.coverage.getCoverage(feature);
+      cycle.duration = Date.now() - startTime;
+      
+    } catch (error) {
+      cycle.finalState = 'failed';
+      cycle.error = error;
+      cycle.duration = Date.now() - startTime;
+    }
+    
+    return cycle;
+  }
+}
+```
+
+### 3. Test Coverage Requirements
+
+#### MANDATORY Coverage Standards
+- **Minimum 90% unit test coverage** for all business logic
+- **Integration tests for every inter-service or API interaction**
+- **Explicit edge case and error handling tests**
+- **Performance testing for critical paths**
+
+#### Coverage Validation
+```yaml
+coverage_requirements:
+  unit_tests:
+    minimum_coverage: 90%
+    target_coverage: 95%
+    exclude_patterns:
+      - "**/*.d.ts"
+      - "**/test-utils/**"
+      - "**/__tests__/**"
+  
+  integration_tests:
+    required_coverage:
+      - "API endpoints"
+      - "Database operations"
+      - "External service calls"
+      - "Authentication flows"
+  
+  e2e_tests:
+    required_coverage:
+      - "Critical user journeys"
+      - "Authentication flows"
+      - "Error handling scenarios"
+```
+
+### 4. Testing Patterns
+
+#### Test Structure Standards
+- **Follow AAA pattern**: Arrange, Act, Assert
+- **Use descriptive test names** that explain the scenario
+- **Group related tests** in describe/context blocks
+- **Keep tests independent and isolated**
+
+#### Unit Testing Patterns
+- **Test individual functions and methods** in isolation
+- **Mock external dependencies and services**
+- **Focus on edge cases and error conditions**
+- **Use property-based testing** for complex algorithms
+
+#### Integration Testing Patterns
+- **Test component interactions and data flow**
+- **Use test containers for database testing**
+- **Test API endpoints with realistic payloads**
+- **Verify external service integrations**
+
+#### End-to-End Testing Patterns
+- **Test critical user journeys and workflows**
+- **Use page object models for UI testing**
+- **Implement visual regression testing**
+- **Test across different browsers and devices**
+
+### 5. Test Data Management
+
+#### Data Strategy
+```yaml
+test_data_management:
+  factories:
+    - "Use factories and builders for test data"
+    - "Implement data seeding for consistent test environments"
+    - "Clean up test data after each test run"
+    - "Use realistic but anonymized production data"
+  
+  isolation:
+    - "Each test should have isolated data"
+    - "Use database transactions for test isolation"
+    - "Reset state between test runs"
+    - "Avoid shared mutable state"
+```
+
+### 6. Performance Testing
+
+#### Performance Standards
+- **Include load testing for critical paths**
+- **Test memory usage and resource consumption**
+- **Verify response times meet SLA requirements**
+- **Test under various network conditions**
+
+### 7. Box Integration Specific
+
+#### Box Testing Requirements
+- **All Box SDK and API calls must be mocked or sandboxed** in integration tests
+- **Validate auth flows and error contracts**
+- **Test file upload/download scenarios**
+- **Verify permission handling**
+
+### 8. Microservice Testing Patterns (Python)
+
+#### Python Import Structure Solutions
+When testing microservices with complex package structures, use direct module imports to bypass circular dependencies:
+
+```python
+# Standard pattern for microservice testing
+import sys
+import os
+import importlib.util
+
+# Add service directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+# Direct module import (bypasses __init__.py circular dependencies)
+spec = importlib.util.spec_from_file_location(
+    'module_name', 
+    os.path.join(os.path.dirname(__file__), '..', '..', 'core', 'module_name.py')
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+# Now use module.ClassName() for testing
+```
+
+#### Custom Test Runner Pattern
+When pytest conflicts with package structure, create custom test runners:
+
+```python
+#!/usr/bin/env python3
+"""Custom test runner for microservice functionality."""
+
+import sys
+import asyncio
+from typing import List, Tuple
+
+def run_sync_tests(test_class, test_methods: List[str]) -> Tuple[int, int]:
+    """Run synchronous tests and return (passed, total)."""
+    test_instance = test_class()
+    passed = 0
+    
+    for test_name in test_methods:
+        try:
+            getattr(test_instance, test_name)()
+            print(f"✅ {test_name} PASSED")
+            passed += 1
+        except Exception as e:
+            print(f"❌ {test_name} FAILED: {e}")
+    
+    return passed, len(test_methods)
+
+async def run_async_tests(test_class, test_methods: List[str]) -> Tuple[int, int]:
+    """Run asynchronous tests and return (passed, total)."""
+    test_instance = test_class()
+    passed = 0
+    
+    for test_name in test_methods:
+        try:
+            await getattr(test_instance, test_name)()
+            print(f"✅ {test_name} PASSED")
+            passed += 1
+        except Exception as e:
+            print(f"❌ {test_name} FAILED: {e}")
+    
+    return passed, len(test_methods)
+```
+
+#### Microservice Test Categories
+```yaml
+microservice_testing:
+  unit_tests:
+    - "Individual component functionality"
+    - "Mock external dependencies completely"
+    - "Test error conditions and edge cases"
+    - "Validate business logic in isolation"
+  
+  integration_tests:
+    - "Multi-component workflows"
+    - "External service integration (with mocking)"
+    - "Database interaction testing"
+    - "API contract validation"
+  
+  failure_scenario_tests:
+    - "Network timeouts and connection failures"
+    - "External service unavailability"
+    - "Resource exhaustion scenarios"
+    - "Graceful degradation testing"
+  
+  performance_tests:
+    - "Response time validation (<200ms requirement)"
+    - "Memory usage under load"
+    - "Concurrent request handling"
+    - "Resource cleanup verification"
+```
+
+### 9. Tools and Automation
+
+#### Required Tools
+- **Use pytest for Python, Jest for JavaScript/TypeScript**
+- **Create custom test runners when pytest conflicts with package structure**
+- **Automate testing in CI for every PR**
+- **Integrate with coverage reporting tools**
+- **Use test containers for external dependencies**
+
+#### CI/CD Integration
+```yaml
+ci_testing:
+  triggers:
+    - "Every pull request"
+    - "Every merge to main"
+    - "Scheduled nightly runs"
+  
+  execution_methods:
+    - "Use pytest when package structure supports it"
+    - "Use custom test runners for microservices with import conflicts"
+    - "Ensure all test types run: unit, integration, failure scenarios, performance"
+    - "Generate test reports compatible with CI/CD systems"
+  
+  requirements:
+    - "All tests must pass (minimum 23 tests for Redis fallback functionality)"
+    - "Coverage thresholds must be met (>90% for business logic)"
+    - "Performance tests must pass (<200ms response time)"
+    - "Security tests must pass"
+    - "Regression tests must pass (prevent future breakage)"
+```
+
+### 9. Quality Gates
+
+#### Definition of Done for Testing
+- [ ] **Unit Tests**: >90% coverage with meaningful tests
+- [ ] **Integration Tests**: All API endpoints and service interactions covered
+- [ ] **E2E Tests**: Critical user journeys tested
+- [ ] **Performance Tests**: SLA requirements met
+- [ ] **Security Tests**: All security controls tested
+- [ ] **Documentation**: Test documentation updated
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all development work  
+**Purpose**: Ensure high-quality, reliable software through comprehensive testing

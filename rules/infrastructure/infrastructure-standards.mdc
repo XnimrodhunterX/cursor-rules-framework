@@ -1,0 +1,504 @@
+---
+ruleId: "INF-01"
+title: "Infrastructure-as-Code Standards"
+status: "active"
+compliance: "mandatory"
+description: "Infrastructure-as-Code standards ensuring all infrastructure is declarative, tested, and GitOps-compliant"
+globs: ["**/infrastructure/**", "**/terraform/**", "**/ansible/**", "**/pulumi/**", "**/cloudformation/**", "**/*.tf", "**/*.tfvars"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "infrastructure"
+---
+
+# INF-01: Infrastructure-as-Code Standards
+
+**Rule Type**: Infrastructure Standards
+**Priority**: CRITICAL
+**Scope**: All infrastructure provisioning and management
+**Integration**: Complements CN-02, CN-04, SEC-01
+
+## ⚠️ IMPORTANT: Placeholder Values Notice
+
+**ALL examples in this rule use ANONYMIZED PLACEHOLDER VALUES that MUST be replaced with actual values:**
+
+- `YOUR_GITHUB_USERNAME` → Replace with actual GitHub username
+- `YOUR_PROJECT_NAME` → Replace with actual project/repository name
+- `example-platform` → Replace with actual platform/application name
+
+**When implementing these configurations, Claude MUST:**
+1. **ASK the user** for actual values to replace placeholders
+2. **NEVER use** placeholder values as if they were real
+3. **PROMPT for real values** when creating infrastructure configurations
+4. **VALIDATE** that placeholders are replaced before deployment
+
+## PURPOSE & SCOPE
+
+Infrastructure-as-Code (IaC) standards ensure all infrastructure is declarative, version-controlled, tested, and deployed through GitOps principles. This rule establishes comprehensive requirements for K3S platform infrastructure management, Terraform configurations, and infrastructure testing.
+
+## CORE STANDARDS
+
+### 1. Declarative Infrastructure Requirements
+
+#### MANDATORY Declarative Standards
+- **All infrastructure must be defined in declarative YAML/Terraform**
+- **No manual cluster configuration permitted**
+- **GitOps deployment enforcement mandatory**
+- **Infrastructure testing with real clusters required**
+- **Immutable infrastructure principles enforced**
+
+#### Infrastructure Definition Patterns
+```yaml
+# K3S Cluster Configuration (infrastructure/k3s/cluster-config.yaml)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k3s-cluster-config
+  namespace: kube-system
+data:
+  # Declarative cluster configuration
+  cluster-config: |
+    apiVersion: k3s.cattle.io/v1
+    kind: Cluster
+    metadata:
+      name: goldschmidt-platform
+    spec:
+      # Single-node K3S configuration
+      server:
+        disableComponents:
+          - traefik
+          - servicelb
+        kubeAPIServerArgs:
+          - --enable-admission-plugins=NodeRestriction,PodSecurityPolicy
+        kubeControllerManagerArgs:
+          - --enable-hostpath-provisioner=false
+        kubeletArgs:
+          - --container-runtime-endpoint=unix:///run/containerd/containerd.sock
+
+      # Cilium CNI configuration
+      network:
+        plugin: cilium
+        options:
+          enableHubble: true
+          enableKubeProxy: false
+          tunnel: disabled
+          ipam:
+            mode: kubernetes
+
+      # Security hardening
+      security:
+        enableAuditLog: true
+        auditLogPath: /var/log/kubernetes/audit.log
+        auditLogMaxAge: 30
+        auditLogMaxBackup: 10
+        auditLogMaxSize: 100
+```
+
+#### Terraform Infrastructure Patterns
+```hcl
+# infrastructure/terraform/main.tf
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.0"
+    }
+  }
+
+  backend "s3" {
+    bucket = "goldschmidt-platform-terraform-state"
+    key    = "k3s-platform/terraform.tfstate"
+    region = "us-west-2"
+  }
+}
+
+# K3S Cluster Resources
+resource "kubernetes_namespace" "observability" {
+  metadata {
+    name = "observability"
+    labels = {
+      "app.kubernetes.io/name" = "observability"
+      "app.kubernetes.io/part-of" = "goldschmidt-platform"
+    }
+  }
+}
+
+resource "kubernetes_namespace" "security" {
+  metadata {
+    name = "security"
+    labels = {
+      "app.kubernetes.io/name" = "security"
+      "app.kubernetes.io/part-of" = "goldschmidt-platform"
+    }
+  }
+}
+
+# Cilium CNI Installation
+resource "helm_release" "cilium" {
+  name       = "cilium"
+  repository = "https://helm.cilium.io"
+  chart      = "cilium"
+  namespace  = "kube-system"
+
+  set {
+    name  = "ipam.mode"
+    value = "kubernetes"
+  }
+
+  set {
+    name  = "tunnel"
+    value = "disabled"
+  }
+
+  set {
+    name  = "enableHubble"
+    value = "true"
+  }
+
+  set {
+    name  = "enableKubeProxy"
+    value = "false"
+  }
+
+  depends_on = [kubernetes_namespace.observability]
+}
+```
+
+### 2. GitOps Deployment Enforcement
+
+#### MANDATORY GitOps Requirements
+- **All infrastructure changes must go through Git repository**
+- **ArgoCD or Flux for GitOps orchestration**
+- **Automated deployment on Git changes**
+- **Rollback capabilities for failed deployments**
+- **Infrastructure drift detection and remediation**
+
+#### ArgoCD Application Configuration
+```yaml
+# applications/platform/argocd-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: example-platform
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_GITHUB_USERNAME/YOUR_PROJECT_NAME
+    targetRevision: main
+    path: applications/platform
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+  revisionHistoryLimit: 10
+```
+
+#### Infrastructure Drift Detection
+```yaml
+# infrastructure/drift-detection.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drift-detection-config
+  namespace: kube-system
+data:
+  drift-detection.yaml: |
+    apiVersion: drift-detection.io/v1
+    kind: DriftDetection
+    metadata:
+      name: k3s-drift-detection
+    spec:
+      interval: 5m
+      resources:
+        - apiVersion: v1
+          kind: ConfigMap
+          namespace: kube-system
+          name: k3s-cluster-config
+        - apiVersion: apps/v1
+          kind: Deployment
+          namespace: observability
+      notifications:
+        - type: slack
+          webhook: ${SLACK_WEBHOOK_URL}
+        - type: email
+          recipients:
+            - admin@goldschmidt-platform.com
+```
+
+### 3. Infrastructure Testing Requirements
+
+#### MANDATORY Testing Standards
+- **Real cluster testing for all infrastructure changes**
+- **Infrastructure validation before deployment**
+- **Rollback testing for all changes**
+- **Performance testing for infrastructure components**
+- **Security testing for infrastructure configurations**
+
+#### Infrastructure Test Framework
+```python
+# tests/infrastructure/test_k3s_cluster.py
+import pytest
+import kubernetes
+from kubernetes import client, config
+from typing import Dict, Any
+
+class TestK3SCluster:
+    """Test K3S cluster infrastructure configuration"""
+
+    @pytest.fixture(autouse=True)
+    def setup_cluster(self):
+        """Setup test cluster connection"""
+        config.load_kube_config()
+        self.core_v1 = client.CoreV1Api()
+        self.apps_v1 = client.AppsV1Api()
+
+    def test_cluster_components(self):
+        """Test that all required cluster components are running"""
+        # Test Cilium CNI
+        cilium_pods = self.core_v1.list_namespaced_pod(
+            namespace="kube-system",
+            label_selector="k8s-app=cilium"
+        )
+        assert len(cilium_pods.items) > 0, "Cilium CNI not deployed"
+
+        # Test Hubble observability
+        hubble_pods = self.core_v1.list_namespaced_pod(
+            namespace="kube-system",
+            label_selector="k8s-app=hubble-relay"
+        )
+        assert len(hubble_pods.items) > 0, "Hubble observability not deployed"
+
+    def test_security_policies(self):
+        """Test security policies are enforced"""
+        # Test Pod Security Policies
+        psp_list = self.core_v1.list_pod_security_policy()
+        assert len(psp_list.items) > 0, "No Pod Security Policies configured"
+
+        # Test Network Policies
+        net_policies = client.NetworkingV1Api().list_network_policy_for_all_namespaces()
+        assert len(net_policies.items) > 0, "No Network Policies configured"
+
+    def test_observability_stack(self):
+        """Test observability components are deployed"""
+        # Test Prometheus
+        prometheus_pods = self.core_v1.list_namespaced_pod(
+            namespace="observability",
+            label_selector="app=prometheus"
+        )
+        assert len(prometheus_pods.items) > 0, "Prometheus not deployed"
+
+        # Test Grafana
+        grafana_pods = self.core_v1.list_namespaced_pod(
+            namespace="observability",
+            label_selector="app=grafana"
+        )
+        assert len(grafana_pods.items) > 0, "Grafana not deployed"
+```
+
+#### Infrastructure Validation Script
+```bash
+#!/bin/bash
+# scripts/validate-infrastructure.sh
+
+set -euo pipefail
+
+echo "🔍 Validating K3S infrastructure configuration..."
+
+# Validate cluster connectivity
+if ! kubectl cluster-info > /dev/null 2>&1; then
+    echo "❌ Cannot connect to K3S cluster"
+    exit 1
+fi
+
+# Validate Cilium CNI
+if ! kubectl get pods -n kube-system -l k8s-app=cilium | grep -q Running; then
+    echo "❌ Cilium CNI not running properly"
+    exit 1
+fi
+
+# Validate security components
+if ! kubectl get pods -n security | grep -q Running; then
+    echo "❌ Security components not running"
+    exit 1
+fi
+
+# Validate observability stack
+if ! kubectl get pods -n observability | grep -q Running; then
+    echo "❌ Observability stack not running"
+    exit 1
+fi
+
+# Validate GitOps deployment
+if ! kubectl get applications -n argocd | grep -q goldschmidt-platform; then
+    echo "❌ ArgoCD application not configured"
+    exit 1
+fi
+
+echo "✅ Infrastructure validation passed"
+```
+
+### 4. Immutable Infrastructure Principles
+
+#### MANDATORY Immutability Requirements
+- **No in-place infrastructure modifications**
+- **Version-controlled infrastructure definitions**
+- **Blue-green deployment for infrastructure changes**
+- **Infrastructure state management**
+- **Automated infrastructure lifecycle management**
+
+#### Infrastructure State Management
+```yaml
+# infrastructure/state-management.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infrastructure-state
+  namespace: kube-system
+data:
+  state.yaml: |
+    infrastructure:
+      version: "1.0.0"
+      last_updated: "2025-01-27T10:00:00Z"
+      components:
+        k3s_cluster:
+          version: "v1.28.0"
+          status: "active"
+          immutable: true
+        cilium_cni:
+          version: "1.15.0"
+          status: "active"
+          immutable: true
+        observability_stack:
+          version: "0.50.0"
+          status: "active"
+          immutable: true
+        security_stack:
+          version: "1.0.0"
+          status: "active"
+          immutable: true
+```
+
+## INTEGRATION REQUIREMENTS
+
+### Cross-Rule Dependencies
+```yaml
+dependencies:
+  INF-01:
+    depends_on:
+      - QC-08: File Organization Standards
+      - SEC-01: Security Standards
+      - CN-02: Container Standards
+    integrates_with:
+      - QC-14: Document Synchronization
+      - CN-04: Monitoring Standards
+      - MI-08: Microservices Governance
+```
+
+### Quality Gates
+```yaml
+quality_gates:
+  infrastructure_deployment:
+    - "All infrastructure declarative (YAML/Terraform)"
+    - "GitOps deployment configured"
+    - "Infrastructure tests passing"
+    - "Security validation completed"
+    - "Performance baseline established"
+```
+
+## IMPLEMENTATION CHECKLIST
+
+### Phase 1: Core Infrastructure (Week 1-2)
+- [ ] Create declarative K3S cluster configuration
+- [ ] Implement Terraform infrastructure definitions
+- [ ] Configure ArgoCD GitOps deployment
+- [ ] Set up infrastructure testing framework
+- [ ] Implement drift detection
+
+### Phase 2: Security Integration (Week 3-4)
+- [ ] Integrate with SEC-01 security standards
+- [ ] Implement infrastructure security policies
+- [ ] Configure security scanning for infrastructure
+- [ ] Set up secret management for infrastructure
+
+### Phase 3: Monitoring Integration (Week 5+)
+- [ ] Integrate with CN-04 monitoring standards
+- [ ] Configure infrastructure monitoring
+- [ ] Implement infrastructure alerting
+- [ ] Set up infrastructure dashboards
+
+## SUCCESS METRICS
+
+### Infrastructure Quality Metrics
+```yaml
+metrics:
+  declarative_coverage: "100% infrastructure as code"
+  gitops_compliance: "100% GitOps deployment"
+  test_coverage: ">90% infrastructure test coverage"
+  security_compliance: "Zero high/critical security findings"
+  deployment_reliability: "100% successful deployments"
+```
+
+### K3S Project Integration Metrics
+```yaml
+project_metrics:
+  cluster_uptime: ">99.9% K3S cluster availability"
+  security_posture: "All services follow security standards"
+  observability_coverage: "100% infrastructure observability"
+  documentation_accuracy: "Real-time infrastructure documentation sync"
+```
+
+## COMPLIANCE VALIDATION
+
+### Automated Compliance Checks
+```bash
+# scripts/compliance-check.sh
+#!/bin/bash
+
+echo "🔍 Running INF-01 compliance checks..."
+
+# Check declarative infrastructure
+if ! find infrastructure/ -name "*.yaml" -o -name "*.tf" | grep -q .; then
+    echo "❌ No declarative infrastructure found"
+    exit 1
+fi
+
+# Check GitOps configuration
+if ! kubectl get applications -n argocd > /dev/null 2>&1; then
+    echo "❌ GitOps not configured"
+    exit 1
+fi
+
+# Check infrastructure tests
+if ! python -m pytest tests/infrastructure/ -v; then
+    echo "❌ Infrastructure tests failing"
+    exit 1
+fi
+
+echo "✅ INF-01 compliance checks passed"
+```
+
+### Manual Compliance Validation
+- [ ] All infrastructure defined in YAML/Terraform
+- [ ] GitOps deployment configured and working
+- [ ] Infrastructure tests passing
+- [ ] Security policies implemented
+- [ ] Monitoring and alerting configured
+- [ ] Documentation synchronized with infrastructure
+
+## CONCLUSION
+
+INF-01 Infrastructure-as-Code Standards establish comprehensive requirements for declarative, tested, and GitOps-compliant infrastructure management. These standards ensure the K3S platform maintains high reliability, security, and operational excellence while supporting rapid development and deployment cycles.
+
+**Integration Note**: This rule works in conjunction with SEC-01 for security, CN-02 for container standards, and CN-04 for monitoring to provide a complete infrastructure management framework.

@@ -1,0 +1,130 @@
+---
+ruleId: "QC-07"
+title: "Documentation Standards"
+status: "active"
+compliance: "mandatory"
+description: "Documentation standards covering architecture, governance, and best practices"
+globs: ["**/*.md", "**/*.rst", "**/docs/**", "**/documentation/**", "**/README*"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "core"
+---
+
+# QC-07: Documentation Standards
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all documentation
+**Purpose**: Ensure comprehensive, maintainable, and accessible project documentation
+
+## Purpose & Scope
+
+Documentation as Code principles with automated generation, maintenance, and quality assurance to ensure comprehensive, accurate, and accessible project documentation. This rule establishes mandatory documentation requirements, governance standards, and architectural guidelines.
+
+## Core Principles
+
+### Documentation as Code
+
+* **Documentation lives alongside code in version control**
+* **Documentation follows same review process as code**
+* **Automated validation and generation where possible**
+* **Documentation deploys with applications**
+
+### Documentation Architecture
+
+```yaml
+# .docs/architecture.yaml
+documentation_structure:
+  technical:
+    api_reference: "Auto-generated from OpenAPI specs"
+    architecture:
+      - document_type: "Architecture Overview (AO)"
+        format: "markdown"
+      - document_type: "C4 Context Diagram"
+        format: "mmd or puml"
+      - document_type: "C4 Container Diagram"
+        format: "mmd or puml"
+      - document_type: "C4 Component Diagram"
+        format: "mmd or puml"
+      - document_type: "Solution Architecture Doc (SAD)"
+        format: "markdown + embedded diagrams"
+      - document_type: "Service Architecture Spec (SAS)"
+        format: "markdown + mmd or puml if applicable"
+      - document_type: "Deployment Architecture"
+        format: "mmd, puml, or image + markdown"
+      - document_type: "Dynamic Interaction Diagrams"
+        format: "mmd or puml"
+      - document_type: "ERD/Data Diagrams"
+        format: "mmd or puml + markdown"
+      - document_type: "API Contracts"
+        format: "OpenAPI YAML + markdown summary"
+      - document_type: "Threat Model (STRIDE, etc)"
+        format: "markdown + mmd for DFD"
+      - document_type: "Security Architecture Overview"
+        format: "markdown + embedded diagram"
+      - document_type: "Observability Plan"
+        format: "markdown"
+      - document_type: "DR and Backup Architecture"
+        format: "markdown + mmd for infra diagrams"
+      - document_type: "Reference Architecture"
+        format: "markdown + mmd or puml"
+      - document_type: "Domain Model"
+        format: "mmd or puml + markdown"
+      - document_type: "ADRs (Architecture Decision Records)"
+        format: "markdown"
+      - document_type: "System Interaction / Sequence Diagrams"
+        format: "mmd or puml or both"
+    runbooks: "Operational procedures and troubleshooting"
+    deployment: "Infrastructure and deployment guides"
+    srs: "Software Requirements Specification"
+    sdd: "Software Design Document"
+    tdd: "Technical Design Document"
+    source_code_docs: "Embedded code documentation"
+
+  user_facing:
+    getting_started: "Quick start guides and tutorials"
+    user_guides: "Feature documentation and workflows"
+    faqs: "Frequently asked questions"
+    changelog: "Version history and migration guides"
+
+  developer:
+    contributing: "Development setup and guidelines"
+    code_style: "Coding standards and conventions"
+    testing: "Testing strategies and examples"
+    security: "Security guidelines and best practices"
+
+tooling:
+  generator: "docusaurus"
+  api_docs: "redoc"
+  diagrams: "mermaid"
+  validation: "vale"
+  deployment: "netlify"
+```
+
+## Expanded Architecture Document Types
+
+All architecture documentation MUST include:
+
+| **Document Type**                      | **Objective**                               | **Scope**                              | **When to Use**                      | **Format**                                 |
+| -------------------------------------- | ------------------------------------------- | -------------------------------------- | ------------------------------------ | ------------------------------------------ |
+| Architecture Overview (AO)             | Summarize system architecture at high level | Entire system                          | Always—anchor doc                    | `markdown`                                 |
+| C4 Context Diagram                     | Show system boundary and external actors    | System and externals                   | Early design phase                   | `mmd` or `puml`                            |
+| C4 Container Diagram                   | Show major containers and responsibilities  | Runtime containers                     | After scoping modules                | `mmd` or `puml`                            |
+| C4 Component Diagram                   | Show internals of a container               | Classes/modules/functions              | During decomposition                 | `mmd` or `puml`                            |
+| Solution Architecture Doc (SAD)        | Document full solution architecture         | Single system or app                   | Before building complex features     | `markdown` + embedded diagram refs         |
+| Service Architecture Spec (SAS)        | Define service-specific architecture        | Microservice-level                     | For all microservices                | `markdown` + `mmd` or `puml` if applicable |
+| Deployment Architecture                | Show network and infra layout               | Nodes, zones, network                  | Before deployment                    | `mmd`, `puml`, or image file + `markdown`  |
+| Dynamic Interaction Diagrams           | Show request or data flows over time        | Use case or feature                    | For onboarding/debugging             | `mmd` or `puml`                            |
+| ERD/Data Diagrams                      | Model data relationships                    | Logical/physical DB models             | Before schema finalization           | `mmd` or `puml` + `markdown`               |
+| API Contracts                          | Document API behavior                       | Internal/external APIs                 | Always with integrations             | `OpenAPI YAML` + `markdown` summary        |
+| Threat Model (STRIDE, etc)             | Identify and mitigate risks                 | Systems and features                   | Required for all Tier 1 features     | `markdown` + `mmd` (for DFD)               |
+| Security Architecture Overview         | Define system-wide security controls        | Entire platform                        | Mandatory for prod systems           | `markdown` + embedded diagram              |
+| Observability Plan                     | Define SLOs, logs, metrics, alerts          | Full stack                             | Before release                       | `markdown`                                 |
+| DR and Backup Architecture             | Define recovery strategy                    | Data, services                         | Required for business continuity     | `markdown` + `mmd` (for infra diagrams)    |
+| Reference Architecture                 | Reusable patterns and blueprints            | Multi-team use                         | For all repeated designs             | `markdown` + `mmd` or `puml`               |
+| Domain Model                           | Show business logic and context             | DDD-based services                     | Event-driven or domain-based systems | `mmd` or `puml` + `markdown`               |
+| ADRs (Architecture Decision Records)   | Track design decisions                      | Per change or service                  | Always—use ADR templates             | `markdown`                                 |
+| System Interaction / Sequence Diagrams | Visualize temporal flow                     | Feature-level or service orchestration | For review and traceability          | `mmd`, `puml`, or both                     |
+
+*All diagrams must be placed in `docs/architecture/` or `docs/architecture/dependencies/`. All narrative documentation must be in `markdown`.*
+
+> For full structure, document examples, and CI/CD rules, see `docs/standards/documentation-standards.mdc`.

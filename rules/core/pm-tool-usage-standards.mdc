@@ -1,0 +1,462 @@
+---
+ruleId: "QC-18"
+title: "PM Tool Usage Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive standards for using the PM tool to track and manage all work items"
+alwaysApply: true
+lastUpdated: "2025-09-12 - CRITICAL SYNTAX CORRECTIONS APPLIED - CREATE COMMANDS FIXED"
+category: "core"
+---
+
+# QC-18: PM Tool Usage Standards
+
+## Purpose & Scope
+
+This rule establishes comprehensive standards for using the PM tool to track and manage all work items. It ensures no work is lost, no duplicates are created, and all work is properly tracked and managed.
+
+## ⚠️ IMPORTANT: Placeholder Values Notice
+
+**ALL examples in this rule use ANONYMIZED PLACEHOLDER VALUES that MUST be replaced with actual values:**
+
+- `YOUR_USERNAME` → Replace with actual username/assignee name
+- `YOUR_USER_ID` → Replace with actual user ID in the PM system
+- `YOUR_GITHUB_USERNAME` → Replace with actual GitHub username
+- `YOUR_PROJECT_NAME` → Replace with actual project/repository name
+
+**When implementing these commands, Claude MUST:**
+1. **ASK the user** for actual values to replace placeholders
+2. **NEVER use** placeholder values as if they were real
+3. **PROMPT for real values** when executing PM tool commands
+4. **VALIDATE** that placeholders are replaced before execution
+
+## MANDATORY PM Tool Protocol
+
+### 1. Pre-Work Checklist
+
+#### ALWAYS Check for Existing Work Items First
+```bash
+# Check for existing work items before creating new ones
+pm work-item list --status backlog
+pm work-item list --status todo
+pm work-item list --status in-progress
+```
+
+#### Search for Similar Work Items
+```bash
+# Search for similar work items to avoid duplicates
+# NOTE: --search option does not exist, use grep instead
+pm work-item list --type task | grep "API"
+pm work-item list --type story | grep "authentication"
+pm work-item list | grep "keyword"
+
+# Filter by available options
+pm work-item list --type epic
+pm work-item list --status backlog
+pm work-item list --assignee YOUR_USERNAME
+pm work-item list --priority high
+```
+
+### 2. Work Item Creation Commands
+
+#### Create Work Items
+```bash
+# Create Epic (CORRECT SYNTAX - title is positional)
+pm work-item create "Epic Title" --type epic --description "Epic description" --priority high
+
+# Create Story (CORRECT SYNTAX - title is positional)
+pm work-item create "Story Title" --type story --description "Story description" --priority medium --epic-id EPIC-001
+
+# Create Task (CORRECT SYNTAX - title is positional)
+pm work-item create "Task Title" --type task --description "Task description" --priority medium --story-id STORY-001 --estimated-hours 4
+
+# Create Task directly under Epic (NEW - Epic→Task hierarchy)
+pm work-item create "Task Title" --type task --description "Task description" --priority medium --epic-id EPIC-001 --estimated-hours 4
+
+# Create Task with auto-detected parent (NEW - --parent parameter)
+pm work-item create "Task Title" --type task --description "Task description" --priority medium --parent PARENT-ID --estimated-hours 4
+
+# Parameter aliases for convenience (NEW)
+pm work-item create "Task Title" --type task --epic EPIC-001 --estimated-hours 4
+pm work-item create "Task Title" --type task --story STORY-001 --estimated-hours 4
+
+# Create using templates (CORRECT SYNTAX - title is positional)
+pm work-item create "Epic Title" --template business_epic
+pm work-item create "Story Title" --template user_story
+pm work-item create "Task Title" --template development_task
+
+# NOTE: Title is POSITIONAL argument, not --title option
+# Use quotes around titles that contain spaces
+```
+
+#### Work Item Creation Requirements
+- **Check for duplicates first** - Always search before creating
+- **Use appropriate type** - Epic, Story, or Task
+- **Set clear title** - Descriptive and specific (POSITIONAL argument, not --title)
+- **Add description** - Detailed requirements and context
+- **Assign priority** - Critical, High, Medium, Low
+- **Set effort estimates** - Hours for tasks, points for stories
+- **Link dependencies** - Epic ID for stories, Story ID for tasks
+
+### 3. Work Item Management Commands
+
+#### List and Search Work Items
+```bash
+# List all work items
+pm work-item list
+
+# List by status
+pm work-item list --status backlog
+pm work-item list --status todo
+pm work-item list --status in-progress
+pm work-item list --status done
+
+# List by type
+pm work-item list --type epic
+pm work-item list --type story
+pm work-item list --type task
+
+# Search work items
+pm work-item list --search "keyword"
+pm work-item list --assignee "username"
+```
+
+#### Update Work Items
+```bash
+# Update work item status (separate command)
+pm work-item update-status WORK-001 backlog
+pm work-item update-status WORK-001 todo
+pm work-item update-status WORK-001 in-progress
+pm work-item update-status WORK-001 done
+
+# Update work item details (separate update command)
+pm work-item update WORK-001 --title "Updated Title"
+pm work-item update WORK-001 --description "Updated description"
+pm work-item update WORK-001 --priority high
+pm work-item update WORK-001 --assignee "username"
+pm work-item update WORK-001 --progress 75
+pm work-item update WORK-001 --add-comment "Updated based on stakeholder feedback"
+
+# NOTE: --add-comment option now available for work item updates
+```
+
+#### View Work Item Details
+```bash
+# View specific work item
+pm work-item show WORK-001
+
+# View work item with full details
+pm work-item show WORK-001 --verbose
+```
+
+### 4. Time Tracking Commands
+
+#### Log Time
+```bash
+# Log time to work item (positional hours - recommended)
+pm time log WORK-001 2 --description "API development"
+
+# Log time with specific user
+pm time log WORK-001 1.5 --user-id YOUR_USER_ID --date "2025-09-12" --description "Testing"
+
+# Alternative syntax with --hours parameter
+pm time log WORK-001 --hours 2 --user-id YOUR_USER_ID --description "API development"
+
+# Auto-detected user (defaults to Cursor)
+pm time log WORK-001 3.0 --description "Database optimization"
+
+# NOTE: Work item ID is positional argument, not --work-item option
+# User ID is optional and defaults to Cursor
+```
+
+#### Active Time Tracking (Timer)
+```bash
+# Start timer for work item
+pm time start WORK-001 --description "Working on implementation"
+
+# Start timer with specific user
+pm time start WORK-001 --user-id YOUR_USER_ID --description "Code review"
+
+# Check timer status
+pm time status --user-id YOUR_USER_ID
+
+# Stop active timer (auto-detects user)
+pm time stop
+
+# Stop timer for specific user
+pm time stop --user-id YOUR_USER_ID
+```
+
+#### View Time Logs
+```bash
+# List all time entries
+pm time list-entries
+
+# View time logs for work item
+pm time list-entries --work-item-id WORK-001
+
+# View time logs for user
+pm time list-entries --user-id YOUR_USER_ID
+
+# View time logs for date range
+pm time list-entries --start-date "2025-09-01" --end-date "2025-09-12"
+
+# Show detailed time entry
+pm time show LOG-ID
+```
+
+### 5. Sprint Management Commands
+
+#### Sprint Operations
+```bash
+# Create sprint
+pm sprint create "Sprint 1" --start-date "2025-09-15" --end-date "2025-09-29"
+
+# Add work items to sprint (via work-item update, not sprint add)
+pm work-item update WORK-001 --sprint-id SPRINT-001
+
+# Add team members to sprint
+pm sprint add-member SPRINT-001 YOUR_USERNAME
+
+# View sprint details
+pm sprint show SPRINT-001
+
+# List sprints
+pm sprint list
+
+# NOTE: No 'pm sprint add' command exists
+# Use 'pm work-item update --sprint-id' instead
+```
+
+### 6. Reporting Commands
+
+#### Generate Reports
+```bash
+# Work item report
+pm report work-item WORK-001
+
+# Time tracking report  
+pm report user YOUR_USERNAME
+
+# Sprint report
+pm report sprint SPRINT-001
+
+# Custom filtered reports
+pm report custom --status backlog --priority high
+pm report custom --type story --assignee YOUR_USERNAME
+
+# Dashboard overview
+pm report dashboard
+
+# Burndown chart
+pm report burndown SPRINT-001
+```
+
+## Rule Application Signals
+
+When you encounter PM tool usage, reference these additional rules:
+
+### PM Tool Implementation Signals
+- **Work Item Management** → Reference `.cursor/rules/core/project-management-standards.mdc` for project management patterns
+- **Time Tracking** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for time tracking patterns
+- **Sprint Management** → Reference `.cursor/rules/core/project-management-standards.mdc` for sprint management patterns
+
+### PM Tool Quality Signals
+- **Duplicate Prevention** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for duplicate checking patterns
+- **Work Item Creation** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for creation standards
+- **Progress Tracking** → Reference `.cursor/rules/core/project-management-standards.mdc` for progress tracking
+
+### PM Tool Issue Resolution Signals
+- **PM Tool Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **PM Tool Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **PM Tool Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Implementation Guidelines
+
+### 1. Pre-Work Protocol
+- **ALWAYS check for existing work items** before creating new ones
+- **Search for similar work items** to avoid duplicates
+- **Verify work item doesn't already exist** with different title/description
+- **Check if work is already in progress** by another team member
+
+### 2. Work Item Creation
+- **Use appropriate work item type** (Epic, Story, Task)
+- **Set clear, descriptive titles** that are searchable
+- **Add detailed descriptions** with requirements and context
+- **Assign appropriate priority** based on business value
+- **Set realistic effort estimates** for planning
+- **Link dependencies** properly (Epic → Story → Task)
+
+### 3. Work Item Management
+- **Update status regularly** as work progresses
+- **Log time spent** on each work item
+- **Add comments/updates** for progress tracking
+- **Close work items** when completed
+- **Archive completed work** for historical reference
+
+### 4. Quality Assurance
+- **No duplicate work items** - Always check first
+- **Complete work item details** - All required fields filled
+- **Regular status updates** - Keep work items current
+- **Time tracking accuracy** - Log actual time spent
+- **Proper work item linking** - Dependencies clearly defined
+
+## Success Metrics
+
+### PM Tool Usage KPIs
+- **0% duplicate work items** - No duplicates created
+- **100% work item coverage** - All work tracked in PM tool
+- **95%+ status accuracy** - Work items kept current
+- **100% time tracking** - All work time logged
+- **Complete audit trail** - Full work item history
+
+### Quality Metrics
+- **Clear work item titles** - Searchable and descriptive
+- **Detailed descriptions** - Complete requirements and context
+- **Appropriate priorities** - Based on business value
+- **Realistic estimates** - Accurate effort planning
+- **Proper linking** - Dependencies clearly defined
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before creating any work item, verify:
+- [ ] Searched for existing similar work items
+- [ ] Confirmed no duplicates exist
+- [ ] Used appropriate work item type
+- [ ] Set clear, descriptive title
+- [ ] Added detailed description
+- [ ] Assigned appropriate priority
+- [ ] Set realistic effort estimates
+- [ ] Linked dependencies properly
+
+### Quality Assurance
+- [ ] No duplicate work items created
+- [ ] All work properly tracked
+- [ ] Work items kept current
+- [ ] Time tracking accurate
+- [ ] Dependencies properly linked
+
+## MANDATORY Issue Documentation Protocol
+
+### **When PM Tool Issues Are Encountered**
+**CRITICAL REQUIREMENT:** All AI agents must document PM Tool issues systematically.
+
+#### **Issue Documentation Process**
+```bash
+# 1. Document the issue encountered
+pm work-item create "PM Tool Issue: [Brief Description]" --type story --epic-id c6089a8e \
+  --description "ISSUE ENCOUNTERED: [Detailed description of what went wrong]
+  
+EXPECTED BEHAVIOR: [What the user expected to happen]
+ACTUAL BEHAVIOR: [What actually happened]
+COMMAND ATTEMPTED: [Exact command that failed]
+ERROR MESSAGE: [Complete error message received]
+CONTEXT: [What task was being attempted]
+SUGGESTED IMPROVEMENT: [Specific suggestion for how PM Tool should behave]
+USABILITY IMPACT: [How this affects user workflow]"
+
+# 2. Log time investigating the issue
+pm time log [WORK_ITEM_ID] [hours] --description "Investigated PM Tool usability issue and documented improvement requirements"
+
+# 3. Continue with workaround if possible, or escalate if blocking
+```
+
+#### **Required Issue Documentation Fields**
+- **Issue Type**: Command error, UX confusion, missing feature, inconsistent behavior
+- **Reproduction Steps**: Exact sequence that caused the issue
+- **Expected vs Actual**: Clear comparison of expected vs actual behavior
+- **Suggested Solution**: Specific improvement recommendation
+- **Priority Assessment**: Impact on workflow (blocking, annoying, minor)
+- **Workaround Used**: How the task was ultimately completed
+
+#### **Issue Categories to Document**
+1. **Command Syntax Errors** - When intuitive commands fail
+2. **Missing Features** - When expected functionality doesn't exist
+3. **Inconsistent Behavior** - When similar commands work differently
+4. **Poor Error Messages** - When errors don't guide to solutions
+5. **Workflow Friction** - When PM Tool forces unnatural workflows
+
+### **Continuous Improvement Protocol**
+**All documented issues contribute to PM Tool evolution and better user experience.**
+
+## Error Handling Standards
+
+### **Comprehensive Error Message System**
+PM Tool now provides helpful, context-aware error messages following ENG-01 engineering excellence standards.
+
+#### **Error Message Features**
+- **Context-aware suggestions**: "Did you mean [suggestion]?"
+- **Usage examples**: Show correct command syntax
+- **Alternative options**: Multiple ways to accomplish goals
+- **Clear guidance**: Explain what went wrong and why
+
+#### **Error Message Examples**
+
+**Command Not Found Errors:**
+```bash
+# Before: Generic Click error
+$ pm work-item invalid-command
+Error: No such command 'invalid-command'.
+
+# After: Helpful error with suggestions
+$ pm work-item invalid-command
+Error: Invalid command usage for 'work-item'
+Attempted: invalid-command
+Issue: 'invalid-command' is not a valid command
+
+Suggestions:
+  1. Check available commands with: work-item --help
+  2. Use tab completion for command suggestions
+  3. Similar commands: create, show, list
+
+Examples:
+  1. work-item --help  # Show all available commands
+  2. work-item create --help  # Show command-specific help
+
+Available commands:
+  • create • show • list • update-status • assign • update • delete
+```
+
+**Resource Not Found Errors:**
+```bash
+# Before: Generic error
+$ pm work-item show invalid-id
+Work item invalid-id not found
+
+# After: Helpful error with guidance
+$ pm work-item show invalid-id
+Error: Invalid command usage for 'pm work-item show'
+Attempted: pm work-item show invalid-id
+Issue: Work item 'invalid-id' not found
+
+Suggestions:
+  1. Check the work item ID: invalid-id
+  2. Use 'pm work-item list' to see all available work items
+  3. Verify the work item exists and try again
+
+Examples:
+  1. pm work-item list
+  2. pm work-item show <work-item-id>
+  3. pm work-item list --type epic
+```
+
+#### **Error Handling Coverage**
+- ✅ **Command Not Found**: All command groups (work-item, sprint, user, time, report)
+- ✅ **Resource Not Found**: Work items, sprints, users, time entries
+- ✅ **Validation Errors**: Parameter validation with helpful constraints
+- ✅ **Missing Arguments**: Clear indication of required parameters
+- ✅ **Invalid Values**: Shows valid options and suggestions
+
+### **Continuous Improvement Protocol**
+**All documented issues contribute to PM Tool evolution and better user experience.**
+
+## Conclusion
+
+This rule ensures comprehensive use of the PM tool to track and manage all work items, preventing duplicates and ensuring no work is lost. It provides explicit commands and protocols for effective project management.
+
+**CRITICAL ADDITION:** All PM Tool issues must be documented systematically to drive continuous improvement and better user experience.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all work tracking and issue documentation  
+**Purpose**: Ensure comprehensive work item tracking, management, and continuous PM Tool improvement

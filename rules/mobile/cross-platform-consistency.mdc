@@ -1,0 +1,446 @@
+---
+ruleId: "MB-03"
+title: "Cross-Platform Consistency Standards"
+status: "active"
+compliance: "mandatory"
+description: "Standards for maintaining consistent UX and functionality across Web, iOS, and Android platforms"
+globs: ["**/mobile/**", "**/apps/**", "**/shared/**"]
+alwaysApply: false
+lastUpdated: "2024-09-08"
+category: "mobile"
+---
+
+# MB-03: Cross-Platform Consistency Standards
+
+## Purpose & Scope
+
+Cross-platform consistency standards ensuring unified user experience, feature parity, and design coherence across Web, iOS, and Android applications for The Middle platform while respecting platform-specific conventions.
+
+## Core Standards
+
+### 1. Design System Consistency
+
+#### MANDATORY Design Token System
+```typescript
+// shared/types/design-tokens.ts
+export interface DesignTokens {
+  colors: {
+    primary: string;
+    primaryVariant: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    error: string;
+    onPrimary: string;
+    onSecondary: string;
+    onBackground: string;
+    onSurface: string;
+    onError: string;
+  };
+  typography: {
+    h1: TypographyScale;
+    h2: TypographyScale;
+    h3: TypographyScale;
+    body1: TypographyScale;
+    body2: TypographyScale;
+    caption: TypographyScale;
+  };
+  spacing: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+  };
+  borderRadius: {
+    sm: number;
+    md: number;
+    lg: number;
+  };
+}
+
+interface TypographyScale {
+  fontSize: number;
+  lineHeight: number;
+  fontWeight: string;
+  letterSpacing?: number;
+}
+```
+
+#### Platform-Specific Implementation
+```swift
+// iOS: DesignTokens.swift
+enum DesignTokens {
+    enum Colors {
+        static let primary = Color("PrimaryColor")
+        static let secondary = Color("SecondaryColor")
+        static let background = Color("BackgroundColor")
+        // ... other colors
+    }
+    
+    enum Typography {
+        static let h1 = Font.custom("SF Pro Display", size: 28).weight(.bold)
+        static let body1 = Font.custom("SF Pro Text", size: 16).weight(.regular)
+        // ... other typography scales
+    }
+    
+    enum Spacing {
+        static let xs: CGFloat = 4
+        static let sm: CGFloat = 8
+        static let md: CGFloat = 16
+        static let lg: CGFloat = 24
+        static let xl: CGFloat = 32
+    }
+}
+```
+
+```kotlin
+// Android: DesignTokens.kt
+object DesignTokens {
+    object Colors {
+        val primary = Color(0xFF1976D2)
+        val secondary = Color(0xFF424242)
+        val background = Color(0xFFFAFAFA)
+        // ... other colors
+    }
+    
+    object Typography {
+        val h1 = TextStyle(
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            lineHeight = 36.sp
+        )
+        val body1 = TextStyle(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 24.sp
+        )
+        // ... other typography scales
+    }
+    
+    object Spacing {
+        val xs = 4.dp
+        val sm = 8.dp
+        val md = 16.dp
+        val lg = 24.dp
+        val xl = 32.dp
+    }
+}
+```
+
+### 2. Component Consistency
+
+#### Universal Component Specifications
+```typescript
+// shared/types/components.ts
+export interface LocationInputProps {
+  value: string;
+  placeholder: string;
+  onValueChange: (value: string) => void;
+  onRemove?: () => void;
+  isLoading?: boolean;
+  error?: string;
+}
+
+export interface PlanCardProps {
+  plan: Plan;
+  onTap: (planId: string) => void;
+  onShare: (planId: string) => void;
+  showActions?: boolean;
+}
+
+export interface ActivityListProps {
+  activities: Activity[];
+  onActivityTap: (activity: Activity) => void;
+  onVote: (activityId: string) => void;
+  loading?: boolean;
+  error?: string;
+}
+```
+
+#### Implementation Guidelines
+```yaml
+component_consistency:
+  location_input:
+    ios:
+      - Use native text field with platform styling
+      - Implement autocomplete with MKLocalSearch
+      - Support haptic feedback for interactions
+    android:
+      - Use Material 3 text field design
+      - Implement autocomplete with Places API
+      - Support material design animations
+    web:
+      - Use accessible HTML input with ARIA labels
+      - Implement autocomplete with browser APIs
+      - Support keyboard navigation
+  
+  plan_card:
+    common:
+      - Show plan title, creation date, participant count
+      - Display map preview or location summary
+      - Include share and action buttons
+    platform_specific:
+      - iOS: Use SF Symbols for icons
+      - Android: Use Material icons
+      - Web: Use Heroicons or similar web-friendly set
+```
+
+### 3. Navigation Consistency
+
+#### Unified Navigation Patterns
+```yaml
+navigation_structure:
+  main_tabs:
+    - home: "Plans" / "My Plans"
+    - create: "Create" / "New Plan"
+    - discover: "Discover" / "Explore" (future)
+    - profile: "Profile" / "Settings"
+  
+  modal_flows:
+    - plan_creation: Full-screen modal on mobile, overlay on web
+    - plan_details: Push navigation on mobile, modal on web
+    - activity_details: Push navigation on mobile, side panel on web
+  
+  platform_adaptations:
+    ios:
+      - Use UITabBarController for main navigation
+      - UINavigationController for hierarchical flows
+      - Sheet presentation for modals
+    android:
+      - Use BottomNavigationView for main navigation
+      - Fragment navigation for hierarchical flows
+      - BottomSheetDialog for modals
+    web:
+      - Use horizontal tab navigation
+      - React Router for URL-based navigation
+      - Modal overlays for temporary content
+```
+
+### 4. Data Synchronization
+
+#### Shared Data Models
+```typescript
+// shared/types/models.ts
+export interface Plan {
+  id: string;
+  title: string;
+  locations: Location[];
+  midpoint: Coordinates;
+  activities: Activity[];
+  shareToken?: string;
+  createdAt: Date;
+  expiresAt: Date;
+  participants: Participant[];
+}
+
+export interface Location {
+  id: string;
+  address: string;
+  coordinates: Coordinates;
+  placeId?: string;
+}
+
+export interface Activity {
+  id: string;
+  name: string;
+  category: ActivityCategory;
+  coordinates: Coordinates;
+  rating?: number;
+  priceLevel?: number;
+  photos: string[];
+  votes: Vote[];
+}
+
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+```
+
+#### State Management Consistency
+```yaml
+state_patterns:
+  loading_states:
+    - idle: No operation in progress
+    - loading: Operation in progress
+    - success: Operation completed successfully
+    - error: Operation failed with error message
+  
+  error_handling:
+    - Network errors: Show retry option
+    - Validation errors: Highlight invalid fields
+    - Permission errors: Guide user to settings
+    - Server errors: Show generic error message
+  
+  offline_behavior:
+    - Cache recent plans locally
+    - Show offline indicator
+    - Queue mutations for when online
+    - Graceful degradation of features
+```
+
+### 5. Feature Parity Matrix
+
+#### Core Features Consistency
+```yaml
+feature_matrix:
+  plan_creation:
+    web: ✅ Full feature set
+    ios: ✅ Full feature set
+    android: ✅ Full feature set
+    notes: "Identical functionality across all platforms"
+  
+  location_input:
+    web: ✅ Address autocomplete, manual coordinate entry
+    ios: ✅ Address autocomplete, current location, manual entry
+    android: ✅ Address autocomplete, current location, manual entry
+    notes: "Mobile has additional current location feature"
+  
+  map_integration:
+    web: ✅ Mapbox GL JS
+    ios: ✅ Apple MapKit
+    android: ✅ Google Maps
+    notes: "Platform-native map libraries for best performance"
+  
+  sharing:
+    web: ✅ URL sharing, social media
+    ios: ✅ Native share sheet, URLs, deep links
+    android: ✅ Native share sheet, URLs, deep links
+    notes: "Mobile has richer native sharing options"
+  
+  offline_support:
+    web: 🔄 Service worker caching
+    ios: ✅ Core Data local storage
+    android: ✅ Room database storage
+    notes: "Mobile has more robust offline capabilities"
+```
+
+### 6. Platform Adaptation Guidelines
+
+#### Respecting Platform Conventions
+```yaml
+platform_conventions:
+  ios:
+    navigation:
+      - Use navigation bars with large titles
+      - Implement swipe-back gestures
+      - Use SF Symbols for consistent iconography
+    interactions:
+      - Haptic feedback for important actions
+      - Context menus for secondary actions
+      - Pull-to-refresh for data updates
+    styling:
+      - Respect Dynamic Type user preferences
+      - Support Dark Mode with system colors
+      - Use native blur effects and materials
+  
+  android:
+    navigation:
+      - Use Material 3 navigation patterns
+      - Implement back button handling
+      - Use Material icons consistently
+    interactions:
+      - Material ripple effects for touch feedback
+      - Floating Action Buttons for primary actions
+      - Snackbars for non-critical notifications
+    styling:
+      - Follow Material Design 3 guidelines
+      - Support dynamic color theming (Android 12+)
+      - Use elevation and shadows appropriately
+  
+  web:
+    navigation:
+      - URL-based routing for bookmarking
+      - Breadcrumbs for deep navigation
+      - Keyboard shortcuts for power users
+    interactions:
+      - Hover states for interactive elements
+      - Focus management for accessibility
+      - Progressive enhancement
+    styling:
+      - Responsive design for all screen sizes
+      - High contrast mode support
+      - Print-friendly layouts where applicable
+```
+
+### 7. Testing Consistency
+
+#### Cross-Platform Test Strategy
+```yaml
+test_coverage:
+  unit_tests:
+    shared_logic:
+      - Business logic in shared utilities
+      - Data transformation functions
+      - API client implementations
+    platform_specific:
+      - View models and state management
+      - Navigation logic
+      - Platform integrations
+  
+  integration_tests:
+    api_integration:
+      - GraphQL query/mutation testing
+      - Error handling scenarios
+      - Authentication flows
+    data_persistence:
+      - Local storage implementations
+      - Sync mechanisms
+      - Offline scenarios
+  
+  e2e_tests:
+    critical_paths:
+      - Plan creation flow
+      - Plan sharing flow
+      - Activity voting flow
+    cross_platform:
+      - Same test scenarios across platforms
+      - Consistent assertions and expectations
+      - Platform-specific implementation details abstracted
+```
+
+## Rule Application Signals
+
+When you encounter cross-platform development work, reference these additional rules:
+
+### Cross-Platform Implementation Signals
+- **Frontend Cross-Platform** → Reference `.cursor/rules/architecture/frontend-standards.mdc` for frontend implementation patterns
+- **iOS Cross-Platform** → Reference `.cursor/rules/mobile/ios-development-standards.mdc` for iOS implementation patterns
+- **Android Cross-Platform** → Reference `.cursor/rules/mobile/android-development-standards.mdc` for Android implementation patterns
+- **Cross-Platform Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Cross-Platform Quality Signals
+- **Cross-Platform Security** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns across platforms
+- **Cross-Platform Testing** → Reference `.cursor/rules/integration/testing-integration.mdc` + `.cursor/rules/mobile/mobile-testing-standards.mdc` for testing across platforms
+- **Cross-Platform Performance** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization across platforms
+- **Cross-Platform Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for monitoring across platforms
+
+### Cross-Platform Issue Resolution Signals
+- **Cross-Platform Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Cross-Platform Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Cross-Platform Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Quality Gates
+
+### Cross-Platform Consistency Checklist
+- [ ] **Design tokens** implemented consistently across all platforms
+- [ ] **Component behavior** identical across platforms (accounting for platform conventions)
+- [ ] **Navigation patterns** follow platform conventions while maintaining consistency
+- [ ] **Feature parity** achieved or documented exceptions approved
+- [ ] **Data models** shared and synchronized across platforms
+- [ ] **Error handling** consistent patterns and messaging
+- [ ] **Accessibility** standards met on all platforms
+- [ ] **Performance** benchmarks met on each platform
+
+### Platform-Specific Adaptations
+- [ ] **iOS**: Human Interface Guidelines compliance
+- [ ] **Android**: Material Design Guidelines compliance  
+- [ ] **Web**: WCAG 2.1 AA accessibility compliance
+- [ ] **All platforms**: Responsive design principles applied
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all cross-platform development
+**Purpose**: Ensure cohesive user experience while respecting platform conventions

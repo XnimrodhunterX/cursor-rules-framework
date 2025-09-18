@@ -1,0 +1,364 @@
+---
+ruleId: "MB-01"
+title: "iOS Development Standards"
+status: "active"
+compliance: "mandatory"
+description: "iOS native development standards for Swift, SwiftUI, and Apple platform integration"
+globs: ["**/ios/**", "**/*.swift", "**/*.plist", "**/*.xcodeproj/**"]
+alwaysApply: false
+lastUpdated: "2024-09-08"
+category: "mobile"
+---
+
+# MB-01: iOS Development Standards
+
+## Purpose & Scope
+
+Native iOS development standards ensuring consistent, performant, and platform-compliant applications using Swift, SwiftUI, and Apple ecosystem integration for The Middle platform.
+
+## Rule Triggers
+
+### When to Apply Cross-Platform and Testing Considerations
+```yaml
+triggers:
+  cross_platform_consistency:
+    when: "Developing iOS features that need to work across platforms"
+    reference: "MB-03: Cross-Platform Consistency Standards"
+    action: "Ensure iOS implementation aligns with cross-platform requirements"
+    conditions:
+      - "Shared business logic"
+      - "API integration"
+      - "UI/UX consistency requirements"
+      - "Feature parity needs"
+  
+  mobile_testing:
+    when: "Implementing iOS features that require testing"
+    reference: "MB-04: Mobile Testing Standards"
+    action: "Apply iOS-specific testing requirements and patterns"
+    conditions:
+      - "New feature development"
+      - "UI component creation"
+      - "API integration"
+      - "User flow implementation"
+  
+  security_integration:
+    when: "Handling sensitive data or security features on iOS"
+    reference: "SEC-01: Universal Security Standards"
+    action: "Apply iOS-specific security best practices"
+    conditions:
+      - "Keychain usage"
+      - "Biometric authentication"
+      - "Data encryption"
+      - "Secure network communication"
+```
+
+## Core Standards
+
+### 1. Swift Language Standards
+
+#### MANDATORY Swift Conventions
+- **Swift 5.9+** minimum version requirement
+- **Strict typing** with minimal use of `Any` or force unwrapping
+- **SwiftLint** integration with custom rules
+- **Async/await** for asynchronous operations (iOS 15+)
+
+#### Code Organization
+```swift
+// MARK: - Protocol Definitions
+protocol LocationServiceProtocol {
+    func geocodeAddress(_ address: String) async throws -> CLLocation
+}
+
+// MARK: - Main Implementation
+@MainActor
+final class LocationService: LocationServiceProtocol {
+    // MARK: - Properties
+    private let geocoder = CLGeocoder()
+    private let locationManager = CLLocationManager()
+    
+    // MARK: - Public Methods
+    func geocodeAddress(_ address: String) async throws -> CLLocation {
+        let placemarks = try await geocoder.geocodeAddressString(address)
+        guard let location = placemarks.first?.location else {
+            throw LocationError.geocodingFailed
+        }
+        return location
+    }
+}
+
+// MARK: - Error Definitions
+enum LocationError: LocalizedError {
+    case geocodingFailed
+    case permissionDenied
+    
+    var errorDescription: String? {
+        switch self {
+        case .geocodingFailed:
+            return "Failed to geocode address"
+        case .permissionDenied:
+            return "Location permission denied"
+        }
+    }
+}
+```
+
+### 2. SwiftUI Architecture Standards
+
+#### Component Design Patterns
+```swift
+// MARK: - View Protocol Compliance
+struct PlanCreationView: View {
+    // MARK: - Properties
+    @StateObject private var viewModel = PlanCreationViewModel()
+    @Environment(\.dismiss) private var dismiss
+    
+    // MARK: - Body
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                locationInputSection
+                createPlanButton
+            }
+            .navigationTitle("Create Plan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                toolbarContent
+            }
+        }
+    }
+    
+    // MARK: - View Components
+    @ViewBuilder
+    private var locationInputSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Enter Locations")
+                .font(.headline)
+            
+            ForEach(viewModel.locations.indices, id: \.self) { index in
+                LocationInputRow(
+                    location: $viewModel.locations[index],
+                    onDelete: { viewModel.removeLocation(at: index) }
+                )
+            }
+            
+            Button("Add Location") {
+                viewModel.addLocation()
+            }
+            .disabled(viewModel.locations.count >= 6)
+        }
+    }
+}
+```
+
+#### MVVM Implementation
+```swift
+// MARK: - ViewModel
+@MainActor
+final class PlanCreationViewModel: ObservableObject {
+    // MARK: - Published Properties
+    @Published var locations: [LocationInput] = [LocationInput()]
+    @Published var isCreating = false
+    @Published var errorMessage: String?
+    
+    // MARK: - Dependencies
+    private let planService: PlanServiceProtocol
+    private let locationService: LocationServiceProtocol
+    
+    // MARK: - Initialization
+    init(
+        planService: PlanServiceProtocol = PlanService(),
+        locationService: LocationServiceProtocol = LocationService()
+    ) {
+        self.planService = planService
+        self.locationService = locationService
+    }
+    
+    // MARK: - Actions
+    func createPlan() async {
+        isCreating = true
+        defer { isCreating = false }
+        
+        do {
+            let plan = try await planService.createPlan(from: locations)
+            // Handle success
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+```
+
+### 3. Apple Platform Integration
+
+#### Core Data Integration
+```swift
+// MARK: - Core Data Stack
+final class PersistenceController {
+    static let shared = PersistenceController()
+    
+    lazy var container: NSPersistentContainer = {
+        let container = NSPersistentContainer(name: "TheMiddleModel")
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Core Data failed to load: \(error)")
+            }
+        }
+        return container
+    }()
+    
+    func save() {
+        let context = container.viewContext
+        if context.hasChanges {
+            try? context.save()
+        }
+    }
+}
+```
+
+#### Push Notifications
+```swift
+// MARK: - Notification Manager
+@MainActor
+final class NotificationManager: NSObject, ObservableObject {
+    @Published var permissionStatus: UNAuthorizationStatus = .notDetermined
+    
+    override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+        checkPermissionStatus()
+    }
+    
+    func requestPermission() async -> Bool {
+        do {
+            let granted = try await UNUserNotificationCenter.current()
+                .requestAuthorization(options: [.alert, .sound, .badge])
+            await MainActor.run {
+                self.permissionStatus = granted ? .authorized : .denied
+            }
+            return granted
+        } catch {
+            return false
+        }
+    }
+}
+```
+
+### 4. Testing Standards
+
+#### Unit Testing
+```swift
+// MARK: - Test Class
+@MainActor
+final class PlanCreationViewModelTests: XCTestCase {
+    private var sut: PlanCreationViewModel!
+    private var mockPlanService: MockPlanService!
+    private var mockLocationService: MockLocationService!
+    
+    override func setUp() async throws {
+        mockPlanService = MockPlanService()
+        mockLocationService = MockLocationService()
+        sut = PlanCreationViewModel(
+            planService: mockPlanService,
+            locationService: mockLocationService
+        )
+    }
+    
+    override func tearDown() async throws {
+        sut = nil
+        mockPlanService = nil
+        mockLocationService = nil
+    }
+    
+    func testCreatePlan_WithValidLocations_CreatesSuccessfully() async throws {
+        // Given
+        sut.locations = [
+            LocationInput(address: "New York, NY"),
+            LocationInput(address: "Boston, MA")
+        ]
+        mockPlanService.createPlanResult = .success(mockPlan)
+        
+        // When
+        await sut.createPlan()
+        
+        // Then
+        XCTAssertFalse(sut.isCreating)
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertEqual(mockPlanService.createPlanCallCount, 1)
+    }
+}
+```
+
+### 5. Performance Standards
+
+#### Memory Management
+- **Use weak references** for delegate patterns
+- **Properly manage observation lifecycles** with `onDisappear`
+- **Lazy loading** for expensive operations
+- **Image caching** for map pins and venue photos
+
+#### UI Performance
+```swift
+// MARK: - Performance Optimizations
+struct OptimizedListView: View {
+    let items: [Item]
+    
+    var body: some View {
+        LazyVStack {
+            ForEach(items) { item in
+                ItemRowView(item: item)
+                    .onAppear {
+                        // Lazy load additional data
+                        loadDataIfNeeded(for: item)
+                    }
+            }
+        }
+    }
+}
+```
+
+## Rule Application Signals
+
+When you encounter iOS development work, reference these additional rules:
+
+### iOS Implementation Signals
+- **iOS Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **iOS Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **iOS Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **iOS Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### iOS Quality Signals
+- **iOS Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **iOS Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **iOS Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for iOS monitoring patterns
+- **Cross-Platform Consistency** → Reference `.cursor/rules/mobile/cross-platform-consistency.mdc` for cross-platform requirements
+- **Mobile Testing** → Reference `.cursor/rules/mobile/mobile-testing-standards.mdc` for mobile-specific testing
+
+### iOS Issue Resolution Signals
+- **iOS Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **iOS Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **iOS Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Quality Gates
+
+### Definition of Done for iOS Development
+- [ ] **SwiftLint passes** with zero warnings
+- [ ] **Unit test coverage** >80% for ViewModels and Services
+- [ ] **UI tests** for critical user journeys
+- [ ] **Accessibility audit** complete (VoiceOver, Dynamic Type)
+- [ ] **Performance testing** on oldest supported device
+- [ ] **Apple Human Interface Guidelines** compliance
+- [ ] **App Store Review Guidelines** compliance
+
+### iOS-Specific Requirements
+- [ ] **iPhone and iPad** support (Universal app)
+- [ ] **Dark mode** support
+- [ ] **Dynamic Type** support
+- [ ] **VoiceOver** accessibility
+- [ ] **iOS 16.0+** minimum deployment target
+- [ ] **Privacy manifest** complete for App Store
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all iOS development
+**Purpose**: Ensure high-quality, performant, and platform-compliant iOS applications

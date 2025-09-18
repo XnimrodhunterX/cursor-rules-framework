@@ -1,0 +1,375 @@
+---
+ruleId: "BUG-01"
+title: "Bug Reporting and Quality Assurance Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive bug reporting, quality assurance, and defect tracking standards"
+globs: ["**/bugs/**", "**/issues/**", "**/*.bug.*", "**/*.issue.*"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "quality"
+---
+
+# BUG-01: Bug Reporting and Quality Assurance Standards
+
+## Purpose & Scope
+
+Comprehensive bug reporting, quality assurance, and defect tracking standards ensuring systematic identification, documentation, resolution, and prevention of software defects through standardized processes, native tooling integration, and engineering excellence practices.
+
+## Core Principles
+
+### 1. Systematic Bug Detection
+- **Proactive identification** through testing and monitoring
+- **User-reported issues** captured with structured data
+- **Automated detection** via CI/CD pipelines and monitoring
+- **Cross-project bug tracking** for enterprise environments
+
+### 2. Standardized Reporting
+- **Consistent bug report formats** across all projects and teams
+- **Severity-based classification** with clear escalation paths
+- **Reproducible documentation** with step-by-step reproduction
+- **Environmental context** capture for debugging efficiency
+
+### 3. Integrated Workflows
+- **Native tool integration** with project management systems
+- **Automated lifecycle management** from detection to resolution
+- **Cross-functional collaboration** between dev, QA, and operations
+- **Knowledge retention** through structured documentation
+
+## Core Standards
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all software development projects
+**Purpose**: Ensure systematic quality assurance and rapid defect resolution
+
+### Mandatory Bug Reporting Requirements
+
+#### 1. Immediate Documentation
+```yaml
+bug_reporting:
+  when_required:
+    - Any software failure or unexpected behavior
+    - Performance degradation beyond acceptable thresholds  
+    - Security vulnerability discovery
+    - Data integrity issues
+    - User experience problems
+    - Integration failures
+    - Documentation inaccuracies
+  
+  mandatory_fields:
+    - severity: [CRITICAL, HIGH, MEDIUM, LOW]
+    - exact_command_or_action: "Exact steps that triggered issue"
+    - error_message: "Complete error text or unexpected behavior"
+    - expected_behavior: "What should have happened"
+    - environment: "OS, version, browser, runtime details"
+    - reproduction_steps: "Step-by-step reproduction guide"
+    - impact_assessment: "How this affects users/systems"
+    
+  optional_but_recommended:
+    - workaround: "Temporary solution if available"
+    - related_issues: "Links to similar or related bugs"
+    - root_cause_hypothesis: "Initial analysis if apparent"
+    - fix_priority: "Business priority for resolution"
+```
+
+#### 2. Severity Classification
+```yaml
+severity_levels:
+  CRITICAL:
+    definition: "Blocks core functionality or causes data corruption"
+    response_time: "Immediate (within 1 hour)"
+    escalation: "Stop all work, notify team lead immediately"
+    examples:
+      - "Cannot create/save/delete core data"
+      - "Data corruption or loss"
+      - "Security breaches or vulnerabilities"
+      - "Complete system unavailability"
+  
+  HIGH:
+    definition: "Significant functionality impaired or major UX issues"  
+    response_time: "Same business day (within 8 hours)"
+    escalation: "Notify team, adjust sprint priorities"
+    examples:
+      - "Major feature not working as designed"
+      - "Performance degradation >50%"
+      - "CLI help doesn't match reality"
+      - "Integration failures with external systems"
+      
+  MEDIUM:
+    definition: "Moderate impact on functionality or user experience"
+    response_time: "Within 3 business days"  
+    escalation: "Add to current sprint backlog"
+    examples:
+      - "Minor feature inconsistencies"
+      - "Suboptimal user experience"
+      - "Performance issues <50% degradation"
+      - "Non-critical documentation gaps"
+      
+  LOW:
+    definition: "Minor issues, cosmetic problems, or enhancement requests"
+    response_time: "Next sprint or release cycle"
+    escalation: "Add to product backlog"
+    examples:
+      - "Cosmetic UI issues"
+      - "Minor text or formatting problems"  
+      - "Enhancement requests"
+      - "Nice-to-have improvements"
+```
+
+#### 3. Bug Report Template Standards
+```yaml
+required_bug_report_format:
+  header:
+    title: "Clear, concise description of the issue"
+    severity: "CRITICAL|HIGH|MEDIUM|LOW"
+    component: "Affected system/module/feature"
+    environment: "Complete environment details"
+    
+  description:
+    summary: "Brief overview of the problem"
+    impact: "How this affects users/business/operations"
+    reproduction_steps: "Numbered, detailed steps to reproduce"
+    expected_behavior: "What should happen"
+    actual_behavior: "What actually happens"
+    error_messages: "Complete error text with stack traces"
+    
+  context:
+    when_discovered: "Date/time and circumstances"
+    frequency: "Always|Sometimes|Rare - with conditions"
+    user_actions: "What user was trying to accomplish"
+    data_involved: "Type/size of data being processed"
+    
+  analysis:
+    workaround: "Temporary solution if available"
+    hypothesis: "Suspected root cause if apparent"
+    related_issues: "Links to similar bugs or features"
+    business_priority: "Impact on business objectives"
+```
+
+### Native Tool Integration Requirements
+
+#### 1. PM Tool Bug Reporting Feature
+```yaml
+native_bug_commands:
+  creation:
+    - "pm bug create --interactive"  # Template-guided creation
+    - "pm bug create 'Title' --severity critical --component storage"
+    - "pm bug create-from-command 'pm work-item create test'"  # Context capture
+    
+  management:  
+    - "pm bug list --severity high --status open"
+    - "pm bug update <id> --status investigating --assignee developer"
+    - "pm bug resolve <id> --resolution fixed --fixed-in v1.0.1"
+    
+  reporting:
+    - "pm bug report --since last-week --format json"
+    - "pm bug stats --component api --timespan 30days"
+    - "pm bug trends --project-wide"
+
+integration_requirements:
+  work_item_system: "Bugs are first-class work items"
+  template_system: "Standardized bug report templates"
+  lifecycle_management: "Automated status transitions"
+  cross_project: "Enterprise-wide bug tracking capability"
+```
+
+#### 2. Automated Bug Detection
+```yaml
+automated_detection:
+  ci_cd_integration:
+    - "Test failures automatically create bug reports"
+    - "Build failures generate infrastructure bugs"
+    - "Security scan failures create security bugs"
+    - "Performance regression creates performance bugs"
+    
+  monitoring_integration:
+    - "Error rate spikes trigger bug creation"
+    - "Performance threshold breaches create bugs"
+    - "Availability issues generate operational bugs"
+    - "Log pattern matching creates proactive bugs"
+    
+  required_automation:
+    - "Link bugs to failed tests/builds automatically"
+    - "Include environment context from CI/CD"
+    - "Assign bugs based on component ownership"  
+    - "Set severity based on impact metrics"
+```
+
+### Quality Assurance Integration
+
+#### 1. Testing Standards Integration
+```yaml
+qa_bug_workflow:
+  test_driven_bug_reports:
+    - "Every bug must include test case for reproduction"
+    - "Bug resolution requires test case that validates fix"
+    - "Regression tests prevent bug reoccurrence"
+    - "Test automation coverage includes bug scenarios"
+    
+  pre_release_validation:
+    - "Critical and high bugs must be resolved before release"
+    - "Medium bugs require explicit risk acceptance"
+    - "Bug fix testing includes original reproduction steps"
+    - "No known critical bugs in production releases"
+```
+
+#### 2. Cross-Project Bug Tracking
+```yaml
+enterprise_bug_management:
+  shared_components:
+    - "Bugs in shared libraries tracked across all projects"
+    - "Security vulnerabilities propagated to affected projects"
+    - "Performance issues tracked at portfolio level"
+    - "Infrastructure bugs affect multiple projects"
+    
+  coordination_requirements:
+    - "Bug resolution coordination across project teams"
+    - "Shared component updates trigger regression testing"
+    - "Security patches require enterprise-wide deployment"
+    - "Knowledge sharing for similar bug patterns"
+```
+
+### Engineering Excellence Requirements
+
+#### 1. Root Cause Analysis
+```yaml
+root_cause_standards:
+  mandatory_analysis:
+    - "All CRITICAL bugs require root cause analysis"
+    - "HIGH bugs require analysis if pattern detected"  
+    - "Root cause documentation prevents recurrence"
+    - "Systemic issues require process improvements"
+    
+  analysis_methodology:
+    - "5 Whys technique for problem drilling"
+    - "Timeline analysis for complex failures"
+    - "System interaction mapping for integration bugs"
+    - "Code review for implementation defects"
+    
+  preventive_actions:
+    - "Process changes to prevent similar issues"
+    - "Automated checks to catch similar patterns"
+    - "Team training for knowledge gaps"
+    - "Architecture improvements for systemic issues"
+```
+
+#### 2. Bug Resolution Standards
+```yaml
+resolution_requirements:
+  fix_validation:
+    - "Original reproduction steps must pass"
+    - "Regression testing for related functionality" 
+    - "Code review focusing on fix quality"
+    - "Documentation updates for behavior changes"
+    
+  knowledge_retention:
+    - "Fix documentation including why approach was chosen"
+    - "Update team knowledge base with learnings"
+    - "Post-mortem for critical bug patterns"
+    - "Process improvements documented and implemented"
+```
+
+### Compliance and Governance
+
+#### 1. Audit Requirements
+```yaml
+audit_standards:
+  bug_tracking_audit:
+    - "All bugs tracked with complete documentation"
+    - "Resolution timeline compliance monitoring"
+    - "Severity classification accuracy validation"
+    - "Fix quality assessment through defect rates"
+    
+  quality_metrics:
+    - "Bug detection rate trends"
+    - "Mean time to resolution by severity"
+    - "Bug recurrence rates"
+    - "Team and component bug patterns"
+    
+  reporting_requirements:
+    - "Weekly bug status reports to stakeholders"
+    - "Monthly quality metrics dashboard"
+    - "Quarterly bug pattern analysis"
+    - "Annual quality improvement planning"
+```
+
+#### 2. Tool Integration Standards
+```yaml
+tool_integration:
+  mandatory_integrations:
+    - "Native PM Tool bug reporting"
+    - "CI/CD pipeline bug creation"  
+    - "Monitoring system bug triggers"
+    - "Code repository bug linking"
+    
+  data_consistency:
+    - "Single source of truth for bug data"
+    - "Cross-tool synchronization requirements"
+    - "Data retention and archival policies"
+    - "Bug data export and import standards"
+```
+
+## Implementation Guidelines
+
+### Development Team Requirements
+1. **Immediate bug reporting** when any issue is encountered
+2. **Template usage** for consistent bug documentation  
+3. **Severity assessment** based on standardized criteria
+4. **Root cause analysis** for all resolved bugs
+5. **Knowledge sharing** through documented resolutions
+
+### Project Management Integration  
+1. **Sprint planning** must account for bug resolution capacity
+2. **Release planning** requires bug severity risk assessment
+3. **Quality gates** block releases with unresolved critical/high bugs
+4. **Retrospectives** include bug pattern analysis and prevention
+
+### Quality Assurance Integration
+1. **Test case creation** for every reported bug
+2. **Regression testing** for all bug fixes
+3. **Automated detection** where technically feasible
+4. **Cross-project coordination** for shared component bugs
+
+### Operations Integration
+1. **Monitoring integration** for proactive bug detection
+2. **Incident response** includes bug creation for systemic issues
+3. **Performance monitoring** triggers performance bug creation
+4. **Security scanning** automatically creates security bugs
+
+## Success Metrics
+
+### Quality Indicators
+- **Bug detection rate**: Proactive vs reactive discovery ratio
+- **Resolution time**: Average time from report to fix by severity
+- **Recurrence rate**: Percentage of bugs that reoccur after fix
+- **Fix quality**: Percentage of fixes that require rework
+
+### Process Indicators  
+- **Report completeness**: Percentage of bugs with all required fields
+- **Template usage**: Adoption rate of standardized templates
+- **Tool integration**: Percentage of bugs created through native tools
+- **Knowledge retention**: Searchable resolution database growth
+
+### Business Impact
+- **User satisfaction**: Reduced user-reported issues
+- **Development velocity**: Reduced time spent on duplicate debugging
+- **Release quality**: Decreased post-release bug discovery
+- **Team efficiency**: Improved debugging and resolution speed
+
+## Continuous Improvement
+
+### Regular Review Process
+- **Weekly**: Bug pattern analysis and immediate process adjustments
+- **Monthly**: Quality metrics review and tool effectiveness assessment
+- **Quarterly**: Template and process improvements based on usage data
+- **Annually**: Strategic quality assurance and tooling roadmap planning
+
+### Evolution Requirements
+- **Tool enhancement**: Based on team feedback and usage patterns
+- **Process refinement**: Continuous improvement based on effectiveness metrics
+- **Template evolution**: Regular updates based on bug pattern changes
+- **Integration expansion**: New tool integrations as technology stack evolves
+
+---
+
+**This standard ensures systematic, comprehensive bug reporting and resolution that improves software quality, team efficiency, and user experience while building institutional knowledge for continuous improvement.**

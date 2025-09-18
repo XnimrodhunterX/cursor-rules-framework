@@ -1,0 +1,296 @@
+---
+ruleId: "QC-14"
+title: "Document Synchronization & Cross-Reference Management"
+alwaysApply: true
+---
+
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all document operations  
+**Purpose**: Ensure comprehensive document synchronization and prevent orphaned files
+**Rule Type**: Quality Control  
+**Priority**: MANDATORY  
+**Scope**: All documentation creation, updates, and maintenance  
+
+## PURPOSE & SCOPE
+
+This rule ensures ALL project documentation remains synchronized, cross-referenced, and consistently maintained across sessions. It prevents the common issue of Cursor losing track of related documents and creating orphaned files without proper integration.
+
+## MANDATORY DOCUMENT SYNCHRONIZATION PROTOCOL
+
+### Pre-Action Document Discovery
+**BEFORE** creating, updating, or modifying ANY document, Cursor MUST:
+
+1. **Execute Document Audit**: Search for ALL related documents
+2. **Map Dependencies**: Identify all files that reference or relate to the target document
+3. **Check Cross-References**: Verify existing links and dependencies
+4. **Plan Updates**: Create update plan for ALL affected documents
+
+#### Required Discovery Commands
+```bash
+# MANDATORY: Run these commands before ANY document operation
+find . -name "*.md" -type f | head -20
+find docs/ -name "*.md" -type f | head -20
+grep -r "keyword" docs/ --include="*.md" | head -10
+ls -la docs/status/
+ls -la docs/issues/
+ls -la docs/planning/
+```
+
+### MANDATORY Cross-Reference Update Matrix
+
+#### When Creating/Updating ANY Document:
+**ALWAYS UPDATE THESE CORE FILES:**
+
+1. **`docs/status/project_status.md`** - Update project status
+2. **`docs/status/phases.md`** - Update phase information
+3. **`docs/status/audit-log.md`** - Log the change
+4. **`docs/issues/issues-tracker.md`** - Update issues/TODOs
+5. **Relevant folder `README.md`** - Update index/navigation
+
+#### Document Type-Specific Updates:
+```yaml
+document_update_matrix:
+  planning_docs:
+    always_update:
+      - "docs/status/project_status.md"
+      - "docs/status/phases.md" 
+      - "docs/planning/README.md"
+      - "comprehensive-action-plan.md" (if exists)
+    
+  spec_docs:
+    always_update:
+      - "docs/specs/README.md"
+      - "docs/status/phases.md"
+      - "docs/architecture/README.md" (if related)
+    
+  test_docs:
+    always_update:
+      - "docs/testing/README.md"
+      - "docs/status/project_status.md"
+      - "docs/issues/issues-tracker.md"
+    
+  architecture_docs:
+    always_update:
+      - "docs/architecture/README.md"
+      - "docs/specs/README.md"
+      - "docs/status/phases.md"
+    
+  status_docs:
+    always_update:
+      - "docs/status/audit-log.md"
+      - "README.md" (project root)
+```
+
+### MANDATORY File Creation Protocol
+
+#### Before Creating ANY New Document:
+1. **Check for Existing**: Search for similar or related documents
+2. **Verify Naming**: Ensure kebab-case naming convention
+3. **Confirm Placement**: Verify correct directory per QC-07/QC-08
+4. **Plan Integration**: Identify all files that need updating
+
+#### REQUIRED Communication Pattern:
+```
+Hey Steve, I'm now conducting document discovery for {document_name} following QC-14 Document Synchronization standards.
+
+Discovery Results:
+- Found related documents: [list]
+- Cross-references to update: [list]
+- Directory placement: [path]
+- Integration plan: [plan]
+
+Proceeding with creation and synchronization updates.
+```
+
+### MANDATORY Update Synchronization Process
+
+#### Step-by-Step Synchronization:
+1. **Primary Document Update**: Make the main change
+2. **Cross-Reference Updates**: Update ALL related documents
+3. **Navigation Updates**: Update README.md files
+4. **Status Updates**: Update project status and phases
+5. **Audit Logging**: Record change in audit log
+6. **Validation**: Verify all links and references work
+
+#### Required Update Sequence:
+```markdown
+# MANDATORY: Follow this exact sequence for EVERY document operation
+
+## Step 1: Document Discovery
+- [ ] Search for existing related documents
+- [ ] Identify cross-references and dependencies  
+- [ ] Map required updates
+
+## Step 2: Primary Update
+- [ ] Create or update the primary document
+- [ ] Include proper YAML metadata
+- [ ] Follow naming conventions
+
+## Step 3: Cross-Reference Updates
+- [ ] Update docs/status/project_status.md
+- [ ] Update docs/status/phases.md
+- [ ] Update docs/status/audit-log.md
+- [ ] Update docs/issues/issues-tracker.md (if applicable)
+- [ ] Update relevant README.md files
+
+## Step 4: Navigation Updates
+- [ ] Update folder README.md with new document link
+- [ ] Update table of contents (if exists)
+- [ ] Update navigation menus (if exists)
+
+## Step 5: Validation
+- [ ] Verify all links work
+- [ ] Check cross-references are bidirectional
+- [ ] Confirm metadata consistency
+```
+
+### MANDATORY Cross-Reference Standards
+
+#### Bidirectional Linking Requirements:
+```markdown
+# Document A references Document B:
+[Related Document B](../path/document-b.md)
+
+# Document B MUST reference Document A:
+[Related Document A](../path/document-a.md)
+```
+
+#### Reference Format Standards:
+```yaml
+cross_reference_formats:
+  internal_links:
+    format: "[Descriptive Text](../relative/path/file.md)"
+    example: "[Project Status](../status/project_status.md)"
+  
+  section_links:
+    format: "[Section Name](file.md#section-header)"
+    example: "[Phase 3 Details](phases.md#phase-3-design-architecture)"
+  
+  file_references:
+    format: "See also: [File Name](path/file.md)"
+    example: "See also: [Testing Standards](../standards/testing-standards.md)"
+```
+
+### MANDATORY Metadata Synchronization
+
+#### Required YAML Front Matter:
+```yaml
+---
+title: "Document Title"
+status: "In Progress|Complete|Draft"
+phase: "1-9" (if applicable)
+last_updated: "YYYY-MM-DD HH:MM:SS"
+related_docs:
+  - "path/to/related-doc-1.md"
+  - "path/to/related-doc-2.md"
+cross_references:
+  - file: "path/to/file.md"
+    section: "section-name"
+    purpose: "why this reference exists"
+created_by: "cursor|human"
+version: "1.0"
+---
+```
+
+#### Metadata Validation Rules:
+- **Title**: Must match file purpose
+- **Status**: Must align with project phase
+- **Last Updated**: MUST use current timestamp (run `date` command first)
+- **Related Docs**: List ALL related documents
+- **Cross References**: Document WHY references exist
+
+### MANDATORY Session Continuity Protocol
+
+#### At Start of Each Session:
+```bash
+# MANDATORY: Run these commands to understand current state
+pwd
+ls -la
+find docs/ -name "*.md" -type f | head -15
+cat docs/status/project_status.md
+cat docs/status/phases.md
+tail -10 docs/status/audit-log.md
+```
+
+#### Required Understanding Check:
+Before ANY document operation, Cursor MUST:
+1. Read current project status
+2. Review recent audit log entries  
+3. Check active phase and deliverables
+4. Identify any incomplete cross-references
+
+### MANDATORY Consistency Validation
+
+#### Document Consistency Checklist:
+- [ ] **Naming**: All files use kebab-case.md
+- [ ] **Placement**: Files in correct directories per QC-07/QC-08
+- [ ] **Metadata**: Complete YAML front matter
+- [ ] **Cross-Links**: All references are bidirectional
+- [ ] **Status Sync**: Status matches project phase
+- [ ] **Navigation**: README.md files updated
+- [ ] **Audit Trail**: Changes logged in audit-log.md
+
+#### Validation Commands:
+```bash
+# Check for broken links
+grep -r "](.*\.md)" docs/ --include="*.md" | grep -v "^docs/"
+
+# Check for missing cross-references
+find docs/ -name "*.md" -exec grep -L "related_docs:" {} \;
+
+# Verify metadata consistency
+find docs/ -name "*.md" -exec grep -L "last_updated:" {} \;
+```
+
+### FORBIDDEN ACTIONS
+
+❌ **Creating documents without discovery phase**  
+❌ **Updating documents without cross-reference updates**  
+❌ **Missing YAML metadata**  
+❌ **Broken or missing cross-references**  
+❌ **Outdated timestamps or status**  
+❌ **Orphaned documents without navigation links**  
+❌ **Inconsistent naming conventions**  
+
+### MANDATORY Quality Gates
+
+#### Before Completing ANY Document Operation:
+- [ ] **Discovery Complete**: All related documents identified
+- [ ] **Updates Synchronized**: All cross-references updated
+- [ ] **Navigation Updated**: README.md files current
+- [ ] **Status Synchronized**: Project status reflects changes
+- [ ] **Audit Logged**: Change recorded in audit log
+- [ ] **Validation Passed**: All links and references work
+- [ ] **Metadata Complete**: YAML front matter valid
+
+### IMPLEMENTATION CHECKLIST
+
+#### For Every Document Operation:
+1. **Pre-Action Discovery**
+   - [ ] Run document discovery commands
+   - [ ] Identify related documents
+   - [ ] Plan synchronization updates
+
+2. **Document Operation**  
+   - [ ] Create/update primary document
+   - [ ] Include complete YAML metadata
+   - [ ] Follow naming conventions
+
+3. **Synchronization Updates**
+   - [ ] Update project_status.md
+   - [ ] Update phases.md
+   - [ ] Update audit-log.md
+   - [ ] Update issues-tracker.md (if applicable)
+   - [ ] Update README.md files
+
+4. **Cross-Reference Updates**
+   - [ ] Add bidirectional links
+   - [ ] Update navigation
+   - [ ] Verify link functionality
+
+5. **Validation & Completion**
+   - [ ] Run validation commands
+   - [ ] Verify consistency
+   - [ ] Confirm all gates passed
+

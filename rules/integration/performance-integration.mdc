@@ -1,0 +1,443 @@
+---
+ruleId: "INT-PERF-01"
+title: "Performance Integration Standards"
+status: "active"
+compliance: "mandatory"
+description: "Cross-cutting performance integration standards that ensure optimal performance across all development domains"
+globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/*.swift", "**/*.kt", "**/*.yaml", "**/*.yml", "**/*.tf", "**/*.sql"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "integration"
+---
+
+# INT-PERF-01: Performance Integration Standards
+
+## Purpose & Scope
+
+This integration rule ensures performance standards are consistently applied across all development domains, providing a unified performance framework that optimizes system performance from frontend to infrastructure.
+
+## Cross-Domain Performance Strategy
+
+### 1. Performance Baseline Establishment
+```yaml
+performance_baselines:
+  frontend_metrics:
+    - "First Contentful Paint (FCP) < 1.5s"
+    - "Largest Contentful Paint (LCP) < 2.5s"
+    - "Cumulative Layout Shift (CLS) < 0.1"
+    - "First Input Delay (FID) < 100ms"
+    - "Time to Interactive (TTI) < 3.5s"
+  
+  api_metrics:
+    - "95th percentile response time < 200ms"
+    - "99th percentile response time < 500ms"
+    - "Throughput > 1000 requests/second"
+    - "Error rate < 0.1%"
+    - "Availability > 99.9%"
+  
+  database_metrics:
+    - "Query execution time < 100ms (95th percentile)"
+    - "Connection pool utilization < 80%"
+    - "Lock wait time < 50ms"
+    - "Cache hit ratio > 90%"
+    - "Storage I/O latency < 10ms"
+  
+  infrastructure_metrics:
+    - "CPU utilization < 70%"
+    - "Memory utilization < 80%"
+    - "Network latency < 50ms"
+    - "Disk I/O latency < 20ms"
+    - "Container startup time < 30s"
+```
+
+### 2. Performance Monitoring Integration
+```yaml
+monitoring_integration:
+  application_performance:
+    - "APM (Application Performance Monitoring)"
+    - "Real User Monitoring (RUM)"
+    - "Synthetic monitoring"
+    - "Error tracking and alerting"
+  
+  infrastructure_performance:
+    - "System metrics collection"
+    - "Container and pod monitoring"
+    - "Network performance monitoring"
+    - "Storage performance tracking"
+  
+  business_metrics:
+    - "User engagement metrics"
+    - "Conversion rate tracking"
+    - "Revenue impact analysis"
+    - "Customer satisfaction scores"
+```
+
+### 3. Performance Testing Strategy
+```yaml
+performance_testing:
+  load_testing:
+    - "Normal expected load"
+    - "Peak load scenarios"
+    - "Stress testing beyond capacity"
+    - "Spike testing for traffic bursts"
+  
+  endurance_testing:
+    - "Long-running performance tests"
+    - "Memory leak detection"
+    - "Resource degradation analysis"
+    - "Stability under sustained load"
+  
+  volume_testing:
+    - "Large data set handling"
+    - "Database performance with scale"
+    - "File upload/download performance"
+    - "Batch processing efficiency"
+```
+
+## Domain-Specific Performance Integration
+
+### Frontend Performance (FE-01 Integration)
+```yaml
+frontend_performance:
+  code_splitting:
+    - "Route-based code splitting"
+    - "Component lazy loading"
+    - "Dynamic imports for heavy libraries"
+    - "Bundle size optimization"
+  
+  caching_strategies:
+    - "Browser caching headers"
+    - "Service worker caching"
+    - "CDN caching configuration"
+    - "Static asset optimization"
+  
+  rendering_optimization:
+    - "Virtual scrolling for large lists"
+    - "Image lazy loading and optimization"
+    - "Critical CSS inlining"
+    - "JavaScript execution optimization"
+  
+  network_optimization:
+    - "HTTP/2 and HTTP/3 support"
+    - "Resource compression (gzip/brotli)"
+    - "Preloading critical resources"
+    - "Connection pooling and keep-alive"
+```
+
+### API Performance (API-01 Integration)
+```yaml
+api_performance:
+  response_optimization:
+    - "Response compression"
+    - "Pagination for large datasets"
+    - "Field selection and filtering"
+    - "Response caching strategies"
+  
+  database_optimization:
+    - "Query optimization and indexing"
+    - "Connection pooling"
+    - "Read replica utilization"
+    - "Query result caching"
+  
+  caching_layers:
+    - "Application-level caching"
+    - "Redis/Memcached integration"
+    - "CDN caching for static responses"
+    - "Database query result caching"
+  
+  async_processing:
+    - "Background job processing"
+    - "Message queue integration"
+    - "Webhook and event handling"
+    - "Batch processing optimization"
+```
+
+### Database Performance (DP-01 Integration)
+```yaml
+database_performance:
+  query_optimization:
+    - "Query execution plan analysis"
+    - "Index optimization and maintenance"
+    - "Query result set optimization"
+    - "Stored procedure optimization"
+  
+  connection_management:
+    - "Connection pooling configuration"
+    - "Connection timeout optimization"
+    - "Read/write splitting"
+    - "Connection health monitoring"
+  
+  storage_optimization:
+    - "Data partitioning strategies"
+    - "Archive and cleanup procedures"
+    - "Storage engine optimization"
+    - "Backup and recovery performance"
+  
+  replication_optimization:
+    - "Read replica utilization"
+    - "Replication lag monitoring"
+    - "Failover performance"
+    - "Data consistency optimization"
+```
+
+### Mobile Performance (MB-01/MB-02 Integration)
+```yaml
+mobile_performance:
+  app_startup:
+    - "Cold start optimization"
+    - "Warm start optimization"
+    - "Splash screen optimization"
+    - "Initial data loading"
+  
+  memory_management:
+    - "Memory leak prevention"
+    - "Image memory optimization"
+    - "Background task optimization"
+    - "Memory pressure handling"
+  
+  network_optimization:
+    - "Request batching and queuing"
+    - "Offline data synchronization"
+    - "Network condition adaptation"
+    - "Data compression and caching"
+  
+  ui_performance:
+    - "Smooth scrolling optimization"
+    - "Animation performance"
+    - "Touch response optimization"
+    - "Battery usage optimization"
+```
+
+### Infrastructure Performance (K8S-01/INF-01 Integration)
+```yaml
+infrastructure_performance:
+  container_optimization:
+    - "Container image size optimization"
+    - "Resource limits and requests"
+    - "Horizontal pod autoscaling"
+    - "Vertical pod autoscaling"
+  
+  networking_optimization:
+    - "Service mesh performance"
+    - "Load balancer configuration"
+    - "Network policy optimization"
+    - "DNS resolution performance"
+  
+  storage_optimization:
+    - "Persistent volume performance"
+    - "Storage class optimization"
+    - "Data locality optimization"
+    - "Backup and restore performance"
+  
+  monitoring_optimization:
+    - "Metrics collection efficiency"
+    - "Log aggregation performance"
+    - "Alerting system optimization"
+    - "Dashboard rendering performance"
+```
+
+## Performance Optimization Techniques
+
+### 1. Caching Strategies
+```yaml
+caching_strategies:
+  application_caching:
+    - "In-memory caching for frequently accessed data"
+    - "Distributed caching for multi-instance applications"
+    - "Cache invalidation strategies"
+    - "Cache warming and preloading"
+  
+  database_caching:
+    - "Query result caching"
+    - "Connection pooling"
+    - "Read replica utilization"
+    - "Materialized views for complex queries"
+  
+  cdn_caching:
+    - "Static asset caching"
+    - "API response caching"
+    - "Edge computing optimization"
+    - "Geographic distribution"
+```
+
+### 2. Asynchronous Processing
+```yaml
+async_processing:
+  background_jobs:
+    - "Queue-based job processing"
+    - "Job prioritization and scheduling"
+    - "Job retry and error handling"
+    - "Job monitoring and alerting"
+  
+  event_driven_architecture:
+    - "Event streaming and processing"
+    - "Microservices communication"
+    - "Event sourcing patterns"
+    - "CQRS implementation"
+  
+  batch_processing:
+    - "Scheduled batch operations"
+    - "Data processing pipelines"
+    - "ETL process optimization"
+    - "Batch job monitoring"
+```
+
+### 3. Resource Optimization
+```yaml
+resource_optimization:
+  cpu_optimization:
+    - "CPU affinity and pinning"
+    - "Thread pool optimization"
+    - "Algorithm efficiency"
+    - "Parallel processing"
+  
+  memory_optimization:
+    - "Memory allocation strategies"
+    - "Garbage collection tuning"
+    - "Memory leak prevention"
+    - "Memory profiling and analysis"
+  
+  network_optimization:
+    - "Connection pooling"
+    - "Keep-alive connections"
+    - "Compression and encoding"
+    - "Protocol optimization"
+```
+
+## Performance Monitoring and Alerting
+
+### 1. Real-time Monitoring
+```yaml
+real_time_monitoring:
+  application_metrics:
+    - "Response time percentiles"
+    - "Throughput and request rates"
+    - "Error rates and types"
+    - "Resource utilization"
+  
+  infrastructure_metrics:
+    - "CPU, memory, disk, network usage"
+    - "Container and pod metrics"
+    - "Database performance metrics"
+    - "Network latency and throughput"
+  
+  business_metrics:
+    - "User engagement and retention"
+    - "Conversion rates and funnels"
+    - "Revenue and cost metrics"
+    - "Customer satisfaction scores"
+```
+
+### 2. Performance Alerting
+```yaml
+performance_alerting:
+  threshold_alerts:
+    - "Response time degradation"
+    - "Error rate increases"
+    - "Resource utilization spikes"
+    - "Throughput drops"
+  
+  anomaly_detection:
+    - "Unusual traffic patterns"
+    - "Performance regression detection"
+    - "Resource usage anomalies"
+    - "User behavior changes"
+  
+  escalation_procedures:
+    - "Alert severity classification"
+    - "On-call rotation and escalation"
+    - "Incident response procedures"
+    - "Post-incident analysis"
+```
+
+## Rule Application Signals
+
+When you encounter performance-related work, reference these additional rules:
+
+### Performance Implementation Signals
+- **API Performance Implementation** → Reference `.cursor/rules/architecture/api-development-standards.mdc` for API-specific performance patterns
+- **Database Performance Implementation** → Reference `.cursor/rules/architecture/database-standards.mdc` for database-specific performance patterns
+- **Frontend Performance Implementation** → Reference `.cursor/rules/architecture/frontend-development-standards.mdc` for frontend-specific performance patterns
+- **Mobile Performance Implementation** → Reference `.cursor/rules/mobile/ios-development-standards.mdc` or `.cursor/rules/mobile/android-development-standards.mdc` for mobile-specific performance patterns
+- **Infrastructure Performance Implementation** → Reference `.cursor/rules/infrastructure/kubernetes-standards.mdc` or `.cursor/rules/infrastructure/infrastructure-standards.mdc` for infrastructure-specific performance patterns
+
+### Performance Quality Signals
+- **Security Performance** → Reference `.cursor/rules/integration/security-integration.mdc` for security performance considerations
+- **Testing Performance** → Reference `.cursor/rules/integration/testing-integration.mdc` for performance testing patterns
+- **Performance Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for performance monitoring patterns
+
+### Performance Issue Resolution Signals
+- **Performance Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for performance conflict resolution
+- **Performance Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for performance rule versioning
+- **Performance Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for performance change impact analysis
+- **Performance Learning** → Reference `.cursor/rules/integration/rule-learning-system.mdc` for learning from performance patterns
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  core_performance:
+    rule: "PERF-01: Performance Standards"
+    integration: "Foundation performance principles and requirements"
+  
+  api_performance:
+    rule: "API-01: API Development Standards"
+    integration: "API-specific performance optimizations"
+  
+  database_performance:
+    rule: "DP-01: Database Standards"
+    integration: "Database performance and optimization"
+  
+  frontend_performance:
+    rule: "FE-01: Frontend Development Standards"
+    integration: "Frontend performance optimization techniques"
+  
+  mobile_performance:
+    rules: ["MB-01: iOS Development Standards", "MB-02: Android Development Standards"]
+    integration: "Mobile platform performance optimization"
+  
+  infrastructure_performance:
+    rules: ["K8S-01: Kubernetes Standards", "INF-01: Infrastructure Standards"]
+    integration: "Infrastructure performance and scaling"
+  
+  monitoring_performance:
+    rule: "MONITOR-01: Monitoring & Observability Standards"
+    integration: "Performance monitoring and alerting"
+```
+
+## Implementation Guidelines
+
+### 1. Performance-First Development
+- **Performance requirements** defined upfront
+- **Performance testing** integrated into CI/CD
+- **Performance reviews** for all changes
+- **Performance budgets** and monitoring
+
+### 2. Continuous Performance Optimization
+- **Regular performance audits** and analysis
+- **Performance regression** detection and prevention
+- **Capacity planning** and scaling strategies
+- **Performance training** and knowledge sharing
+
+### 3. Performance Culture
+- **Performance awareness** across all teams
+- **Performance metrics** and dashboards
+- **Performance goals** and incentives
+- **Performance best practices** documentation
+
+## Success Metrics
+
+### Performance KPIs
+- **Response time** percentiles and trends
+- **Throughput** and capacity metrics
+- **Error rates** and availability
+- **Resource utilization** efficiency
+- **User satisfaction** and engagement
+
+### Quality Gates
+- **Performance baselines** met for all domains
+- **Performance regression** prevention
+- **Capacity planning** accuracy
+- **Performance monitoring** coverage
+- **Performance optimization** effectiveness

@@ -1,0 +1,730 @@
+---
+ruleId: "FE-01"
+title: "Frontend Development Standards"
+status: "active"
+compliance: "mandatory"
+description: "Frontend development standards for React/TypeScript, component architecture, and UI/UX best practices"
+globs: ["**/*.tsx", "**/*.jsx", "**/*.ts", "**/*.js", "**/components/**", "**/src/**", "**/app/**", "**/pages/**"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "architecture"
+---
+
+# FE-01: Frontend Development Standards
+
+## Purpose & Scope
+
+Frontend development standards ensure consistent, maintainable, and performant user interfaces through modern frameworks, component architectures, and development practices. This rule establishes standards for React/TypeScript development, component design patterns, state management, performance optimization, and accessibility compliance.
+
+## Rule Triggers
+
+### When to Apply Cross-Platform Considerations
+```yaml
+triggers:
+  cross_platform_consistency:
+    when: "Working on UI components that will be used across Web, iOS, and Android platforms"
+    reference: "MB-03: Cross-Platform Consistency Standards"
+    action: "Check platform-specific requirements and ensure consistent UX"
+    conditions:
+      - "Component has mobile targets"
+      - "Design system components"
+      - "Shared UI libraries"
+      - "Cross-platform features"
+  
+  security_integration:
+    when: "Handling user authentication, sensitive data, or security-sensitive UI"
+    reference: "SEC-01: Universal Security Standards"
+    action: "Apply security best practices for frontend"
+    conditions:
+      - "Authentication forms"
+      - "Data input validation"
+      - "Secure data display"
+      - "API integration with sensitive data"
+```
+
+## Rule Application Signals
+
+When you encounter frontend development work, reference these additional rules:
+
+### Frontend Implementation Signals
+- **Frontend Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **Frontend Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **Frontend Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **Frontend Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Frontend Quality Signals
+- **Frontend Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Frontend Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Frontend Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for frontend monitoring patterns
+- **Cross-Platform Consistency** → Reference `.cursor/rules/mobile/cross-platform-consistency.mdc` for cross-platform requirements
+
+### Frontend Issue Resolution Signals
+- **Frontend Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Frontend Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Frontend Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  security:
+    rule: "SEC-01: Universal Security Standards"
+    integration: "Frontend security, authentication, and data protection"
+    requirements:
+      - "Client-side security validation"
+      - "Secure authentication flows"
+      - "XSS prevention"
+      - "CSRF protection"
+  
+  testing:
+    rule: "QC-01: Comprehensive Testing Standards"
+    integration: "Frontend testing requirements and test automation"
+    requirements:
+      - "Component unit tests"
+      - "Integration tests"
+      - "E2E tests"
+      - "Visual regression tests"
+  
+  api_integration:
+    rule: "API-01: API Development Standards"
+    integration: "Frontend API integration and data handling"
+    requirements:
+      - "API client implementation"
+      - "Error handling"
+      - "Data validation"
+      - "Loading states"
+  
+  performance:
+    rule: "PERF-01: Performance Standards"
+    integration: "Frontend performance optimization"
+    requirements:
+      - "Bundle optimization"
+      - "Lazy loading"
+      - "Caching strategies"
+      - "Performance monitoring"
+```
+
+## Core Standards
+
+### 1. React & TypeScript Architecture
+
+#### Component Design Patterns
+
+**Functional Component Architecture:**
+```typescript
+// components/user/UserProfile.tsx
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { User, UserPreferences } from '@/types/user';
+import { userService } from '@/services/userService';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { Button, Card, Avatar, Skeleton } from '@/components/ui';
+import { UserPreferencesModal } from './UserPreferencesModal';
+import { formatDisplayName } from '@/utils/userUtils';
+
+interface UserProfileProps {
+  userId: string;
+  isEditable?: boolean;
+  onProfileUpdate?: (user: User) => void;
+  className?: string;
+}
+
+interface UserProfileState {
+  user: User | null;
+  preferences: UserPreferences | null;
+  isLoading: boolean;
+  isPreferencesModalOpen: boolean;
+  error: string | null;
+}
+
+/**
+ * UserProfile component displays user information with optional editing capabilities
+ * 
+ * @example
+ * ```tsx
+ * <UserProfile 
+ *   userId="user123" 
+ *   isEditable={true}
+ *   onProfileUpdate={handleProfileUpdate}
+ * />
+ * ```
+ */
+export const UserProfile: React.FC<UserProfileProps> = ({
+  userId,
+  isEditable = false,
+  onProfileUpdate,
+  className = ''
+}) => {
+  const { currentUser } = useAuthContext();
+  const [state, setState] = useState<UserProfileState>({
+    user: null,
+    preferences: null,
+    isLoading: true,
+    isPreferencesModalOpen: false,
+    error: null
+  });
+
+  // Memoized computed values
+  const isCurrentUser = useMemo(() => 
+    currentUser?.id === userId, 
+    [currentUser?.id, userId]
+  );
+
+  const displayName = useMemo(() => 
+    state.user ? formatDisplayName(state.user) : '',
+    [state.user]
+  );
+
+  const canEdit = useMemo(() => 
+    isEditable && isCurrentUser,
+    [isEditable, isCurrentUser]
+  );
+
+  // Load user data
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        setState(prev => ({ ...prev, isLoading: true, error: null }));
+        
+        const [user, preferences] = await Promise.all([
+          userService.getUser(userId),
+          userService.getUserPreferences(userId)
+        ]);
+
+        setState(prev => ({
+          ...prev,
+          user,
+          preferences,
+          isLoading: false
+        }));
+      } catch (error) {
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Failed to load user data',
+          isLoading: false
+        }));
+      }
+    };
+
+    if (userId) {
+      loadUserData();
+    }
+  }, [userId]);
+
+  // Event handlers
+  const handleEditPreferences = useCallback(() => {
+    setState(prev => ({ ...prev, isPreferencesModalOpen: true }));
+  }, []);
+
+  const handlePreferencesClose = useCallback(() => {
+    setState(prev => ({ ...prev, isPreferencesModalOpen: false }));
+  }, []);
+
+  const handlePreferencesUpdate = useCallback(async (newPreferences: UserPreferences) => {
+    try {
+      await userService.updateUserPreferences(userId, newPreferences);
+      setState(prev => ({
+        ...prev,
+        preferences: newPreferences,
+        isPreferencesModalOpen: false
+      }));
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+    }
+  }, [userId]);
+
+  const handleProfileEdit = useCallback(async (updatedUser: Partial<User>) => {
+    if (!state.user) return;
+
+    try {
+      const updated = await userService.updateUser(userId, updatedUser);
+      setState(prev => ({ ...prev, user: updated }));
+      onProfileUpdate?.(updated);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
+  }, [userId, state.user, onProfileUpdate]);
+
+  // Loading state
+  if (state.isLoading) {
+    return (
+      <Card className={`user-profile ${className}`}>
+        <div className="user-profile__content">
+          <Skeleton className="user-profile__avatar" width={80} height={80} circle />
+          <div className="user-profile__details">
+            <Skeleton className="user-profile__name" width={200} height={24} />
+            <Skeleton className="user-profile__email" width={250} height={16} />
+            <Skeleton className="user-profile__bio" width={300} height={48} />
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (state.error) {
+    return (
+      <Card className={`user-profile user-profile--error ${className}`}>
+        <div className="user-profile__error">
+          <p>Failed to load user profile: {state.error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  // No user found
+  if (!state.user) {
+    return (
+      <Card className={`user-profile user-profile--not-found ${className}`}>
+        <div className="user-profile__not-found">
+          <p>User not found</p>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={`user-profile ${className}`} data-testid="user-profile">
+      <div className="user-profile__content">
+        <Avatar 
+          src={state.user.avatarUrl} 
+          alt={displayName}
+          className="user-profile__avatar"
+        />
+        <div className="user-profile__details">
+          <h2 className="user-profile__name">{displayName}</h2>
+          <p className="user-profile__email">{state.user.email}</p>
+          {state.user.bio && (
+            <p className="user-profile__bio">{state.user.bio}</p>
+          )}
+        </div>
+        {canEdit && (
+          <div className="user-profile__actions">
+            <Button onClick={handleEditPreferences}>
+              Edit Preferences
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {state.isPreferencesModalOpen && (
+        <UserPreferencesModal
+          preferences={state.preferences}
+          onClose={handlePreferencesClose}
+          onSave={handlePreferencesUpdate}
+        />
+      )}
+    </Card>
+  );
+};
+```
+
+#### Component Architecture Standards
+- **Use functional components with React Hooks or Vue Composition API**
+- **Apply the Single Responsibility Principle (SRP)**
+- **Favor composition over inheritance**
+- **Implement proper component composition and reusability**
+
+### 2. State Management
+
+#### State Management Patterns
+```typescript
+// hooks/useAppState.ts
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+interface AppState {
+  user: User | null;
+  theme: 'light' | 'dark';
+  notifications: Notification[];
+  setUser: (user: User | null) => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+  addNotification: (notification: Notification) => void;
+  removeNotification: (id: string) => void;
+}
+
+export const useAppState = create<AppState>()(
+  devtools(
+    persist(
+      (set) => ({
+        user: null,
+        theme: 'light',
+        notifications: [],
+        setUser: (user) => set({ user }),
+        setTheme: (theme) => set({ theme }),
+        addNotification: (notification) => 
+          set((state) => ({ 
+            notifications: [...state.notifications, notification] 
+          })),
+        removeNotification: (id) =>
+          set((state) => ({
+            notifications: state.notifications.filter(n => n.id !== id)
+          }))
+      }),
+      {
+        name: 'app-storage',
+        partialize: (state) => ({ 
+          user: state.user, 
+          theme: state.theme 
+        })
+      }
+    )
+  )
+);
+```
+
+#### State Management Standards
+- **Prefer local state for component-specific logic**
+- **Use global stores (e.g., Redux, Zustand, Pinia) only for shared state**
+- **Avoid prop drilling by using context or smart containers**
+- **Implement proper state normalization for complex data**
+
+### 3. Type Safety
+
+#### TypeScript Standards
+```typescript
+// types/user.ts
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  bio?: string;
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark';
+  language: string;
+  notifications: NotificationSettings;
+  privacy: PrivacySettings;
+}
+
+// Ensure all props are typed and defaultProps (or TS defaults) are declared
+interface ComponentProps {
+  required: string;
+  optional?: number;
+  withDefault: boolean;
+}
+
+const Component: React.FC<ComponentProps> = ({ 
+  required, 
+  optional, 
+  withDefault = true 
+}) => {
+  // Component implementation
+};
+```
+
+### 4. Performance Optimization
+
+#### Performance Standards
+```typescript
+// Performance optimization patterns
+const ExpensiveComponent: React.FC<Props> = React.memo(({ data, onUpdate }) => {
+  const expensiveValue = useMemo(() => {
+    return data.map(item => complexCalculation(item));
+  }, [data]);
+
+  const handleClick = useCallback((id: string) => {
+    onUpdate(id);
+  }, [onUpdate]);
+
+  return (
+    <div>
+      {expensiveValue.map(item => (
+        <ExpensiveItem 
+          key={item.id} 
+          item={item} 
+          onClick={handleClick}
+        />
+      ))}
+    </div>
+  );
+});
+```
+
+#### Optimization Requirements
+- **Implement code splitting and lazy loading**
+- **Use React.memo, useMemo, useCallback for optimization**
+- **Apply proper image optimization and lazy loading**
+- **Implement virtual scrolling for large lists**
+
+### 5. Styling & Design System
+
+#### CSS Architecture
+```scss
+// Design system tokens
+:root {
+  // Colors
+  --color-primary: #007bff;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  
+  // Typography
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-base: 1rem;
+  --line-height-base: 1.5;
+  
+  // Spacing
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 3rem;
+  
+  // Breakpoints
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+}
+
+// Component styles
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: 8px;
+  background: var(--color-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &__avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  &__details {
+    flex: 1;
+  }
+  
+  &__name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-xs) 0;
+  }
+  
+  &__email {
+    color: var(--color-secondary);
+    margin: 0;
+  }
+  
+  &__bio {
+    margin: var(--spacing-sm) 0 0 0;
+    line-height: 1.6;
+  }
+}
+```
+
+#### Styling Standards
+- **Use CSS-in-JS or utility-first CSS frameworks**
+- **Implement consistent design tokens and theme system**
+- **Apply responsive design principles**
+- **Use CSS Grid and Flexbox for layouts**
+
+### 6. Accessibility (a11y)
+
+#### Accessibility Standards
+```typescript
+// Accessible component example
+const AccessibleButton: React.FC<ButtonProps> = ({ 
+  children, 
+  onClick, 
+  disabled,
+  ariaLabel 
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      aria-disabled={disabled}
+      className="accessible-button"
+    >
+      {children}
+    </button>
+  );
+};
+
+// Form with proper accessibility
+const AccessibleForm: React.FC = () => {
+  return (
+    <form role="form" aria-labelledby="form-title">
+      <h2 id="form-title">User Registration</h2>
+      
+      <div>
+        <label htmlFor="email">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          required
+          aria-describedby="email-help"
+        />
+        <div id="email-help">Enter a valid email address</div>
+      </div>
+      
+      <button type="submit">Register</button>
+    </form>
+  );
+};
+```
+
+#### Accessibility Requirements
+- **Implement WCAG 2.1 AA compliance**
+- **Use semantic HTML elements properly**
+- **Provide proper ARIA labels and roles**
+- **Test with screen readers and keyboard navigation**
+
+### 7. File Structure
+
+#### Project Organization
+```
+src/
+├── components/
+│   ├── ui/                    # Reusable UI components
+│   │   ├── Button/
+│   │   ├── Card/
+│   │   └── Input/
+│   ├── features/              # Feature-specific components
+│   │   ├── user/
+│   │   ├── dashboard/
+│   │   └── settings/
+│   └── layouts/               # Layout components
+├── hooks/                     # Custom React hooks
+├── services/                  # API and external services
+├── stores/                    # State management
+├── types/                     # TypeScript type definitions
+├── utils/                     # Utility functions
+└── styles/                    # Global styles and themes
+```
+
+#### File Structure Standards
+- **Group by feature/module, not by type**
+- **Place component, test, and style together under a folder per feature**
+- **Use consistent naming conventions**
+- **Separate concerns appropriately**
+
+### 8. Testing Frontend Components
+
+#### Testing Standards
+```typescript
+// Component test example
+import { render, screen, fireEvent } from '@testing-library/react';
+import { UserProfile } from './UserProfile';
+
+describe('UserProfile', () => {
+  const mockUser = {
+    id: 'user123',
+    email: 'test@example.com',
+    displayName: 'Test User',
+    avatarUrl: 'https://example.com/avatar.jpg',
+    bio: 'Test bio',
+    preferences: { theme: 'light', language: 'en' },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  it('renders user information correctly', () => {
+    render(<UserProfile userId="user123" />);
+    
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Test bio')).toBeInTheDocument();
+  });
+
+  it('shows loading state initially', () => {
+    render(<UserProfile userId="user123" />);
+    
+    expect(screen.getByTestId('user-profile')).toBeInTheDocument();
+    // Loading skeleton should be visible
+  });
+
+  it('handles error state', async () => {
+    // Mock service to throw error
+    jest.spyOn(userService, 'getUser').mockRejectedValue(new Error('API Error'));
+    
+    render(<UserProfile userId="user123" />);
+    
+    await screen.findByText(/Failed to load user profile/);
+    expect(screen.getByText('Retry')).toBeInTheDocument();
+  });
+});
+```
+
+#### Testing Requirements
+- **Write unit tests for component logic**
+- **Use testing library for component testing**
+- **Implement visual regression testing**
+- **Test accessibility with automated tools**
+
+### 9. Build & Deployment
+
+#### Build Configuration
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+  build: {
+    target: 'es2015',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          utils: ['lodash', 'date-fns'],
+        },
+      },
+    },
+  },
+  server: {
+    port: 3000,
+    open: true,
+  },
+});
+```
+
+#### Build Standards
+- **Use modern build tools (Vite, Webpack, Rollup)**
+- **Implement proper bundle optimization**
+- **Use service workers for offline functionality**
+- **Apply proper caching strategies**
+
+### 10. Quality Gates
+
+#### Definition of Done for Frontend
+- [ ] **TypeScript**: All components properly typed
+- [ ] **Accessibility**: WCAG 2.1 AA compliance verified
+- [ ] **Performance**: Lighthouse score >90
+- [ ] **Testing**: >80% component test coverage
+- [ ] **Responsive**: Works on all target devices
+- [ ] **Documentation**: Component documentation updated
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all frontend development  
+**Purpose**: Ensure consistent, accessible, and performant user interfaces
+description: "Frontend development standards covering UI/UX, frameworks, and best practices"
+globs: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/frontend/**", "**/ui/**", "**/components/**", "**/*.css", "**/*.scss", "**/*.less"]
+alwaysApply: false
+---

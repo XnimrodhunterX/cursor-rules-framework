@@ -1,0 +1,806 @@
+---
+ruleId: "API-01"
+title: "API Development Standards"
+status: "active"
+compliance: "mandatory"
+description: "API design and development standards covering REST, GraphQL, and best practices"
+globs: ["**/api/**", "**/*.api.*", "**/routes/**", "**/endpoints/**", "**/controllers/**", "**/*.controller.*"]
+alwaysApply: false
+lastUpdated: "2025-09-12"
+category: "architecture"
+---
+
+# API-01: API Development Standards
+
+## Purpose & Scope
+
+API development standards ensure consistent, well-documented, and secure application programming interfaces. This rule establishes standards for REST API design, OpenAPI documentation, microservices contracts, error handling, and API versioning.
+
+## Rule Application Signals
+
+When you encounter API development work, reference these additional rules:
+
+### API Implementation Signals
+- **API Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **API Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **API Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **API Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### API Quality Signals
+- **API Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **API Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **API Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for API monitoring patterns
+
+### API Issue Resolution Signals
+- **API Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **API Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **API Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Rule Dependencies
+
+### Related Standards Integration
+```yaml
+dependencies:
+  security:
+    rule: "SEC-01: Universal Security Standards"
+    integration: "API authentication, authorization, input validation, and secure communication"
+    requirements:
+      - "JWT token validation"
+      - "Rate limiting implementation"
+      - "Input sanitization"
+      - "HTTPS enforcement"
+  
+  testing:
+    rule: "QC-01: Comprehensive Testing Standards"
+    integration: "API testing requirements and test automation"
+    requirements:
+      - "Unit tests for API endpoints"
+      - "Integration tests for API contracts"
+      - "E2E tests for API workflows"
+      - "Performance tests for API load"
+  
+  performance:
+    rule: "PERF-01: Performance Standards"
+    integration: "API performance optimization and monitoring"
+    requirements:
+      - "Response time optimization"
+      - "Caching strategies"
+      - "Database query optimization"
+      - "API rate limiting"
+  
+  documentation:
+    rule: "QC-07: Documentation Standards"
+    integration: "API documentation and OpenAPI specifications"
+    requirements:
+      - "OpenAPI 3.1+ specifications"
+      - "API documentation generation"
+      - "Interactive API documentation"
+      - "Version documentation"
+```
+
+## Core Standards
+
+### 1. REST API Design Principles
+
+#### MANDATORY REST Standards
+- **Use RESTful semantics and HTTP methods appropriately**
+- **Avoid ambiguous routes (`/do`, `/process`)**
+- **Always version APIs: `/v1/`**
+- **Use proper HTTP status codes**
+
+#### RESTful API Design
+```typescript
+// Example RESTful API structure
+interface RESTfulAPI {
+  // Resource-based URLs
+  users: {
+    GET: '/v1/users',           // List users
+    POST: '/v1/users',          // Create user
+    GET: '/v1/users/{id}',      // Get specific user
+    PUT: '/v1/users/{id}',      // Update user
+    DELETE: '/v1/users/{id}',   // Delete user
+  };
+  
+  // Nested resources
+  userPosts: {
+    GET: '/v1/users/{id}/posts',     // Get user's posts
+    POST: '/v1/users/{id}/posts',    // Create post for user
+    GET: '/v1/users/{id}/posts/{postId}', // Get specific post
+  };
+  
+  // Query parameters for filtering
+  filtering: {
+    GET: '/v1/users?status=active&role=admin&limit=10&offset=0',
+  };
+}
+```
+
+#### HTTP Method Usage
+```yaml
+http_methods:
+  GET:
+    purpose: "Retrieve resources"
+    idempotent: true
+    safe: true
+    examples:
+      - "GET /v1/users"
+      - "GET /v1/users/123"
+      - "GET /v1/users?status=active"
+  
+  POST:
+    purpose: "Create new resources"
+    idempotent: false
+    safe: false
+    examples:
+      - "POST /v1/users"
+      - "POST /v1/users/123/posts"
+  
+  PUT:
+    purpose: "Update entire resource"
+    idempotent: true
+    safe: false
+    examples:
+      - "PUT /v1/users/123"
+  
+  PATCH:
+    purpose: "Partial resource update"
+    idempotent: true
+    safe: false
+    examples:
+      - "PATCH /v1/users/123"
+  
+  DELETE:
+    purpose: "Remove resources"
+    idempotent: true
+    safe: false
+    examples:
+      - "DELETE /v1/users/123"
+```
+
+### 2. API Versioning Strategy
+
+#### MANDATORY Versioning Standards
+- **Use semantic versioning (semver) for API versions**
+- **Include version in URL path: `/v1/`, `/v2/`**
+- **Maintain backward compatibility within major versions**
+- **Provide deprecation notices for breaking changes**
+
+#### Versioning Implementation
+```typescript
+// API versioning middleware
+interface APIVersion {
+  version: string;
+  deprecated?: boolean;
+  sunsetDate?: string;
+  migrationGuide?: string;
+}
+
+class APIVersionManager {
+  private versions: Map<string, APIVersion> = new Map();
+  
+  constructor() {
+    this.versions.set('v1', {
+      version: 'v1',
+      deprecated: false
+    });
+    
+    this.versions.set('v2', {
+      version: 'v2',
+      deprecated: false
+    });
+  }
+  
+  validateVersion(version: string): boolean {
+    return this.versions.has(version);
+  }
+  
+  isDeprecated(version: string): boolean {
+    const apiVersion = this.versions.get(version);
+    return apiVersion?.deprecated || false;
+  }
+  
+  addDeprecationHeaders(response: Response, version: string): void {
+    const apiVersion = this.versions.get(version);
+    if (apiVersion?.deprecated) {
+      response.headers.set('Deprecation', 'true');
+      response.headers.set('Sunset', apiVersion.sunsetDate || '');
+      response.headers.set('Link', `<${apiVersion.migrationGuide}>; rel="deprecation"`);
+    }
+  }
+}
+```
+
+### 3. OpenAPI Documentation
+
+#### MANDATORY Documentation Standards
+- **Document all APIs with OpenAPI 3.1.0+ specification**
+- **Include request/response schemas and examples**
+- **Provide comprehensive error documentation**
+- **Maintain up-to-date API documentation**
+
+#### OpenAPI Specification Example
+```yaml
+# openapi.yaml
+openapi: 3.1.0
+info:
+  title: User Management API
+  version: 1.0.0
+  description: API for managing user accounts and profiles
+  contact:
+    name: API Support
+    email: api-support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+paths:
+  /users:
+    get:
+      summary: List users
+      description: Retrieve a paginated list of users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    post:
+      summary: Create user
+      description: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - displayName
+        - status
+    
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          minLength: 8
+      required:
+        - email
+        - displayName
+        - password
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required:
+        - error
+        - message
+```
+
+### 4. Request/Response Validation
+
+#### MANDATORY Validation Standards
+- **Validate all requests against OpenAPI schemas**
+- **Use consistent response formats**
+- **Implement proper error handling**
+- **Apply rate limiting and request throttling**
+
+#### Validation Implementation
+```python
+# api/validation.py
+from pydantic import BaseModel, validator, EmailStr
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import re
+
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    display_name: str
+    password: str
+    
+    @validator('display_name')
+    def validate_display_name(cls, v):
+        if len(v) < 1 or len(v) > 100:
+            raise ValueError('Display name must be between 1 and 100 characters')
+        return v
+    
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'\d', v):
+            raise ValueError('Password must contain at least one digit')
+        return v
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    display_name: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+class ErrorResponse(BaseModel):
+    error: str
+    message: str
+    details: Optional[Dict[str, Any]] = None
+    timestamp: datetime = datetime.utcnow()
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+```
+
+### 5. Error Handling
+
+#### MANDATORY Error Standards
+- **Use consistent HTTP status codes**
+- **Return structured error formats**
+- **Provide meaningful error messages**
+- **Include error codes for programmatic handling**
+
+#### Error Handling Implementation
+```python
+# api/error_handling.py
+from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
+from typing import Dict, Any
+import logging
+
+class APIError(Exception):
+    def __init__(self, message: str, status_code: int = 400, error_code: str = None):
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code
+        super().__init__(message)
+
+class ValidationError(APIError):
+    def __init__(self, message: str, details: Dict[str, Any] = None):
+        super().__init__(message, 400, "VALIDATION_ERROR")
+        self.details = details
+
+class NotFoundError(APIError):
+    def __init__(self, resource: str, resource_id: str):
+        message = f"{resource} with id {resource_id} not found"
+        super().__init__(message, 404, "NOT_FOUND")
+
+class UnauthorizedError(APIError):
+    def __init__(self, message: str = "Unauthorized"):
+        super().__init__(message, 401, "UNAUTHORIZED")
+
+class ForbiddenError(APIError):
+    def __init__(self, message: str = "Forbidden"):
+        super().__init__(message, 403, "FORBIDDEN")
+
+async def api_error_handler(request: Request, exc: APIError):
+    """Global error handler for API errors"""
+    error_response = {
+        "error": exc.error_code or "API_ERROR",
+        "message": exc.message,
+        "timestamp": datetime.utcnow().isoformat(),
+        "path": request.url.path,
+        "method": request.method
+    }
+    
+    if hasattr(exc, 'details'):
+        error_response["details"] = exc.details
+    
+    logging.error(f"API Error: {error_response}")
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_response
+    )
+
+# Error response format
+ERROR_RESPONSES = {
+    400: {
+        "description": "Bad Request",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": "VALIDATION_ERROR",
+                    "message": "Invalid input data",
+                    "details": {
+                        "email": ["Invalid email format"],
+                        "password": ["Password too short"]
+                    },
+                    "timestamp": "2024-01-01T12:00:00Z"
+                }
+            }
+        }
+    },
+    401: {
+        "description": "Unauthorized",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": "UNAUTHORIZED",
+                    "message": "Invalid or missing authentication",
+                    "timestamp": "2024-01-01T12:00:00Z"
+                }
+            }
+        }
+    },
+    404: {
+        "description": "Not Found",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": "NOT_FOUND",
+                    "message": "Resource not found",
+                    "timestamp": "2024-01-01T12:00:00Z"
+                }
+            }
+        }
+    },
+    500: {
+        "description": "Internal Server Error",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": "INTERNAL_ERROR",
+                    "message": "An unexpected error occurred",
+                    "timestamp": "2024-01-01T12:00:00Z"
+                }
+            }
+        }
+    }
+}
+```
+
+### 6. Microservices API Contracts
+
+#### MANDATORY Contract Standards
+- **Services must publish public API specifications**
+- **Services should declare required dependencies**
+- **Implement service discovery and health checks**
+- **Use circuit breakers for external service calls**
+
+#### Service Contract Implementation
+```yaml
+# service-contract.yaml
+service:
+  name: user-service
+  version: 1.0.0
+  description: User management microservice
+  
+  api:
+    specification: "./openapi.yaml"
+    version: "v1"
+    base_url: "https://user-service.example.com/v1"
+    
+  dependencies:
+    required:
+      - name: auth-service
+        version: "1.0.0"
+        purpose: "Authentication and authorization"
+      - name: notification-service
+        version: "1.0.0"
+        purpose: "Send user notifications"
+    
+    optional:
+      - name: analytics-service
+        version: "1.0.0"
+        purpose: "User behavior analytics"
+    
+  health:
+    endpoint: "/health"
+    checks:
+      - database
+      - redis
+      - external_services
+    
+  metrics:
+    endpoint: "/metrics"
+    format: "prometheus"
+    
+  documentation:
+    swagger_ui: "/docs"
+    redoc: "/redoc"
+    postman_collection: "./postman_collection.json"
+```
+
+#### Service Discovery
+```python
+# service/discovery.py
+import consul
+from typing import List, Dict, Any
+import requests
+
+class ServiceDiscovery:
+    def __init__(self, consul_host: str = "localhost", consul_port: int = 8500):
+        self.consul = consul.Consul(host=consul_host, port=consul_port)
+    
+    def register_service(self, service_name: str, service_id: str, 
+                        address: str, port: int, tags: List[str] = None):
+        """Register service with Consul"""
+        self.consul.agent.service.register(
+            name=service_name,
+            service_id=service_id,
+            address=address,
+            port=port,
+            tags=tags or [],
+            check={
+                "http": f"http://{address}:{port}/health",
+                "interval": "10s",
+                "timeout": "5s"
+            }
+        )
+    
+    def discover_service(self, service_name: str) -> List[Dict[str, Any]]:
+        """Discover service instances"""
+        _, services = self.consul.health.service(service_name, passing=True)
+        return [
+            {
+                "id": service["Service"]["ID"],
+                "address": service["Service"]["Address"],
+                "port": service["Service"]["Port"],
+                "tags": service["Service"]["Tags"]
+            }
+            for service in services
+        ]
+    
+    def get_service_url(self, service_name: str) -> str:
+        """Get a service URL for making requests"""
+        services = self.discover_service(service_name)
+        if not services:
+            raise Exception(f"No healthy instances found for service: {service_name}")
+        
+        # Simple round-robin selection
+        service = services[0]  # In production, implement proper load balancing
+        return f"http://{service['address']}:{service['port']}"
+```
+
+### 7. Rate Limiting and Throttling
+
+#### MANDATORY Rate Limiting Standards
+- **Implement rate limiting for all API endpoints**
+- **Use appropriate rate limits based on endpoint sensitivity**
+- **Provide rate limit headers in responses**
+- **Handle rate limit exceeded gracefully**
+
+#### Rate Limiting Implementation
+```python
+# api/rate_limiting.py
+from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
+import time
+from collections import defaultdict
+import redis
+
+class RateLimiter:
+    def __init__(self, redis_client: redis.Redis):
+        self.redis = redis_client
+        self.default_limits = {
+            "GET": 1000,      # 1000 requests per minute
+            "POST": 100,      # 100 requests per minute
+            "PUT": 100,       # 100 requests per minute
+            "DELETE": 50,     # 50 requests per minute
+        }
+    
+    def check_rate_limit(self, request: Request, client_id: str = None):
+        """Check if request is within rate limits"""
+        if not client_id:
+            client_id = request.client.host
+        
+        method = request.method
+        limit = self.default_limits.get(method, 100)
+        
+        # Create key for this client and method
+        key = f"rate_limit:{client_id}:{method}"
+        
+        # Get current count
+        current = self.redis.get(key)
+        if current and int(current) >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "RATE_LIMIT_EXCEEDED",
+                    "message": f"Rate limit exceeded for {method} requests",
+                    "retry_after": self.redis.ttl(key)
+                }
+            )
+        
+        # Increment counter
+        pipe = self.redis.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, 60)  # 1 minute window
+        pipe.execute()
+    
+    def add_rate_limit_headers(self, response: JSONResponse, 
+                              client_id: str, method: str):
+        """Add rate limit headers to response"""
+        key = f"rate_limit:{client_id}:{method}"
+        limit = self.default_limits.get(method, 100)
+        current = int(self.redis.get(key) or 0)
+        remaining = max(0, limit - current)
+        
+        response.headers["X-RateLimit-Limit"] = str(limit)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 60)
+        
+        return response
+```
+
+### 8. API Testing Standards
+
+#### MANDATORY Testing Requirements
+- **Write comprehensive API tests for all endpoints**
+- **Test both success and error scenarios**
+- **Validate response schemas and status codes**
+- **Include integration tests for service interactions**
+
+#### API Testing Implementation
+```python
+# tests/test_api.py
+import pytest
+from fastapi.testclient import TestClient
+from unittest.mock import patch
+from api.main import app
+
+client = TestClient(app)
+
+class TestUserAPI:
+    def test_create_user_success(self):
+        """Test successful user creation"""
+        user_data = {
+            "email": "test@example.com",
+            "display_name": "Test User",
+            "password": "SecurePass123"
+        }
+        
+        response = client.post("/v1/users", json=user_data)
+        
+        assert response.status_code == 201
+        data = response.json()
+        assert data["email"] == user_data["email"]
+        assert data["display_name"] == user_data["display_name"]
+        assert "id" in data
+        assert "created_at" in data
+    
+    def test_create_user_validation_error(self):
+        """Test user creation with invalid data"""
+        user_data = {
+            "email": "invalid-email",
+            "display_name": "",
+            "password": "weak"
+        }
+        
+        response = client.post("/v1/users", json=user_data)
+        
+        assert response.status_code == 400
+        data = response.json()
+        assert data["error"] == "VALIDATION_ERROR"
+        assert "details" in data
+    
+    def test_get_user_not_found(self):
+        """Test getting non-existent user"""
+        response = client.get("/v1/users/non-existent-id")
+        
+        assert response.status_code == 404
+        data = response.json()
+        assert data["error"] == "NOT_FOUND"
+    
+    def test_rate_limiting(self):
+        """Test rate limiting"""
+        # Make multiple requests to trigger rate limit
+        for _ in range(101):  # Exceed POST limit of 100
+            response = client.post("/v1/users", json={
+                "email": f"test{_}@example.com",
+                "display_name": f"Test User {_}",
+                "password": "SecurePass123"
+            })
+        
+        assert response.status_code == 429
+        data = response.json()
+        assert data["error"] == "RATE_LIMIT_EXCEEDED"
+```
+
+### 9. Quality Gates
+
+#### Definition of Done for API Development
+- [ ] **OpenAPI Specification**: Complete and validated
+- [ ] **Request/Response Validation**: All inputs validated
+- [ ] **Error Handling**: Comprehensive error responses
+- [ ] **Rate Limiting**: Implemented and tested
+- [ ] **Documentation**: API docs generated and updated
+- [ ] **Testing**: >90% test coverage
+- [ ] **Security**: Authentication and authorization implemented
+- [ ] **Performance**: Response times meet SLA requirements
+
+---
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all API development  
+**Purpose**: Ensure consistent, well-documented, and secure APIs

@@ -1,0 +1,595 @@
+---
+ruleId: "MB-02"
+title: "Android Development Standards"
+status: "active"
+compliance: "mandatory"
+description: "Android native development standards for Kotlin, Jetpack Compose, and Android platform integration"
+globs: ["**/android/**", "**/*.kt", "**/*.kts", "**/*.xml", "**/gradle/**"]
+alwaysApply: false
+lastUpdated: "2024-09-08"
+category: "mobile"
+---
+
+# MB-02: Android Development Standards
+
+## Purpose & Scope
+
+Native Android development standards ensuring consistent, performant, and platform-compliant applications using Kotlin, Jetpack Compose, and Android ecosystem integration for The Middle platform.
+
+## Rule Triggers
+
+### When to Apply Cross-Platform and Testing Considerations
+```yaml
+triggers:
+  cross_platform_consistency:
+    when: "Developing Android features that need to work across platforms"
+    reference: "MB-03: Cross-Platform Consistency Standards"
+    action: "Ensure Android implementation aligns with cross-platform requirements"
+    conditions:
+      - "Shared business logic"
+      - "API integration"
+      - "UI/UX consistency requirements"
+      - "Feature parity needs"
+  
+  mobile_testing:
+    when: "Implementing Android features that require testing"
+    reference: "MB-04: Mobile Testing Standards"
+    action: "Apply Android-specific testing requirements and patterns"
+    conditions:
+      - "New feature development"
+      - "UI component creation"
+      - "API integration"
+      - "User flow implementation"
+  
+  security_integration:
+    when: "Handling sensitive data or security features on Android"
+    reference: "SEC-01: Universal Security Standards"
+    action: "Apply Android-specific security best practices"
+    conditions:
+      - "Keystore usage"
+      - "Biometric authentication"
+      - "Data encryption"
+      - "Secure network communication"
+```
+
+## Core Standards
+
+### 1. Kotlin Language Standards
+
+#### MANDATORY Kotlin Conventions
+- **Kotlin 1.9+** minimum version requirement
+- **Coroutines** for asynchronous operations
+- **Null safety** with proper nullable handling
+- **ktlint** integration for code formatting
+- **Detekt** for static code analysis
+
+#### Code Organization
+```kotlin
+// LocationService.kt
+interface LocationService {
+    suspend fun geocodeAddress(address: String): Result<LatLng>
+    suspend fun getCurrentLocation(): Result<LatLng>
+}
+
+@Singleton
+class LocationServiceImpl @Inject constructor(
+    private val geocoder: Geocoder,
+    private val fusedLocationClient: FusedLocationProviderClient
+) : LocationService {
+    
+    override suspend fun geocodeAddress(address: String): Result<LatLng> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val addresses = geocoder.getFromLocationName(address, 1)
+                addresses?.firstOrNull()?.let { address ->
+                    Result.success(LatLng(address.latitude, address.longitude))
+                } ?: Result.failure(LocationException("Geocoding failed"))
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+    
+    override suspend fun getCurrentLocation(): Result<LatLng> {
+        return suspendCoroutine { continuation ->
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location ->
+                    location?.let {
+                        continuation.resume(Result.success(LatLng(it.latitude, it.longitude)))
+                    } ?: continuation.resume(Result.failure(LocationException("No location available")))
+                }
+                .addOnFailureListener { exception ->
+                    continuation.resume(Result.failure(exception))
+                }
+        }
+    }
+}
+
+sealed class LocationException(message: String) : Exception(message) {
+    object PermissionDenied : LocationException("Location permission denied")
+    class GeocodingFailed(address: String) : LocationException("Failed to geocode: $address")
+}
+```
+
+### 2. Jetpack Compose UI Standards
+
+#### Component Design Patterns
+```kotlin
+// PlanCreationScreen.kt
+@Composable
+fun PlanCreationScreen(
+    viewModel: PlanCreationViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    LaunchedEffect(uiState.navigationEvent) {
+        uiState.navigationEvent?.let { event ->
+            when (event) {
+                is NavigationEvent.PlanCreated -> onNavigateBack()
+                is NavigationEvent.ShowError -> {
+                    // Handle error navigation
+                }
+            }
+            viewModel.clearNavigationEvent()
+        }
+    }
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create Plan") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        PlanCreationContent(
+            uiState = uiState,
+            onLocationAdded = viewModel::addLocation,
+            onLocationRemoved = viewModel::removeLocation,
+            onLocationChanged = viewModel::updateLocation,
+            onCreatePlan = viewModel::createPlan,
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
+}
+
+@Composable
+private fun PlanCreationContent(
+    uiState: PlanCreationUiState,
+    onLocationAdded: () -> Unit,
+    onLocationRemoved: (Int) -> Unit,
+    onLocationChanged: (Int, String) -> Unit,
+    onCreatePlan: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "Enter 2-6 locations to find the middle",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
+        itemsIndexed(uiState.locations) { index, location ->
+            LocationInputCard(
+                location = location,
+                onLocationChanged = { newValue ->
+                    onLocationChanged(index, newValue)
+                },
+                onRemove = if (uiState.locations.size > 1) {
+                    { onLocationRemoved(index) }
+                } else null,
+                modifier = Modifier.animateItemPlacement()
+            )
+        }
+        
+        if (uiState.locations.size < 6) {
+            item {
+                OutlinedButton(
+                    onClick = onLocationAdded,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add Location")
+                }
+            }
+        }
+        
+        item {
+            Spacer(Modifier.height(16.dp))
+            
+            Button(
+                onClick = onCreatePlan,
+                enabled = !uiState.isLoading && uiState.canCreatePlan,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Find the Middle")
+                }
+            }
+        }
+    }
+}
+```
+
+#### MVVM with StateFlow
+```kotlin
+// PlanCreationViewModel.kt
+@HiltViewModel
+class PlanCreationViewModel @Inject constructor(
+    private val planRepository: PlanRepository,
+    private val locationService: LocationService
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow(PlanCreationUiState())
+    val uiState: StateFlow<PlanCreationUiState> = _uiState.asStateFlow()
+    
+    fun addLocation() {
+        val currentState = _uiState.value
+        if (currentState.locations.size < 6) {
+            _uiState.value = currentState.copy(
+                locations = currentState.locations + LocationInput()
+            )
+        }
+    }
+    
+    fun removeLocation(index: Int) {
+        val currentState = _uiState.value
+        if (currentState.locations.size > 1 && index in currentState.locations.indices) {
+            _uiState.value = currentState.copy(
+                locations = currentState.locations.toMutableList().apply {
+                    removeAt(index)
+                }
+            )
+        }
+    }
+    
+    fun updateLocation(index: Int, address: String) {
+        val currentState = _uiState.value
+        if (index in currentState.locations.indices) {
+            val updatedLocations = currentState.locations.toMutableList()
+            updatedLocations[index] = updatedLocations[index].copy(address = address)
+            
+            _uiState.value = currentState.copy(
+                locations = updatedLocations,
+                canCreatePlan = updatedLocations.count { it.address.isNotBlank() } >= 2
+            )
+        }
+    }
+    
+    fun createPlan() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            
+            try {
+                val validLocations = _uiState.value.locations
+                    .filter { it.address.isNotBlank() }
+                
+                val plan = planRepository.createPlan(validLocations)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    navigationEvent = NavigationEvent.PlanCreated(plan.id)
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Unknown error occurred"
+                )
+            }
+        }
+    }
+    
+    fun clearNavigationEvent() {
+        _uiState.value = _uiState.value.copy(navigationEvent = null)
+    }
+}
+
+data class PlanCreationUiState(
+    val locations: List<LocationInput> = listOf(LocationInput(), LocationInput()),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val canCreatePlan: Boolean = false,
+    val navigationEvent: NavigationEvent? = null
+)
+
+sealed class NavigationEvent {
+    data class PlanCreated(val planId: String) : NavigationEvent()
+    data class ShowError(val message: String) : NavigationEvent()
+}
+```
+
+### 3. Android Architecture Components
+
+#### Room Database
+```kotlin
+// PlanEntity.kt
+@Entity(tableName = "plans")
+data class PlanEntity(
+    @PrimaryKey
+    val id: String,
+    val title: String,
+    val createdAt: Long,
+    val expiresAt: Long,
+    val midpoint: String, // JSON representation of LatLng
+    val shareToken: String?
+)
+
+@Dao
+interface PlanDao {
+    @Query("SELECT * FROM plans WHERE expiresAt > :currentTime ORDER BY createdAt DESC")
+    fun getActivePlans(currentTime: Long = System.currentTimeMillis()): Flow<List<PlanEntity>>
+    
+    @Query("SELECT * FROM plans WHERE id = :planId")
+    suspend fun getPlanById(planId: String): PlanEntity?
+    
+    @Query("SELECT * FROM plans WHERE shareToken = :token")
+    suspend fun getPlanByToken(token: String): PlanEntity?
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPlan(plan: PlanEntity)
+    
+    @Delete
+    suspend fun deletePlan(plan: PlanEntity)
+    
+    @Query("DELETE FROM plans WHERE expiresAt <= :currentTime")
+    suspend fun deleteExpiredPlans(currentTime: Long = System.currentTimeMillis())
+}
+
+@Database(
+    entities = [PlanEntity::class],
+    version = 1,
+    exportSchema = false
+)
+@TypeConverters(Converters::class)
+abstract class TheMiddleDatabase : RoomDatabase() {
+    abstract fun planDao(): PlanDao
+}
+```
+
+#### Dependency Injection with Hilt
+```kotlin
+// DatabaseModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): TheMiddleDatabase {
+        return Room.databaseBuilder(
+            context,
+            TheMiddleDatabase::class.java,
+            "the_middle_database"
+        )
+        .fallbackToDestructiveMigration()
+        .build()
+    }
+    
+    @Provides
+    fun providePlanDao(database: TheMiddleDatabase): PlanDao {
+        return database.planDao()
+    }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+    
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
+            })
+            .build()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideApolloClient(okHttpClient: OkHttpClient): ApolloClient {
+        return ApolloClient.Builder()
+            .serverUrl(BuildConfig.GRAPHQL_ENDPOINT)
+            .okHttpClient(okHttpClient)
+            .build()
+    }
+}
+```
+
+### 4. Testing Standards
+
+#### Unit Testing
+```kotlin
+// PlanCreationViewModelTest.kt
+@HiltAndroidTest
+@RunWith(AndroidJUnit4::class)
+class PlanCreationViewModelTest {
+    
+    @get:Rule
+    val hiltRule = HiltAndroidRule(this)
+    
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+    
+    @Inject
+    lateinit var planRepository: PlanRepository
+    
+    @Inject
+    lateinit var locationService: LocationService
+    
+    private lateinit var viewModel: PlanCreationViewModel
+    
+    @Before
+    fun setup() {
+        hiltRule.inject()
+        viewModel = PlanCreationViewModel(planRepository, locationService)
+    }
+    
+    @Test
+    fun addLocation_whenUnderLimit_addsLocationSuccessfully() = runTest {
+        // Given - initial state has 2 locations
+        val initialSize = viewModel.uiState.value.locations.size
+        
+        // When
+        viewModel.addLocation()
+        
+        // Then
+        assertEquals(initialSize + 1, viewModel.uiState.value.locations.size)
+    }
+    
+    @Test
+    fun createPlan_withValidLocations_createsSuccessfully() = runTest {
+        // Given
+        viewModel.updateLocation(0, "New York, NY")
+        viewModel.updateLocation(1, "Boston, MA")
+        
+        // When
+        viewModel.createPlan()
+        
+        // Then
+        viewModel.uiState.test {
+            val loadingState = awaitItem()
+            assertTrue(loadingState.isLoading)
+            
+            val completedState = awaitItem()
+            assertFalse(completedState.isLoading)
+            assertNotNull(completedState.navigationEvent)
+            assertTrue(completedState.navigationEvent is NavigationEvent.PlanCreated)
+        }
+    }
+}
+```
+
+#### UI Testing with Compose
+```kotlin
+// PlanCreationScreenTest.kt
+@HiltAndroidTest
+@RunWith(AndroidJUnit4::class)
+class PlanCreationScreenTest {
+    
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+    
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    
+    @Before
+    fun setup() {
+        hiltRule.inject()
+    }
+    
+    @Test
+    fun planCreationScreen_displaysCorrectly() {
+        composeTestRule.setContent {
+            TheMiddleTheme {
+                PlanCreationScreen(onNavigateBack = {})
+            }
+        }
+        
+        composeTestRule
+            .onNodeWithText("Create Plan")
+            .assertIsDisplayed()
+        
+        composeTestRule
+            .onNodeWithText("Enter 2-6 locations to find the middle")
+            .assertIsDisplayed()
+        
+        composeTestRule
+            .onNodeWithText("Add Location")
+            .assertIsDisplayed()
+            .assertIsEnabled()
+    }
+    
+    @Test
+    fun addLocation_increasesLocationInputs() {
+        composeTestRule.setContent {
+            TheMiddleTheme {
+                PlanCreationScreen(onNavigateBack = {})
+            }
+        }
+        
+        // Initially should have 2 location inputs
+        composeTestRule
+            .onAllNodesWithContentDescription("Location input")
+            .assertCountEquals(2)
+        
+        // Add a location
+        composeTestRule
+            .onNodeWithText("Add Location")
+            .performClick()
+        
+        // Should now have 3 location inputs
+        composeTestRule
+            .onAllNodesWithContentDescription("Location input")
+            .assertCountEquals(3)
+    }
+}
+```
+
+## Rule Application Signals
+
+When you encounter Android development work, reference these additional rules:
+
+### Android Implementation Signals
+- **Android Security Implementation** → Reference `.cursor/rules/integration/security-integration.mdc` for security patterns and requirements
+- **Android Testing Implementation** → Reference `.cursor/rules/integration/testing-integration.mdc` for testing patterns and requirements
+- **Android Performance Implementation** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance optimization patterns
+- **Android Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Android Quality Signals
+- **Android Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Android Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` + `.cursor/rules/integration/testing-integration.mdc`
+- **Android Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for Android monitoring patterns
+- **Cross-Platform Consistency** → Reference `.cursor/rules/mobile/cross-platform-consistency.mdc` for cross-platform requirements
+- **Mobile Testing** → Reference `.cursor/rules/mobile/mobile-testing-standards.mdc` for mobile-specific testing
+
+### Android Issue Resolution Signals
+- **Android Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Android Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Android Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Quality Gates
+
+### Definition of Done for Android Development
+- [ ] **ktlint and Detekt** pass with zero warnings
+- [ ] **Unit test coverage** >80% for ViewModels and Repositories
+- [ ] **UI tests** for critical user journeys
+- [ ] **Accessibility testing** with TalkBack enabled
+- [ ] **Performance testing** on low-end devices (API 26+)
+- [ ] **Material Design 3** compliance
+- [ ] **Android compatibility** testing across API levels
+
+### Android-Specific Requirements
+- [ ] **Phone and tablet** layouts optimized
+- [ ] **Dark theme** support with dynamic colors
+- [ ] **Large text** accessibility support
+- [ ] **Android 8.0 (API 26)+** minimum SDK
+- [ ] **Target Android 14 (API 34)+**
+- [ ] **Privacy policy** compliance for Play Store
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all Android development
+**Purpose**: Ensure high-quality, performant, and platform-compliant Android applications

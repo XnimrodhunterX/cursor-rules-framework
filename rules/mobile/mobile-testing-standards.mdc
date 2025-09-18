@@ -1,0 +1,698 @@
+---
+ruleId: "MB-04"
+title: "Mobile Testing Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive testing standards for iOS and Android applications including unit, integration, UI, and device testing"
+globs: ["**/mobile/**", "**/test/**", "**/androidTest/**", "**/UITests/**"]
+alwaysApply: false
+lastUpdated: "2024-09-08"
+category: "mobile"
+---
+
+# MB-04: Mobile Testing Standards
+
+## Purpose & Scope
+
+Mobile testing standards ensuring comprehensive quality assurance for iOS and Android applications through automated testing, device compatibility, performance validation, and platform-specific testing strategies.
+
+## Core Standards
+
+### 1. Test Pyramid for Mobile
+
+#### MANDATORY Test Distribution
+```yaml
+mobile_test_pyramid:
+  unit_tests:
+    target_coverage: 80%
+    focus_areas:
+      - ViewModels and business logic
+      - Data models and transformations
+      - Utility functions and helpers
+      - Repository implementations
+      - Service layer logic
+  
+  integration_tests:
+    target_coverage: 60%
+    focus_areas:
+      - API client implementations
+      - Database operations
+      - Platform service integrations
+      - Navigation flows
+      - Data synchronization
+  
+  ui_tests:
+    target_coverage: 40%
+    focus_areas:
+      - Critical user journeys
+      - Cross-platform consistency
+      - Accessibility compliance
+      - Error handling UX
+      - Platform-specific interactions
+  
+  device_tests:
+    target_coverage: "Key scenarios"
+    focus_areas:
+      - Performance on low-end devices
+      - Different screen sizes
+      - Platform version compatibility
+      - Network condition variations
+      - Hardware feature integration
+```
+
+### 2. iOS Testing Standards
+
+#### XCTest Implementation
+```swift
+// PlanCreationViewModelTests.swift
+import XCTest
+import Combine
+@testable import TheMiddle
+
+@MainActor
+final class PlanCreationViewModelTests: XCTestCase {
+    private var sut: PlanCreationViewModel!
+    private var mockPlanService: MockPlanService!
+    private var mockLocationService: MockLocationService!
+    private var cancellables: Set<AnyCancellable>!
+    
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        mockPlanService = MockPlanService()
+        mockLocationService = MockLocationService()
+        cancellables = Set<AnyCancellable>()
+        
+        sut = PlanCreationViewModel(
+            planService: mockPlanService,
+            locationService: mockLocationService
+        )
+    }
+    
+    override func tearDownWithError() throws {
+        sut = nil
+        mockPlanService = nil
+        mockLocationService = nil
+        cancellables = nil
+        try super.tearDownWithError()
+    }
+    
+    func testAddLocation_WhenUnderLimit_AddsLocationSuccessfully() async {
+        // Given
+        let initialCount = sut.locations.count
+        
+        // When
+        sut.addLocation()
+        
+        // Then
+        XCTAssertEqual(sut.locations.count, initialCount + 1)
+        XCTAssertTrue(sut.locations.last?.address.isEmpty ?? false)
+    }
+    
+    func testCreatePlan_WithValidLocations_CompletesSuccessfully() async {
+        // Given
+        sut.locations = [
+            LocationInput(address: "New York, NY"),
+            LocationInput(address: "Boston, MA")
+        ]
+        
+        let expectation = XCTestExpectation(description: "Plan creation completes")
+        mockPlanService.createPlanResult = .success(
+            Plan.mock(id: "test-plan-id")
+        )
+        
+        // When
+        await sut.createPlan()
+        
+        // Then
+        XCTAssertFalse(sut.isLoading)
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertEqual(mockPlanService.createPlanCallCount, 1)
+    }
+    
+    func testCreatePlan_WhenServiceFails_ShowsErrorMessage() async {
+        // Given
+        sut.locations = [
+            LocationInput(address: "New York, NY"),
+            LocationInput(address: "Boston, MA")
+        ]
+        
+        let expectedError = PlanServiceError.networkError("Connection failed")
+        mockPlanService.createPlanResult = .failure(expectedError)
+        
+        // When
+        await sut.createPlan()
+        
+        // Then
+        XCTAssertFalse(sut.isLoading)
+        XCTAssertEqual(sut.errorMessage, expectedError.localizedDescription)
+    }
+}
+
+// Mock Services
+final class MockPlanService: PlanServiceProtocol {
+    var createPlanResult: Result<Plan, Error> = .success(Plan.mock())
+    var createPlanCallCount = 0
+    
+    func createPlan(from locations: [LocationInput]) async throws -> Plan {
+        createPlanCallCount += 1
+        return try createPlanResult.get()
+    }
+}
+```
+
+#### SwiftUI UI Testing
+```swift
+// PlanCreationUITests.swift
+import XCTest
+
+final class PlanCreationUITests: XCTestCase {
+    private var app: XCUIApplication!
+    
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        continueAfterFailure = false
+        
+        app = XCUIApplication()
+        app.launchEnvironment = ["UITEST_MODE": "true"]
+        app.launch()
+    }
+    
+    func testPlanCreation_HappyPath_CreatesSuccessfully() throws {
+        // Navigate to plan creation
+        let createButton = app.buttons["Create Plan"]
+        XCTAssertTrue(createButton.waitForExistence(timeout: 5))
+        createButton.tap()
+        
+        // Enter first location
+        let firstLocationField = app.textFields["location_input_0"]
+        XCTAssertTrue(firstLocationField.waitForExistence(timeout: 5))
+        firstLocationField.tap()
+        firstLocationField.typeText("New York, NY")
+        
+        // Enter second location
+        let secondLocationField = app.textFields["location_input_1"]
+        secondLocationField.tap()
+        secondLocationField.typeText("Boston, MA")
+        
+        // Create plan
+        let findMiddleButton = app.buttons["Find the Middle"]
+        XCTAssertTrue(findMiddleButton.isEnabled)
+        findMiddleButton.tap()
+        
+        // Verify navigation to plan details
+        let planDetailsTitle = app.staticTexts["Plan Details"]
+        XCTAssertTrue(planDetailsTitle.waitForExistence(timeout: 10))
+    }
+    
+    func testLocationInput_AddLocation_IncreasesInputFields() throws {
+        // Navigate to plan creation
+        app.buttons["Create Plan"].tap()
+        
+        // Initial count
+        let initialLocationFields = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'location_input_'")
+        )
+        let initialCount = initialLocationFields.count
+        
+        // Add location
+        app.buttons["Add Location"].tap()
+        
+        // Verify increased count
+        let updatedLocationFields = app.textFields.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'location_input_'")
+        )
+        XCTAssertEqual(updatedLocationFields.count, initialCount + 1)
+    }
+    
+    func testAccessibility_VoiceOverNavigation() throws {
+        // Enable VoiceOver for testing
+        app.buttons["Create Plan"].tap()
+        
+        // Test VoiceOver labels
+        let locationInput = app.textFields["location_input_0"]
+        XCTAssertEqual(locationInput.label, "Location input field 1")
+        
+        let addLocationButton = app.buttons["Add Location"]
+        XCTAssertEqual(addLocationButton.label, "Add location button")
+        XCTAssertEqual(addLocationButton.hint, "Adds a new location input field")
+    }
+}
+```
+
+### 3. Android Testing Standards
+
+#### JUnit and Espresso Implementation
+```kotlin
+// PlanCreationViewModelTest.kt
+@HiltAndroidTest
+@RunWith(AndroidJUnit4::class)
+class PlanCreationViewModelTest {
+    
+    @get:Rule
+    val hiltRule = HiltAndroidRule(this)
+    
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+    
+    @Inject
+    lateinit var planRepository: PlanRepository
+    
+    @Inject
+    lateinit var locationService: LocationService
+    
+    private lateinit var viewModel: PlanCreationViewModel
+    
+    @Before
+    fun setup() {
+        hiltRule.inject()
+        viewModel = PlanCreationViewModel(planRepository, locationService)
+    }
+    
+    @Test
+    fun addLocation_whenUnderLimit_addsLocationSuccessfully() = runTest {
+        // Given
+        val initialSize = viewModel.uiState.value.locations.size
+        
+        // When
+        viewModel.addLocation()
+        
+        // Then
+        assertEquals(initialSize + 1, viewModel.uiState.value.locations.size)
+        assertTrue(viewModel.uiState.value.locations.last().address.isEmpty())
+    }
+    
+    @Test
+    fun createPlan_withValidLocations_completesSuccessfully() = runTest {
+        // Given
+        viewModel.updateLocation(0, "New York, NY")
+        viewModel.updateLocation(1, "Boston, MA")
+        
+        val mockPlan = Plan(
+            id = "test-plan-id",
+            title = "Test Plan",
+            locations = emptyList(),
+            midpoint = Coordinates(0.0, 0.0),
+            activities = emptyList(),
+            createdAt = System.currentTimeMillis(),
+            expiresAt = System.currentTimeMillis() + 86400000L
+        )
+        
+        // Mock repository response
+        every { planRepository.createPlan(any()) } returns flowOf(Result.success(mockPlan))
+        
+        // When
+        viewModel.createPlan()
+        
+        // Then
+        viewModel.uiState.test {
+            val loadingState = awaitItem()
+            assertTrue(loadingState.isLoading)
+            
+            val completedState = awaitItem()
+            assertFalse(completedState.isLoading)
+            assertNull(completedState.error)
+            assertTrue(completedState.navigationEvent is NavigationEvent.PlanCreated)
+        }
+    }
+}
+
+// Compose UI Testing
+@HiltAndroidTest
+@RunWith(AndroidJUnit4::class)
+class PlanCreationScreenTest {
+    
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+    
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    
+    @Before
+    fun setup() {
+        hiltRule.inject()
+    }
+    
+    @Test
+    fun planCreationScreen_displaysCorrectly() {
+        composeTestRule.setContent {
+            TheMiddleTheme {
+                PlanCreationScreen(onNavigateBack = {})
+            }
+        }
+        
+        // Verify initial UI elements
+        composeTestRule
+            .onNodeWithText("Create Plan")
+            .assertIsDisplayed()
+        
+        composeTestRule
+            .onNodeWithText("Enter 2-6 locations to find the middle")
+            .assertIsDisplayed()
+        
+        composeTestRule
+            .onAllNodesWithTag("location_input")
+            .assertCountEquals(2)
+        
+        composeTestRule
+            .onNodeWithText("Add Location")
+            .assertIsDisplayed()
+            .assertIsEnabled()
+    }
+    
+    @Test
+    fun createPlan_withValidInput_navigatesToPlanDetails() {
+        composeTestRule.setContent {
+            TheMiddleTheme {
+                PlanCreationScreen(onNavigateBack = {})
+            }
+        }
+        
+        // Enter locations
+        composeTestRule
+            .onAllNodesWithTag("location_input")[0]
+            .performTextInput("New York, NY")
+        
+        composeTestRule
+            .onAllNodesWithTag("location_input")[1]
+            .performTextInput("Boston, MA")
+        
+        // Create plan
+        composeTestRule
+            .onNodeWithText("Find the Middle")
+            .assertIsEnabled()
+            .performClick()
+        
+        // Verify loading state
+        composeTestRule
+            .onNodeWithContentDescription("Loading")
+            .assertIsDisplayed()
+    }
+    
+    @Test
+    fun accessibility_talkBackSupport() {
+        composeTestRule.setContent {
+            TheMiddleTheme {
+                PlanCreationScreen(onNavigateBack = {})
+            }
+        }
+        
+        // Test semantic properties
+        composeTestRule
+            .onNodeWithTag("location_input")
+            .assert(hasContentDescription())
+            .assert(hasSetTextAction())
+        
+        composeTestRule
+            .onNodeWithText("Add Location")
+            .assert(hasClickAction())
+            .assert(hasContentDescription())
+    }
+}
+```
+
+### 4. Device and Performance Testing
+
+#### Device Matrix Testing
+```yaml
+device_testing_matrix:
+  ios_devices:
+    primary:
+      - iPhone 15 Pro (iOS 17+)
+      - iPhone 12 (iOS 16+)
+      - iPad Air (iOS 16+)
+    compatibility:
+      - iPhone SE 3rd gen (iOS 16+)
+      - iPhone 11 (iOS 16+)
+      - iPad 9th gen (iOS 16+)
+  
+  android_devices:
+    primary:
+      - Pixel 8 (Android 14)
+      - Samsung Galaxy S23 (Android 14)
+      - OnePlus 11 (Android 13)
+    compatibility:
+      - Samsung Galaxy A54 (Android 13) # Mid-range
+      - Google Pixel 6a (Android 13) # Budget flagship
+      - Samsung Galaxy Tab A8 (Android 13) # Tablet
+  
+  testing_scenarios:
+    memory_constraints:
+      - Low memory devices (3GB RAM)
+      - Background app limits
+      - Memory pressure scenarios
+    network_conditions:
+      - Slow 3G networks
+      - Intermittent connectivity  
+      - Offline scenarios
+    performance_benchmarks:
+      - App launch time < 3 seconds
+      - Screen transition time < 300ms
+      - API response handling < 5 seconds
+```
+
+#### Performance Testing Implementation
+```swift
+// iOS Performance Tests
+final class PerformanceTests: XCTestCase {
+    private var app: XCUIApplication!
+    
+    override func setUp() {
+        super.setUp()
+        app = XCUIApplication()
+        app.launch()
+    }
+    
+    func testAppLaunchPerformance() {
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            app.terminate()
+            app.launch()
+        }
+    }
+    
+    func testPlanCreationPerformance() {
+        app.buttons["Create Plan"].tap()
+        
+        measure(metrics: [XCTClockMetric()]) {
+            let firstLocationField = app.textFields["location_input_0"]
+            firstLocationField.tap()
+            firstLocationField.typeText("New York, NY")
+            
+            let secondLocationField = app.textFields["location_input_1"]
+            secondLocationField.tap()
+            secondLocationField.typeText("Boston, MA")
+            
+            app.buttons["Find the Middle"].tap()
+            
+            // Wait for plan details screen
+            let planDetailsTitle = app.staticTexts["Plan Details"]
+            XCTAssertTrue(planDetailsTitle.waitForExistence(timeout: 10))
+        }
+    }
+    
+    func testMemoryUsage() {
+        // Monitor memory usage during intensive operations
+        let memoryMetric = XCTMemoryMetric()
+        
+        measure(metrics: [memoryMetric]) {
+            // Perform memory-intensive operations
+            for i in 0..<10 {
+                app.buttons["Create Plan"].tap()
+                app.buttons["Back"].tap()
+            }
+        }
+    }
+}
+```
+
+```kotlin
+// Android Performance Tests
+@RunWith(AndroidJUnit4::class)
+class PerformanceTest {
+    
+    @get:Rule
+    val benchmarkRule = BenchmarkRule()
+    
+    @Test
+    fun benchmarkPlanCreation() {
+        benchmarkRule.measureRepeated {
+            val scenario = ActivityScenario.launch(MainActivity::class.java)
+            
+            scenario.onActivity { activity ->
+                // Navigate to plan creation
+                val navController = activity.findNavController(R.id.nav_host_fragment)
+                runOnUiThread {
+                    navController.navigate(R.id.planCreationFragment)
+                }
+            }
+            
+            // Measure time to complete plan creation
+            onView(withId(R.id.location_input_0))
+                .perform(typeText("New York, NY"))
+            
+            onView(withId(R.id.location_input_1))
+                .perform(typeText("Boston, MA"))
+            
+            onView(withId(R.id.create_plan_button))
+                .perform(click())
+            
+            // Wait for completion
+            onView(withId(R.id.plan_details_layout))
+                .check(matches(isDisplayed()))
+            
+            scenario.close()
+        }
+    }
+    
+    @Test
+    fun benchmarkListScrolling() {
+        benchmarkRule.measureRepeated {
+            // Test scrolling performance with large datasets
+            onView(withId(R.id.plans_recycler_view))
+                .perform(
+                    RecyclerViewActions.scrollToPosition<RecyclerView.ViewHolder>(99)
+                )
+        }
+    }
+}
+```
+
+### 5. Automated Testing Pipeline
+
+#### CI/CD Integration
+```yaml
+# .github/workflows/mobile-tests.yml
+name: Mobile Tests
+
+on:
+  push:
+    paths:
+      - 'apps/ios/**'
+      - 'apps/android/**'
+      - 'shared/**'
+  pull_request:
+    paths:
+      - 'apps/ios/**'
+      - 'apps/android/**'
+      - 'shared/**'
+
+jobs:
+  ios-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.0'
+      
+      - name: Install dependencies
+        run: |
+          cd apps/ios
+          xcodebuild -resolvePackageDependencies
+      
+      - name: Run unit tests
+        run: |
+          cd apps/ios
+          xcodebuild test \
+            -project TheMiddle.xcodeproj \
+            -scheme TheMiddle \
+            -destination 'platform=iOS Simulator,name=iPhone 15'
+      
+      - name: Run UI tests
+        run: |
+          cd apps/ios
+          xcodebuild test \
+            -project TheMiddle.xcodeproj \
+            -scheme TheMiddleUITests \
+            -destination 'platform=iOS Simulator,name=iPhone 15'
+
+  android-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Run unit tests
+        run: |
+          cd apps/android
+          ./gradlew testDebugUnitTest
+      
+      - name: Run instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          script: |
+            cd apps/android
+            ./gradlew connectedAndroidTest
+
+  cross-platform-consistency:
+    needs: [ios-tests, android-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Verify API contracts
+        run: |
+          # Compare shared type definitions
+          npm run test:api-contracts
+      
+      - name: Check design token consistency
+        run: |
+          # Verify design tokens match across platforms
+          npm run test:design-tokens
+```
+
+## Rule Application Signals
+
+When you encounter mobile testing work, reference these additional rules:
+
+### Mobile Testing Implementation Signals
+- **iOS Testing Implementation** → Reference `.cursor/rules/mobile/ios-development-standards.mdc` for iOS-specific testing patterns
+- **Android Testing Implementation** → Reference `.cursor/rules/mobile/android-development-standards.mdc` for Android-specific testing patterns
+- **Cross-Platform Testing** → Reference `.cursor/rules/mobile/cross-platform-consistency.mdc` for cross-platform testing requirements
+- **Mobile Testing Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Mobile Testing Quality Signals
+- **Mobile Security Testing** → Reference `.cursor/rules/integration/security-integration.mdc` for security testing patterns
+- **Mobile Performance Testing** → Reference `.cursor/rules/integration/performance-integration.mdc` for performance testing patterns
+- **Mobile Testing Integration** → Reference `.cursor/rules/integration/testing-integration.mdc` for comprehensive testing integration
+- **Mobile Monitoring** → Reference `.cursor/rules/operations/monitoring-observability.mdc` for mobile monitoring patterns
+
+### Mobile Testing Issue Resolution Signals
+- **Mobile Testing Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Mobile Testing Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Mobile Testing Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Quality Gates
+
+### Mobile Testing Requirements
+- [ ] **Unit test coverage** >80% for ViewModels and business logic
+- [ ] **Integration test coverage** >60% for API and database operations
+- [ ] **UI test coverage** for all critical user journeys
+- [ ] **Device compatibility** tested on primary device matrix
+- [ ] **Performance benchmarks** met on low-end devices
+- [ ] **Accessibility testing** with screen readers enabled
+- [ ] **Network condition testing** including offline scenarios
+- [ ] **Memory leak detection** with profiling tools
+
+### Platform-Specific Testing
+- [ ] **iOS**: XCTest unit tests, XCUITest UI tests, Instruments profiling
+- [ ] **Android**: JUnit unit tests, Espresso UI tests, Android Profiler analysis
+- [ ] **Cross-platform**: API contract tests, design token verification
+
+---
+
+**Rule Status**: ✅ **ACTIVE**
+**Compliance**: MANDATORY for all mobile application testing
+**Purpose**: Ensure comprehensive quality assurance and reliability across mobile platforms

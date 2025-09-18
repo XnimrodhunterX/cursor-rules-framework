@@ -1,0 +1,203 @@
+---
+ruleId: "QC-06"
+title: "Project Management & Governance Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive project management standards for work item tracking, task management, and governance"
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "core"
+---
+
+# QC-06: Project Management & Governance Standards
+
+## Purpose & Scope
+
+This rule establishes comprehensive project management standards for systematic work tracking, task management, and governance. It ensures all work is properly tracked, managed, and completed systematically using the PM tool.
+
+## MANDATORY Project Management Protocol
+
+### 1. Work Item Management
+
+#### Work Item Creation Requirements
+- **All tasks must be tracked** using the PM tool
+- **Clear task descriptions** with specific deliverables
+- **Priority levels** assigned (High, Medium, Low)
+- **Estimated effort** documented
+- **Dependencies** identified and tracked
+- **Acceptance criteria** defined
+
+#### Work Item Lifecycle
+```yaml
+work_item_lifecycle:
+  creation:
+    - "Create work item using PM tool"
+    - "Assign appropriate priority and effort"
+    - "Define clear acceptance criteria"
+    - "Identify dependencies if any"
+  
+  execution:
+    - "Update progress regularly"
+    - "Document blockers and issues"
+    - "Track time and effort spent"
+    - "Maintain work item status"
+  
+  completion:
+    - "Verify all acceptance criteria met"
+    - "Update work item status to completed"
+    - "Document completion evidence"
+    - "Close work item with summary"
+```
+
+### 2. Task Management Standards
+
+#### Single Task Focus
+- **One task at a time** - Complete current task before starting new one
+- **No task divergence** without explicit human agreement
+- **Systematic completion** - Work through tasks methodically
+- **Progress tracking** - Update PM tool regularly
+
+#### Task Divergence Protocol
+```yaml
+divergence_management:
+  blocking_divergence:
+    condition: "Current task cannot proceed due to blocker"
+    action: "Ask human for permission to diverge"
+    example: "Hey Steve, I need to diverge to fix the database connection issue before I can complete the API testing. Is this okay?"
+  
+  non_blocking_divergence:
+    condition: "New task identified but current task can continue"
+    action: "Create work item using PM tool and continue current task"
+    example: "I noticed we need to update the documentation. I'll create a work item for this and continue with the current API development."
+```
+
+### 3. Progress Tracking and Reporting
+
+#### Regular Progress Updates
+- **Daily progress updates** in PM tool
+- **Blocker identification** and escalation
+- **Time tracking** for effort estimation
+- **Status updates** for all active work items
+
+#### Progress Reporting Format
+```yaml
+progress_report:
+  work_item_id: "WC-001"
+  status: "In Progress"
+  progress_percentage: 75
+  time_spent: "4 hours"
+  blockers: "None"
+  next_steps: "Complete API testing and update documentation"
+  estimated_completion: "2 hours"
+```
+
+### 4. Quality Gates and Governance
+
+#### Definition of Done
+- **All acceptance criteria met**
+- **Code reviewed and tested**
+- **Documentation updated**
+- **Work item status updated**
+- **Completion evidence documented**
+
+#### Quality Assurance Checklist
+- [ ] **Work item created** for all tasks
+- [ ] **Acceptance criteria defined** and met
+- [ ] **Progress tracked** regularly
+- [ ] **Dependencies managed** appropriately
+- [ ] **Completion verified** and documented
+- [ ] **PM tool updated** with final status
+
+### 5. Governance and Compliance
+
+#### Project Governance
+- **Regular status reviews** with stakeholders
+- **Risk identification** and mitigation
+- **Resource allocation** tracking
+- **Timeline management** and adjustment
+
+#### Compliance Requirements
+- **All work tracked** in PM tool
+- **No untracked work** performed
+- **Regular reporting** to stakeholders
+- **Audit trail** maintained for all decisions
+
+## Rule Application Signals
+
+When you encounter project management work, reference these additional rules:
+
+### Project Management Implementation Signals
+- **PM Tool Usage** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for PM tool commands and usage patterns
+- **Work Item Creation** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for work item creation patterns
+- **Task Management** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for task management patterns
+- **Progress Tracking** → Reference `.cursor/rules/core/pm-tool-usage-standards.mdc` for progress tracking patterns
+- **Documentation** → Reference `.cursor/rules/core/documentation-standards.mdc` for documentation standards
+
+### Project Management Quality Signals
+- **Systematic Work** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for systematic work patterns
+- **Focus Management** → Reference `.cursor/rules/core/ai-assistant-communication-protocol.mdc` for focus maintenance
+- **Quality Assurance** → Reference `.cursor/rules/core/comprehensive-testing-standards.mdc` for quality standards
+
+### Project Management Issue Resolution Signals
+- **Project Conflicts** → Reference `.cursor/rules/integration/rule-conflict-resolution.mdc` for conflict resolution
+- **Project Rule Changes** → Reference `.cursor/rules/integration/rule-versioning-compatibility.mdc` for versioning
+- **Project Impact Analysis** → Reference `.cursor/rules/integration/rule-impact-analysis-tools.mdc` for change impact analysis
+
+## Implementation Guidelines
+
+### 1. PM Tool Usage
+- **Create work items** for all identified tasks
+- **Update progress** regularly and accurately
+- **Track time and effort** spent on each task
+- **Maintain work item status** current and accurate
+
+### 2. Task Execution
+- **Focus on single task** until completion
+- **Ask for permission** before diverging to other tasks
+- **Create work items** for non-blocking divergence
+- **Document completion** with evidence
+
+### 3. Governance and Reporting
+- **Regular status updates** to stakeholders
+- **Risk identification** and mitigation
+- **Resource tracking** and allocation
+- **Timeline management** and adjustment
+
+## Success Metrics
+
+### Project Management KPIs
+- **100% work item coverage** - All work tracked in PM tool
+- **95%+ completion rate** - Work items completed successfully
+- **<5% divergence rate** - Minimal unplanned task switching
+- **100% documentation** - All work properly documented
+
+### Quality Metrics
+- **Clear acceptance criteria** for all work items
+- **Regular progress updates** in PM tool
+- **Complete audit trail** for all decisions
+- **Stakeholder satisfaction** with progress reporting
+
+## Compliance Validation
+
+### Self-Verification Checklist
+Before completing any work, verify:
+- [ ] Work item created and tracked in PM tool
+- [ ] Acceptance criteria defined and met
+- [ ] Progress updated regularly
+- [ ] Completion documented with evidence
+- [ ] Work item status updated to completed
+
+### Quality Assurance
+- [ ] All work properly tracked
+- [ ] No untracked work performed
+- [ ] Regular progress reporting
+- [ ] Complete audit trail maintained
+- [ ] Stakeholder communication clear
+
+## Conclusion
+
+This rule ensures systematic project management through proper work item tracking, task management, and governance. It prevents work from being lost or forgotten and ensures all work is properly managed and completed.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all project work  
+**Purpose**: Ensure systematic project management and work tracking

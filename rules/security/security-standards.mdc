@@ -1,0 +1,725 @@
+---
+ruleId: "SEC-01"
+title: "Universal Security Standards"
+status: "active"
+compliance: "mandatory"
+description: "Universal security standards for secure development practices across all applications and systems"
+globs: ["**/auth/**", "**/security/**", "**/secrets/**", "**/config/**", "**/*.env*", "**/*.key*", "**/*.pem*", "**/*.crt*", "**/middleware/**", "**/guards/**", "**/policies/**"]
+alwaysApply: true
+lastUpdated: "2025-09-12"
+category: "security"
+---
+
+# SEC-01: Universal Security Standards
+
+## Purpose & Scope
+
+Universal security standards ensure secure development practices across all applications and systems. This rule establishes comprehensive security requirements for credential management, input validation, authentication, authorization, security scanning, and data protection.
+
+## Core Standards
+
+### 1. Credential Hygiene (SEC-01)
+
+#### MANDATORY Credential Management
+- **Never commit secrets, API keys, or credentials to version control**
+- **Use environment variables or external secret management systems**
+- **Implement secret rotation and expiration policies**
+- **Apply least-privilege access principles**
+
+#### Secret Management Implementation
+```yaml
+# .env.example (template file)
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+API_KEY=your_api_key_here
+JWT_SECRET=your_jwt_secret_here
+REDIS_URL=redis://localhost:6379
+
+# .env (actual file - NEVER commit)
+DATABASE_URL=postgresql://prod_user:secure_password@prod-db:5432/prod_db
+API_KEY=sk_live_actual_api_key_here
+JWT_SECRET=very_long_random_secret_string
+REDIS_URL=redis://prod-redis:6379
+```
+
+#### Environment Configuration
+```python
+# config/security.py
+import os
+from typing import Optional
+from cryptography.fernet import Fernet
+
+class SecurityConfig:
+    def __init__(self):
+        self.database_url = self._get_required_env('DATABASE_URL')
+        self.api_key = self._get_required_env('API_KEY')
+        self.jwt_secret = self._get_required_env('JWT_SECRET')
+        self.redis_url = self._get_required_env('REDIS_URL')
+
+    def _get_required_env(self, key: str) -> str:
+        value = os.getenv(key)
+        if not value:
+            raise ValueError(f"Required environment variable {key} is not set")
+        return value
+
+    def get_encryption_key(self) -> bytes:
+        key = os.getenv('ENCRYPTION_KEY')
+        if not key:
+            raise ValueError("ENCRYPTION_KEY environment variable is required")
+        return key.encode()
+```
+
+### 2. Input Validation & Sanitization
+
+#### MANDATORY Input Validation
+- **Validate all user inputs at API boundaries**
+- **Use parameterized queries to prevent SQL injection**
+- **Sanitize outputs to prevent XSS vulnerabilities**
+- **Implement rate limiting and request throttling**
+
+#### Input Validation Implementation
+```python
+# utils/validation.py
+import re
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, validator, EmailStr
+from sqlalchemy import text
+
+class UserInput(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+
+    @validator('username')
+    def validate_username(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', v):
+            raise ValueError('Username must be 3-20 characters, alphanumeric and underscore only')
+        return v
+
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'\d', v):
+            raise ValueError('Password must contain at least one digit')
+        return v
+
+# SQL Injection Prevention
+def safe_query_execute(connection, query: str, params: Dict[str, Any]):
+    """Execute parameterized query to prevent SQL injection"""
+    return connection.execute(text(query), params)
+
+# XSS Prevention
+def sanitize_html(content: str) -> str:
+    """Sanitize HTML content to prevent XSS"""
+    import html
+    return html.escape(content)
+```
+
+### 3. Authentication & Authorization
+
+#### MANDATORY Authentication Standards
+- **Use strong authentication mechanisms (OAuth 2.0, OIDC)**
+- **Implement proper session management**
+- **Apply role-based access control (RBAC)**
+- **Use JWT tokens with appropriate expiration**
+
+#### Authentication Implementation
+```python
+# auth/jwt_handler.py
+import jwt
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+class JWTHandler:
+    def __init__(self, secret_key: str):
+        self.secret_key = secret_key
+        self.algorithm = "HS256"
+
+    def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None):
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(minutes=15)
+
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        return encoded_jwt
+
+    def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            return payload
+        except jwt.PyJWTError:
+            return None
+
+# RBAC Implementation
+class RoleBasedAccessControl:
+    def __init__(self):
+        self.roles = {
+            'admin': ['read', 'write', 'delete', 'admin'],
+            'user': ['read', 'write'],
+            'guest': ['read']
+        }
+
+    def has_permission(self, user_role: str, required_permission: str) -> bool:
+        if user_role not in self.roles:
+            return False
+        return required_permission in self.roles[user_role]
+
+    def require_permission(self, permission: str):
+        """Decorator to require specific permission"""
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                # Get user role from context
+                user_role = get_current_user_role()
+                if not self.has_permission(user_role, permission):
+                    raise PermissionError(f"User lacks {permission} permission")
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+```
+
+### 4. Version Security Management (SEC-02)
+
+#### MANDATORY Version Security Requirements
+- **NEVER hardcode specific versions** in rules or examples (e.g., `python:3.13`, `node:18`)
+- **Use latest secure versions** or version ranges that specify minimum secure versions
+- **Regularly update dependencies** to patch security vulnerabilities
+- **Implement automated vulnerability scanning** for all dependencies
+- **Use dependency management tools** that can automatically update to secure versions
+
+#### Version Security Implementation
+```yaml
+# Example: Use latest or secure version ranges
+# ❌ WRONG - Hardcoded versions that can become vulnerable
+FROM python:3.13-slim
+NODE_VERSION: '18'
+
+# ✅ CORRECT - Use latest or secure version ranges
+FROM python:latest-slim  # or python:3.13+-slim for minimum version
+NODE_VERSION: 'latest'   # or '18+' for minimum version
+```
+
+#### Dependency Security Standards
+```python
+# requirements.txt - Use version ranges for security
+# ❌ WRONG - Fixed versions
+requests==2.31.0
+flask==3.0.0
+
+# ✅ CORRECT - Version ranges with minimum secure versions
+requests>=2.31.0,<3.0.0
+flask>=3.0.0,<4.0.0
+```
+
+### 5. Security Scanning (SEC-03)
+
+#### MANDATORY Scanning Integration
+- **Pre-commit hooks MUST include Semgrep and Gitleaks**
+- **CI pipelines MUST fail on high-severity findings**
+- **Results MUST be reviewed before merge**
+- **Secrets in Git history MUST be remediated**
+
+#### Tool Configuration Standards
+
+**Semgrep Configuration (SAST):**
+```yaml
+# .semgrep.yml
+rules:
+  - id: owasp-top-10
+    patterns:
+      - owasp-top-10
+      - security
+      - python
+      - javascript
+  - id: hardcoded-secrets
+    patterns:
+      - pattern: "password.*=.*['\"][^'\"]{8,}['\"]"
+      - pattern: "api_key.*=.*['\"][^'\"]{8,}['\"]"
+      - pattern: "secret.*=.*['\"][^'\"]{8,}['\"]"
+```
+
+**Gitleaks Configuration:**
+```toml
+# .gitleaks.toml
+[extend]
+useDefault = true
+
+[[rules]]
+description = "API Key Pattern"
+regex = '''api[_-]?key[_-]?=.{8,}'''
+tags = ["key", "api"]
+
+[[rules]]
+description = "Database Connection String"
+regex = '''(postgresql|mysql|mongodb)://[^\\s]+'''
+tags = ["database", "connection"]
+```
+
+#### Pre-commit Configuration
+```yaml
+# .pre-commit-config.yaml
+repos:
+- repo: https://github.com/semgrep/semgrep
+  rev: v1.45.0
+  hooks:
+  - id: semgrep
+    entry: semgrep --config=auto --error
+    files: \.(py|js|ts|jsx|tsx|go|java)$
+
+- repo: https://github.com/zricethezav/gitleaks
+  rev: v8.18.0
+  hooks:
+  - id: gitleaks
+    args: [--verbose]
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: detect-private-key
+  - id: detect-aws-credentials
+  - id: detect-gcp-credentials
+```
+
+### 5. Software Bill of Materials (SEC-15)
+
+#### MANDATORY SBOM Generation
+- **All applications MUST generate SBOM in SPDX 2.3+ or CycloneDX 1.4+ format**
+- **SBOMs MUST include direct and transitive dependencies**
+- **Container images MUST have embedded SBOMs**
+- **SBOMs MUST be generated on every build/release**
+
+#### SBOM Content Requirements
+```yaml
+# SBOM Content Standards
+sbom_requirements:
+  metadata:
+    - "Component name and version"
+    - "Supplier information"
+    - "License information"
+    - "Build timestamp and environment"
+
+  dependencies:
+    - "Direct dependencies with versions"
+    - "Transitive dependencies"
+    - "Dependency relationships"
+    - "Vulnerability information"
+
+  compliance:
+    - "License compliance validation"
+    - "Vulnerability assessment"
+    - "Export control compliance"
+    - "Regulatory requirements"
+```
+
+#### SBOM Generation Integration
+```yaml
+# .github/workflows/sbom.yml
+name: Generate SBOM
+on: [push, pull_request]
+
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Generate SBOM
+      run: |
+        # For Python projects
+        pip install cyclonedx-bom
+        cyclonedx-py -o bom.xml
+
+        # For Node.js projects
+        npm install -g @cyclonedx/cyclonedx-npm
+        cyclonedx-npm --output-file bom.xml
+
+        # For container images
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image --format cyclonedx --output bom.xml your-image:tag
+
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v3
+      with:
+        name: sbom
+        path: bom.xml
+```
+
+### 6. Data Protection
+
+#### MANDATORY Data Protection Standards
+- **Encrypt data at rest and in transit**
+- **Implement proper data classification**
+- **Apply data residency and privacy regulations**
+- **Use secure communication protocols (TLS 1.3+)**
+
+#### Data Encryption Implementation
+```python
+# utils/encryption.py
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import base64
+import os
+
+class DataEncryption:
+    def __init__(self, key: bytes):
+        self.cipher = Fernet(key)
+
+    def encrypt_data(self, data: str) -> str:
+        """Encrypt sensitive data"""
+        return self.cipher.encrypt(data.encode()).decode()
+
+    def decrypt_data(self, encrypted_data: str) -> str:
+        """Decrypt sensitive data"""
+        return self.cipher.decrypt(encrypted_data.encode()).decode()
+
+    @staticmethod
+    def generate_key() -> bytes:
+        """Generate a new encryption key"""
+        return Fernet.generate_key()
+
+# TLS Configuration
+def configure_tls():
+    """Configure TLS 1.3+ for secure communication"""
+    import ssl
+
+    context = ssl.create_default_context()
+    context.minimum_version = ssl.TLSVersion.TLSv1_3
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.check_hostname = True
+
+    return context
+```
+
+### 7. Secure Coding Standards (SEC-11)
+
+#### MANDATORY Secure Coding Practices
+- **Use secure coding practices for all security utilities**
+- **Document all security assumptions and limitations**
+- **Include risk ratings and CVSS scores where applicable**
+- **Implement proper input validation for security tools**
+
+#### Secure Code Patterns
+```python
+# security/secure_patterns.py
+import hashlib
+import secrets
+from typing import Optional
+
+class SecurePatterns:
+    @staticmethod
+    def generate_secure_token(length: int = 32) -> str:
+        """Generate cryptographically secure random token"""
+        return secrets.token_urlsafe(length)
+
+    @staticmethod
+    def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
+        """Hash password with salt using PBKDF2"""
+        if not salt:
+            salt = secrets.token_hex(16)
+
+        # Use PBKDF2 with 100,000 iterations
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt.encode(),
+            iterations=100000,
+        )
+        key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
+        return key.decode(), salt
+
+    @staticmethod
+    def verify_password(password: str, hashed: str, salt: str) -> bool:
+        """Verify password against hash and salt"""
+        try:
+            expected_hash, _ = SecurePatterns.hash_password(password, salt)
+            return secrets.compare_digest(hashed, expected_hash)
+        except Exception:
+            return False
+```
+
+### 8. Security Architecture Requirements
+
+#### Zero Trust Architecture
+```yaml
+zero_trust_principles:
+  service_communication:
+    - mTLS_required: "All inter-service communication encrypted"
+    - authentication: "JWT tokens for all API calls"
+    - authorization: "RBAC/ABAC for fine-grained permissions"
+    - network_policies: "Deny-all default with explicit allow rules"
+
+  data_protection:
+    - encryption_at_rest: "All databases encrypted"
+    - encryption_in_transit: "TLS 1.3 minimum"
+    - data_classification: "PII/sensitive data marked and protected"
+    - access_logging: "All data access logged and auditable"
+
+  container_security:
+    - minimal_images: "Distroless or alpine-based images"
+    - non_root_users: "UID > 1000 for all application processes"
+    - read_only_filesystems: "Immutable container filesystems"
+    - security_scanning: "Vulnerability scans in CI/CD pipeline"
+```
+
+#### Security Architecture Standards
+- **Implement Zero Trust Architecture principles**
+- **Apply Defense in Depth strategies**
+- **Use Threat Modeling (STRIDE, PASTA, OCTAVE) methodologies**
+- **Follow NIST Cybersecurity Framework guidelines**
+
+### 9. Mandatory Security Gates
+
+#### Security Compliance Requirements
+- **Security Scans**: TruffleHog, Semgrep, Bandit, Safety, Trivy must pass
+- **Vulnerability Assessment**: All high/critical vulnerabilities must be addressed
+- **Penetration Testing**: Security controls must be tested
+- **Compliance Validation**: SOC2, ISO27001 requirements must be met
+
+#### CI/CD Security Integration
+```yaml
+# .github/workflows/security.yml
+name: Security Scanning
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Semgrep
+      run: semgrep --config=auto --error
+
+    - name: Run Gitleaks
+      run: gitleaks detect --exit-code 1
+
+    - name: Run Trivy
+      run: |
+        trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+        trivy config --severity HIGH,CRITICAL --exit-code 1 .
+
+    - name: Run Bandit (Python)
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        pip install bandit
+        bandit -r . -f json -o bandit-report.json
+        bandit -r . --severity-level high
+
+    - name: Run Safety (Python)
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        pip install safety
+        safety check --json --output safety-report.json
+```
+
+### 10. Infrastructure Security Standards
+
+#### MANDATORY Infrastructure Security Requirements
+- **K3S cluster hardening mandatory**
+- **Cilium security policy enforcement**
+- **etcd encryption and access controls**
+- **GitOps security for infrastructure**
+
+#### K3S Cluster Hardening Configuration
+```yaml
+# infrastructure/k3s/security-hardening.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k3s-security-config
+  namespace: kube-system
+data:
+  security-config.yaml: |
+    # K3S API Server Security
+    apiServer:
+      auditLog:
+        enabled: true
+        path: /var/log/kubernetes/audit.log
+        maxAge: 30
+        maxBackup: 10
+        maxSize: 100
+      admissionControl:
+        - NodeRestriction
+        - PodSecurityPolicy
+        - ServiceAccount
+      authorizationMode:
+        - RBAC
+        - Node
+      tlsCertFile: /var/lib/rancher/k3s/server/tls/server-ca.crt
+      tlsPrivateKeyFile: /var/lib/rancher/k3s/server/tls/server-ca.key
+
+    # K3S Controller Manager Security
+    controllerManager:
+      useServiceAccountCredentials: true
+      serviceAccountPrivateKeyFile: /var/lib/rancher/k3s/server/tls/service.key
+      rootCAFile: /var/lib/rancher/k3s/server/tls/server-ca.crt
+
+    # K3S Scheduler Security
+    scheduler:
+      useServiceAccountCredentials: true
+      serviceAccountPrivateKeyFile: /var/lib/rancher/k3s/server/tls/service.key
+      rootCAFile: /var/lib/rancher/k3s/server/tls/server-ca.crt
+
+    # etcd Security Configuration
+    etcd:
+      dataDir: /var/lib/rancher/k3s/server/db/etcd
+      snapshotCount: 10000
+      heartbeatInterval: 100
+      electionTimeout: 1000
+      listenClientUrls: https://127.0.0.1:2379
+      listenPeerUrls: https://127.0.0.1:2380
+      clientCertAuth: true
+      peerCertAuth: true
+      certFile: /var/lib/rancher/k3s/server/tls/etcd/server.crt
+      keyFile: /var/lib/rancher/k3s/server/tls/etcd/server.key
+      caFile: /var/lib/rancher/k3s/server/tls/etcd/server-ca.crt
+      peerCertFile: /var/lib/rancher/k3s/server/tls/etcd/peer.crt
+      peerKeyFile: /var/lib/rancher/k3s/server/tls/etcd/peer.key
+      peerCaFile: /var/lib/rancher/k3s/server/tls/etcd/peer-ca.crt
+```
+
+#### Cilium Security Policy Patterns
+```yaml
+# security/cilium-security-policies.yaml
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: security-policy
+spec:
+  endpointSelector: {}
+  ingress:
+  # Require mTLS for all inter-service communication
+  - authentication:
+      mode: required
+    fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: applications
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/*"
+        - method: "POST"
+          path: "/api/*"
+        - method: "PUT"
+          path: "/api/*"
+        - method: "DELETE"
+          path: "/api/*"
+
+  # Allow observability traffic
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: observability
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/metrics"
+        - method: "GET"
+          path: "/health"
+
+  # Allow security scanning
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: security
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/vulnerability-scan"
+```
+
+#### GitOps Security Requirements
+```yaml
+# security/gitops-security.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitops-security-config
+  namespace: argocd
+data:
+  gitops-security.yaml: |
+    # Manifest signing requirements
+    manifestSigning:
+      enabled: true
+      keyPath: /etc/argocd/keys/manifest-signing.key
+      certPath: /etc/argocd/keys/manifest-signing.crt
+
+    # Secret management
+    secretManagement:
+      externalSecrets: true
+      vaultIntegration: true
+      secretRotation: true
+
+    # Access controls
+    accessControls:
+      repositoryAccess:
+        - type: ssh
+          keyPath: /etc/argocd/keys/repo-access.key
+        - type: https
+          username: gitops-user
+          password: ${GITOPS_PASSWORD}
+
+      clusterAccess:
+        - type: serviceAccount
+          namespace: argocd
+          name: argocd-application-controller
+
+    # Audit logging
+    auditLogging:
+      enabled: true
+      level: detailed
+      destination: /var/log/argocd/audit.log
+      retention: 90d
+```
+
+### 11. Success Metrics
+
+#### Security Compliance Metrics
+- ✅ **100% repos with scanning enabled**
+- ✅ **0 secrets in version control**
+- ✅ **<2% false positive rate**
+- ✅ **All high/critical vulnerabilities addressed within 30 days**
+- ✅ **100% SBOM generation for all releases**
+- ✅ **K3S cluster hardening implemented**
+- ✅ **Cilium security policies enforced**
+- ✅ **GitOps security controls active**
+
+#### Infrastructure Security Metrics
+```yaml
+infrastructure_security:
+  k3s_hardening: "100% K3S security controls implemented"
+  cilium_security: "100% services with Cilium policies"
+  etcd_security: "etcd encryption and access controls active"
+  gitops_security: "100% GitOps security controls active"
+  audit_logging: "100% infrastructure audit logging enabled"
+```
+
+#### Compliance Mapping
+
+| Framework | Control ID | Coverage |
+|-----------|------------|----------|
+| **NIST SSDF** | RV.1.1 | ✅ Full |
+| **ISO 27001** | A.12.6.1 | ✅ Full |
+| **SOC 2** | CC7.1 | ✅ Full |
+| **OWASP Top 10** | All | ✅ Full |
+| **CIS K8S** | 1.1.1-1.1.35 | ✅ Full |
+| **CIS K3S** | All | ✅ Full |
