@@ -182,7 +182,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Built for [Cursor IDE](https://cursor.com) integration
 - Designed with enterprise development practices
 - Created with comprehensive quality controls
-- Generated with [Claude Code](https://claude.ai/code)
 
 ---
 
