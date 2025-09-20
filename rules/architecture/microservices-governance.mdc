@@ -425,7 +425,40 @@ spec:
           type: DirectoryOrCreate
 ```
 
-### 12. Quality Gates & Compliance
+### 12. Python Package Structure (MANDATORY)
+
+#### MANDATORY Python Standards
+- **MUST follow PYTHON-STRUCTURE-01 rules** - see `.cursor/rules/development/python-structure.mdc`
+- **Each service is independent installable package** with proper pyproject.toml
+- **src/ layout required for all Python microservices** - no flat layouts allowed
+- **Absolute imports only** - enforce strictly, no relative imports
+- **pip installable packages** - must work with `pip install -e .`
+
+#### Python Service Requirements
+```python
+# MANDATORY: src/ layout structure
+services/
+├── {service-name}/
+│   ├── src/
+│   │   └── {service_name}/
+│   │       ├── __init__.py
+│   │       ├── __main__.py
+│   │       └── ...
+│   ├── pyproject.toml
+│   └── requirements.txt
+
+# MANDATORY: Absolute imports only
+from {service_name}.api.routes import Router  # ✅ CORRECT
+from .api.routes import Router                # ❌ FORBIDDEN
+```
+
+#### Python Package Validation
+- **Cursor MUST reject relative imports** in Python code
+- **Cursor MUST enforce src/ layout** for new Python services
+- **Cursor MUST validate pip installability** before completion
+- **Cursor MUST check pyproject.toml configuration** for proper package setup
+
+### 13. Quality Gates & Compliance
 
 #### Definition of Done for Microservices
 - [ ] **API Contract**: OpenAPI specification complete and validated
@@ -437,6 +470,7 @@ spec:
 - [ ] **Performance**: Load testing completed with SLO compliance
 - [ ] **Service Mesh**: Cilium integration and L7 policies configured
 - [ ] **K3S Optimization**: Single-node deployment patterns implemented
+- [ ] **Python Structure**: src/ layout, absolute imports, pip installable (Python services only)
 
 #### Success Metrics
 - **Service Independence**: <3 direct dependencies per service

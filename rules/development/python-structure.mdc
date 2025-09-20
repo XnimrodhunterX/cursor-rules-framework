@@ -1,0 +1,293 @@
+---
+ruleId: "PYTHON-STRUCTURE-01"
+title: "Python Package Structure Standards"
+status: "active"
+compliance: "mandatory"
+description: "Enforces 2025 Python packaging standards with mandatory src/ layout for all microservices"
+alwaysApply: false
+lastUpdated: "2025-01-27"
+category: "development"
+globs: ["**/services/**/*.py", "**/microservices/**/*.py", "**/src/**/*.py", "**/pyproject.toml", "**/setup.py"]
+---
+
+# PYTHON-STRUCTURE-01: Python Package Structure Standards
+
+## Purpose & Scope
+
+This rule enforces 2025 Python packaging standards as mandatory requirements for all Python microservices, ensuring consistent, maintainable, and installable package structures across the entire codebase.
+
+## 🚨 MANDATORY: src/ Layout (2025 Standard)
+
+### Required Structure
+- **ALL Python microservices MUST use src/ layout**
+- **Structure**: `services/{service}/src/{service}/`
+- **NO flat layout allowed for microservices**
+- **NO exceptions** - this is mandatory for all new services
+
+### Example Structure
+```
+services/
+├── user-service/
+│   ├── src/
+│   │   └── user_service/
+│   │       ├── __init__.py
+│   │       ├── __main__.py
+│   │       ├── api/
+│   │       │   ├── __init__.py
+│   │       │   └── routes.py
+│   │       ├── domain/
+│   │       │   ├── __init__.py
+│   │       │   └── models.py
+│   │       └── infrastructure/
+│   │           ├── __init__.py
+│   │           └── database.py
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   └── README.md
+└── order-service/
+    ├── src/
+    │   └── order_service/
+    │       ├── __init__.py
+    │       ├── __main__.py
+    │       └── ...
+    ├── pyproject.toml
+    └── requirements.txt
+```
+
+## 🚨 MANDATORY: Absolute Imports Only
+
+### Import Standards
+- **ALL imports MUST be absolute**: `from {service}.module import Class`
+- **NO relative imports allowed**: `from .module import Class`
+- **NO relative imports allowed**: `from ..module import Class`
+- **NO exceptions** - this prevents import path issues
+
+### Correct Import Examples
+```python
+# ✅ CORRECT - Absolute imports
+from user_service.api.routes import UserRouter
+from user_service.domain.models import User
+from user_service.infrastructure.database import Database
+
+# ❌ FORBIDDEN - Relative imports
+from .api.routes import UserRouter
+from ..domain.models import User
+from ...infrastructure.database import Database
+```
+
+### Import Validation
+- **Cursor MUST reject any code using relative imports**
+- **Cursor MUST suggest absolute import alternatives**
+- **Cursor MUST validate import paths are correct**
+
+## 🚨 MANDATORY: Package Installation
+
+### Installation Requirements
+- **ALL services MUST be pip installable**: `pip install -e .`
+- **MUST work locally, in containers, and in Kubernetes**
+- **pyproject.toml MUST specify src/ layout packages**
+- **MUST support development installation**
+
+### Required pyproject.toml Structure
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "user-service"
+version = "0.1.0"
+description = "User management microservice"
+authors = [{name = "Your Name", email = "your.email@example.com"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "pydantic>=2.0.0",
+]
+
+[project.scripts]
+user-service = "user_service.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+```
+
+### Installation Validation
+- **Cursor MUST validate pip installability before completion**
+- **Cursor MUST test installation in development mode**
+- **Cursor MUST ensure all dependencies are properly specified**
+
+## 🚨 MANDATORY: Entry Points
+
+### Main Module Requirements
+- **Main modules**: `src/{service}/__main__.py`
+- **Execution**: `python -m {service}` after installation
+- **CLI entry points via pyproject.toml [project.scripts]**
+
+### Example __main__.py
+```python
+# src/user_service/__main__.py
+"""User Service Main Entry Point"""
+
+import sys
+import uvicorn
+from user_service.api.app import create_app
+
+def main():
+    """Main entry point for user service"""
+    app = create_app()
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level="info"
+    )
+
+if __name__ == "__main__":
+    main()
+```
+
+### Execution Methods
+```bash
+# After installation
+pip install -e .
+python -m user_service
+
+# Or via CLI entry point
+user-service
+
+# Or directly
+python src/user_service/__main__.py
+```
+
+## 🔧 ENFORCEMENT RULES
+
+### Code Review Enforcement
+- **Cursor MUST reject any code using relative imports**
+- **Cursor MUST enforce src/ layout for new services**
+- **Cursor MUST validate pip installability before completion**
+- **Cursor MUST check pyproject.toml configuration**
+
+### Validation Checklist
+Before accepting any Python service code, Cursor MUST verify:
+
+- [ ] **src/ layout implemented**: `services/{service}/src/{service}/`
+- [ ] **Absolute imports only**: No relative imports found
+- [ ] **pyproject.toml configured**: Proper package configuration
+- [ ] **__main__.py exists**: Entry point properly configured
+- [ ] **Installation works**: `pip install -e .` succeeds
+- [ ] **Module execution works**: `python -m {service}` succeeds
+
+### Error Prevention
+- **Prevent flat layout**: Reject services not using src/ layout
+- **Prevent relative imports**: Convert to absolute imports
+- **Prevent missing pyproject.toml**: Require proper package configuration
+- **Prevent broken installations**: Validate before completion
+
+## 📋 Implementation Examples
+
+### Complete Service Template
+```python
+# services/example-service/src/example_service/__init__.py
+"""Example Service Package"""
+
+__version__ = "0.1.0"
+__author__ = "Your Name"
+
+# services/example-service/src/example_service/__main__.py
+"""Example Service Main Entry Point"""
+
+import uvicorn
+from example_service.api.app import create_app
+
+def main():
+    app = create_app()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":
+    main()
+
+# services/example-service/src/example_service/api/app.py
+"""Example Service API Application"""
+
+from fastapi import FastAPI
+from example_service.api.routes import router
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="Example Service")
+    app.include_router(router)
+    return app
+
+# services/example-service/src/example_service/api/routes.py
+"""Example Service API Routes"""
+
+from fastapi import APIRouter
+from example_service.domain.models import ExampleModel
+
+router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@router.get("/examples")
+async def get_examples():
+    return {"examples": []}
+```
+
+### Docker Integration
+```dockerfile
+# services/example-service/Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY src/ ./src/
+COPY pyproject.toml .
+
+# Install the package
+RUN pip install -e .
+
+# Run the service
+CMD ["python", "-m", "example_service"]
+```
+
+## 🎯 Success Criteria
+
+### Quality Gates
+- ✅ **Rules prevent relative imports** in code reviews
+- ✅ **Rules enforce src/ layout** for new services
+- ✅ **Rules require pip installability** validation
+- ✅ **All future Python services** follow standards automatically
+
+### Compliance Metrics
+- **100% src/ layout adoption**: All services use src/ layout
+- **0% relative imports**: No relative imports in codebase
+- **100% installable packages**: All services pip installable
+- **100% entry point compliance**: All services have proper entry points
+
+## Integration with Other Rules
+
+This rule works in conjunction with:
+- **MICROSERVICES-01**: Microservices governance and architecture standards
+- **ENG-01**: Engineering excellence standards
+- **SEC-01**: Security standards for package security
+- **TEST-01**: Testing standards for package testing
+
+## Conclusion
+
+This rule ensures all Python microservices follow 2025 packaging standards with mandatory src/ layout, absolute imports, and proper package installation. It prevents common Python packaging issues and ensures consistent, maintainable service architecture.
+
+**Rule Status**: ✅ **ACTIVE**  
+**Compliance**: MANDATORY for all Python microservices  
+**Purpose**: Enforce 2025 Python packaging standards and prevent common packaging issues
