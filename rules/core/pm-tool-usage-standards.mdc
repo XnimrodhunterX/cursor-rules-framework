@@ -32,30 +32,79 @@ This rule establishes comprehensive standards for using the PM tool to track and
 
 ## MANDATORY PM Tool Protocol
 
-### 1. Pre-Work Checklist
+### 1. CRITICAL PRE-WORK CHECKLIST (MANDATORY)
 
-#### ALWAYS Check for Existing Work Items First
+#### ⚠️ VIOLATION PREVENTION: Check First, Create Second
+**CRITICAL:** This checklist MUST be completed before ANY work item creation to prevent violations.
+
+#### Step 1: ALWAYS Check for Existing Work Items First
 ```bash
-# Check for existing work items before creating new ones
+# MANDATORY: Check ALL statuses before creating new work items
 pm work-item list --status backlog
 pm work-item list --status todo
 pm work-item list --status in-progress
+pm work-item list --status review
+pm work-item list --status done
 ```
 
-#### Search for Similar Work Items
+#### Step 2: Search for Similar Work Items
 ```bash
-# Search for similar work items to avoid duplicates
+# MANDATORY: Search for similar work items to avoid duplicates
 # NOTE: --search option does not exist, use grep instead
 pm work-item list --type task | grep "API"
 pm work-item list --type story | grep "authentication"
-pm work-item list | grep "keyword"
-
-# Filter by available options
-pm work-item list --type epic
-pm work-item list --status backlog
-pm work-item list --assignee YOUR_USERNAME
-pm work-item list --priority high
+pm work-item list --type bug | grep "login"
 ```
+
+#### Step 3: Verify No Duplicates Exist
+- [ ] Checked all work item statuses
+- [ ] Searched for similar work items by keywords
+- [ ] Confirmed no duplicates exist
+- [ ] **ONLY THEN** proceed to create new work items
+
+#### Step 4: Document Pre-Work Verification
+```bash
+# Document that pre-work checklist was completed
+echo "Pre-work checklist completed: $(date)" >> work-log.txt
+echo "Checked existing work items: YES" >> work-log.txt
+echo "Searched for duplicates: YES" >> work-log.txt
+echo "Verified no duplicates: YES" >> work-log.txt
+```
+
+### 2. VIOLATION CONSEQUENCES & CORRECTION
+
+#### ⚠️ PM Tool Violations
+**If work items are created without following the pre-work checklist:**
+
+1. **IMMEDIATE CORRECTION REQUIRED:**
+   ```bash
+   # Check for duplicates that may have been created
+   pm work-item list --status todo | grep "similar_keywords"
+   pm work-item list --status in-progress | grep "similar_keywords"
+   ```
+
+2. **CONSOLIDATE DUPLICATE WORK ITEMS:**
+   ```bash
+   # If duplicates found, consolidate them
+   pm work-item update WORK-ITEM-ID --status cancelled --description "DUPLICATE - Consolidated with WORK-ITEM-ID-2"
+   ```
+
+3. **DOCUMENT THE VIOLATION:**
+   ```bash
+   echo "VIOLATION: Work item created without pre-work checklist - $(date)" >> violation-log.txt
+   echo "Corrective action taken: Consolidated duplicates" >> violation-log.txt
+   ```
+
+4. **PREVENT FUTURE VIOLATIONS:**
+   - Always complete the pre-work checklist
+   - Document the verification process
+   - Ask for clarification if unsure about existing work items
+
+#### ✅ SUCCESS CRITERIA
+- [ ] Pre-work checklist completed before any work item creation
+- [ ] No duplicate work items created
+- [ ] All work items properly tracked and managed
+- [ ] Violation log maintained for continuous improvement
 
 ### 2. Work Item Creation Commands
 

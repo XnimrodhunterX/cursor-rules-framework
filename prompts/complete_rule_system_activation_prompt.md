@@ -1,105 +1,114 @@
-Follow the rules in .cursor/rules/*
+# AI Agent Workflow System - Complete Version
 
-This is a comprehensive rule system with 45+ rules covering all aspects of development, including:
+## 🚀 NEW WORKFLOW: Context-Aware Rule Application
 
-**ALWAYS APPLY RULES (20 rules):**
-- GLOBAL-01: Comprehensive Rule Reading Protocol (MANDATORY - read ALL rules)
+**MANDATORY: Read `.cursor/prompts/ai-agent-workflow.md` FIRST**
+
+This replaces the old "read all 45+ rules" approach with efficient, context-specific rule selection.
+
+## ⚡ EFFICIENCY REVOLUTION
+
+- **90% reduction** in rule reading time (4-8 rules instead of 45+)
+- **Context-aware** rule application based on task type
+- **Mandatory pre-work checklists** to prevent violations
+- **Clear decision trees** for different task types
+- **Single entry point** for easy maintenance and updates
+
+## 🎯 TASK-SPECIFIC WORKFLOWS
+
+### Always Read (Every Task) - 4 Core Rules
+- QC-13: AI Assistant Communication Protocol
+- QC-16: No Assumptions Rule
+- QC-06: Project Management & Governance Standards
+- QC-18: PM Tool Usage Standards
+
+### Context-Specific Rule Selection (4-8 rules per task type):
+
+**PM Tool Work:**
+- QC-18: PM Tool Usage Standards
+- QC-06: Project Management Standards
+- **CRITICAL:** Check existing work items BEFORE creating new ones
+
+**Git Work:**
+- GIT-01: Git Branching Strategy
+- QC-13: Communication Protocol
+
+**Infrastructure Work:**
+- K8S-01: Kubernetes Standards
+- OPEX-02: Deployment Progression Standards
+- CN-02: Docker Container Standards
+
+**Python/Backend Development:**
+- PYTHON-STRUCTURE-01: Python Package Structure Standards
+- QC-15: Systematic Debugging Methodology
+- DP-01: Database Standards
+
+**Frontend Development:**
+- FE-01: Frontend Development Standards
+- TEST-01: Testing Standards
+
+**Mobile Development:**
+- MB-01: iOS Development Standards OR MB-02: Android Development Standards
+- MB-03: Cross-Platform Consistency Standards
+
+**Security Work:**
 - SEC-01: Universal Security Standards
 - INT-SEC-01: Security Integration Standards
-- INT-CONFLICT-01: Rule Conflict Resolution Standards
-- INT-VERSION-01: Rule Versioning and Compatibility Standards
-- INT-IMPACT-01: Rule Impact Analysis Tools and Framework
-- INT-PERF-MON-01: Rule Performance Monitoring and Optimization
-- INT-LEARN-01: Rule Learning System and Usage Pattern Analysis
+
+**Testing Work:**
+- TEST-01: Testing Standards
+- INT-TEST-01: Testing Integration Standards
+
+**Documentation Work:**
+- QC-14: Document Synchronization (PRIMARY documentation authority)
+- QC-17: Human-Like Writing Standards
+
+## ✅ QUALITY GATES (MANDATORY)
+
+Before completing any task, verify:
+- [ ] All required rules read and understood
+- [ ] PM tool work items checked/created appropriately
+- [ ] Git workflow followed (if applicable)
+- [ ] Security standards applied (if applicable)
+- [ ] Testing requirements met (if applicable)
+
+## 🚨 EMERGENCY OVERRIDE
+
+If rule conflicts occur:
+1. Stop and ask for clarification
+2. Reference: INT-CONFLICT-01 (Rule Conflict Resolution)
+3. Document the conflict and proposed resolution
+
+## 📋 CROSS-CUTTING CONCERNS
+
+If your task involves multiple domains, read:
 - INT-DECISION-01: Rule Application Decision Tree
-- INT-METRICS-01: Rule Effectiveness Metrics and Monitoring
-- QC-13: AI Assistant Communication Protocol
-- QC-14: Document Synchronization & Cross-Reference Management (PRIMARY documentation authority)
-- QC-08: File Organization Standards
-- QC-06: Project Management & Governance Standards
-- QC-01: Comprehensive Testing Standards (90% coverage minimum)
-- GIT-01: Git Branching Strategy
-- TEST-01: Testing Standards (90% coverage minimum)
-- INT-TEST-01: Testing Integration Standards
-- INT-PERF-01: Performance Integration Standards
-- PYTHON-STRUCTURE-01: Python Package Structure Standards (mandatory src/ layout)
-
-**APPLY INTELLIGENTLY RULES (12 rules):**
-- API-01: API Development Standards
-- DP-01: Database Standards
-- FE-01: Frontend Development Standards
-- QC-01: Comprehensive Testing Standards
-- ENG-01: Engineering Excellence Standards
-- BUG-01: Bug Reporting Standards
-- K8S-01: Kubernetes Standards
-- DOCKER-01: Docker Container Standards
-- MONITOR-01: Monitoring & Observability
-- PERF-01: Performance Standards
-- INF-01: Infrastructure Standards
-- OPEX-01: Operational Excellence Standards
-
-**MANUAL RULES (3 rules):**
-- MB-03: Cross-Platform Consistency
-- MB-04: Mobile Testing Standards
-- OPEX-01: Operational Excellence
-
-**INTEGRATION RULES (4 rules):**
-- INT-SEC-01: Security Integration Standards
-- INT-TEST-01: Testing Integration Standards
-- INT-PERF-01: Performance Integration Standards
 - INT-CONFLICT-01: Rule Conflict Resolution Standards
 
-**MOBILE PLATFORM RULES (4 rules):**
-- MB-01: iOS Development Standards
-- MB-02: Android Development Standards
-- MB-03: Cross-Platform Consistency (PRIMARY for mobile testing)
-- MB-04: Mobile Testing Standards
+## 🎯 RULE DEPENDENCY MATRIX
 
-**CRITICAL REQUIREMENTS:**
-1. **ALWAYS read ALL rules** in .cursor/rules/* completely before starting any work
-2. **ALWAYS apply security standards** (SEC-01, INT-SEC-01) to ALL work
-3. **ALWAYS check for existing work items** before creating new ones (QC-13)
-4. **ALWAYS track work** using the PM tool from beginning to end (QC-13)
-5. **ALWAYS add evidence of completion** as comments when work is done (QC-13)
-6. **ALWAYS follow the decision tree** (INT-DECISION-01) for rule application
-7. **ALWAYS monitor rule effectiveness** (INT-METRICS-01) and performance
-8. **ALWAYS resolve conflicts** using the conflict resolution hierarchy (INT-CONFLICT-01)
-9. **ALWAYS maintain rule quality** and prevent staleness (GLOBAL-01)
-10. **ALWAYS apply appropriate globs** for intelligent rule application
+For complex tasks, reference: `.cursor/rules/RULE_DEPENDENCY_MATRIX.md`
 
-**RULE APPLICATION PRIORITY:**
-1. Security Rules (SEC-01, INT-SEC-01) - HIGHEST PRIORITY
-2. Core Rules (GLOBAL-01, QC-*, GIT-01) - ALWAYS APPLY
-3. Integration Rules (INT-CONFLICT-01, INT-DECISION-01, INT-METRICS-01) - ALWAYS APPLY
-4. Architecture Rules (API-01, DP-01, FE-01) - APPLY INTELLIGENTLY
-5. Platform Rules (MB-*, K8S-01, INF-01) - APPLY BASED ON CONTEXT
-6. Operational Rules (OPEX-01, MONITOR-01) - MANUAL/TRIGGERED
-7. Specialized Integration Rules (INT-TEST-01, INT-PERF-01) - APPLY BASED ON CONTEXT
+## 📊 SUCCESS METRICS
 
-**MANDATORY PROTOCOL:**
-- Read ALL rules completely before starting work
-- Apply rules based on file type and context
-- Use the decision tree for rule application decisions
-- Monitor rule effectiveness and performance
-- Maintain rule quality and prevent staleness
-- Resolve conflicts using the established hierarchy
-- Track all work using the PM tool
-- Add evidence of completion as comments
+- **100% workflow compliance** with context-specific rules
+- **0% PM tool violations** through mandatory pre-work checklists
+- **90%+ task efficiency** with focused rule application
+- **Complete quality gate verification** before task completion
 
-**FAILURE TO FOLLOW THESE RULES WILL RESULT IN:**
-- Incomplete work that doesn't meet standards
-- Security vulnerabilities and compliance issues
-- Poor code quality and maintainability
-- Inefficient development processes
-- Rule conflicts and inconsistencies
-- Stale and ineffective rules
+## 🚀 EFFICIENCY BENEFITS
 
-**SUCCESS METRICS:**
-- 100% rule compliance
-- 95%+ rule effectiveness
-- 0% stale rules
-- 100% security compliance
-- Complete work tracking and documentation
-- Continuous rule improvement and optimization
+- **90% reduction** in rule reading time (4-8 rules instead of 45+)
+- **Context-aware** rule application based on task type
+- **Mandatory pre-work checklists** to prevent violations
+- **Clear decision trees** for different task types
+- **Single entry point** for easy maintenance and updates
 
-This is a comprehensive, integrated rule system that ensures high-quality, secure, and maintainable development practices. Follow ALL rules systematically and completely.
+**FAILURE TO FOLLOW = Incomplete work, rule violations, poor quality**
+**SUCCESS = Context-aware compliance, efficient execution, zero violations**
+
+---
+
+## 📚 COMPLETE RULE REFERENCE
+
+For the complete list of all 44+ rules and their details, see the individual rule files in `.cursor/rules/`. The new workflow system ensures you only need to read the context-specific rules for your task type, dramatically improving efficiency while maintaining full compliance.

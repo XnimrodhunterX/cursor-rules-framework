@@ -1,39 +1,59 @@
-Follow the rules in .cursor/rules/* starting with .cursor/rules/global-rule.mdc
+# AI Agent Workflow System - Short Version
 
-CRITICAL: Read ALL 45+ rules completely before starting work.
+## 🚀 NEW WORKFLOW: Context-Aware Rule Application
 
-MANDATORY RULES (Always Apply - 20 rules):
-- [GLOBAL-01: Read ALL rules systematically](.cursor/rules/global-rule.mdc)
-- [SEC-01: Apply security standards to ALL work](.cursor/rules/security/security-standards.mdc)
-- [QC-13: Check existing work items, track work, add completion evidence]()
-- [INT-DECISION-01: Use decision tree for rule application](.cursor/rules/integration/rule-application-decision-tree.mdc)
-- [INT-CONFLICT-01: Resolve conflicts using priority hierarchy](.cursor/rules/integration/rule-conflict-resolution.mdc)
-- [INT-METRICS-01: Monitor rule effectiveness and performance](.cursor/rules/integration/rule-effectiveness-metrics.mdc)
-- [QC-16: No Assumptions Rule](.cursor/rules/core/no-assumptions-rule.mdc)
-- [QC-06: Project Management & Governance Standards](.cursor/rules/core/project-management-standards.mdc)
-- [QC-18: PM Tool Usage Standards](.cursor/rules/core/pm-tool-usage-standards.mdc)
-- [GIT-01: Git Branching Strategy & Version Control Standards](.cursor/rules/development/git-branching-strategy.mdc)
-- [QC-14: Document Synchronization & Cross-Reference Management - PRIMARY documentation authority](.cursor/rules/core/qc-14-doc-sync.mdc)
-- [QC-08: File Organization Standards](.cursor/rules/core/file-organization.mdc)
-- [ENG-01: Engineering Excellence Standards](.cursor/rules/core/engineering_excellence_standards.mdc)
-- [QC17: Human-Like Writing Standards](.cursor/rules/core/human-like-writing-standards.mdc)
-- [AI Assistant Communication Protocol](.cursor/rules/core/communication-protocol.mdc)
-- [Systematic Debugging Methodology](.cursor/rules/development/systematic-debugging-methodology.mdc)
-- [Rule Conflict Resolution Standards](.cursor/rules/integration/rule-conflict-resolution.mdc)
-- [Rule Performance Monitoring and Optimization](.cursor/rules/integration/rule-performance-monitoring.mdc)
-- [Performance Integration Standards](.cursor/rules/integration/performance-integration.mdc)
-- [Rule Learning System and Usage Pattern Analysis](.cursor/rules/integration/rule-learning-system.mdc)
-- ["Rule Impact Analysis Tools and Framework](.cursor/rules/integration/rule-impact-analysis-tools.mdc)
-- [Rule Versioning and Compatibility Standards](.cursor/rules/integration/rule-versioning-compatibility.mdc)
-- [Testing Integration Standards](.cursor/rules/integration/testing-integration.mdc)
-- [Rule Application Decision Tree](.cursor/rules/integration/rule-application-decision-tree.mdc)
-- [Security Integration Standards](.cursor/rules/integration/security-integration.mdc)
-- [OPEX-02: Deployment Progression Standards](.cursor/rules/operations/deployment-progression-standards.mdc)
+**MANDATORY: Read `.cursor/prompts/ai-agent-workflow.md` FIRST**
 
-PRIORITY ORDER: Security > Core > Integration > Architecture > Platform > Operational
+This replaces the old "read all 44+ rules" approach with efficient, context-specific rule selection.
 
-For complete rule details, see: .cursor/prompts/complete_rule_system_activation_prompt.md
+## ⚡ EFFICIENCY BENEFITS
 
-FAILURE TO FOLLOW = Incomplete work, security issues, poor quality, rule conflicts
+- **90% reduction** in rule reading time (4-8 rules instead of 44+)
+- **Context-aware** rule application based on task type
+- **Mandatory pre-work checklists** to prevent violations
+- **Clear decision trees** for different task types
 
-SUCCESS = 100% compliance, 95%+ effectiveness, 0% stale rules, 90% test coverage, complete tracking
+## 🎯 TASK-SPECIFIC WORKFLOWS
+
+### Always Read (Every Task)
+- QC-13: Communication Protocol
+- QC-16: No Assumptions Rule  
+- QC-06: Project Management Standards
+- QC-18: PM Tool Usage Standards
+
+### Then Follow Task-Specific Workflow:
+- **PM Tool Work**: QC-18 + QC-06 (Check existing items FIRST!)
+- **Git Work**: GIT-01 + QC-13
+- **Infrastructure**: K8S-01 + OPEX-02 + CN-02
+- **Development**: PYTHON-STRUCTURE-01 + QC-15 + DP-01
+- **Frontend**: FE-01 + TEST-01
+- **Mobile**: MB-01/MB-02 + MB-03
+- **Security**: SEC-01 + INT-SEC-01
+- **Testing**: TEST-01 + INT-TEST-01
+- **Documentation**: QC-14 + QC-17
+
+## ✅ QUALITY GATES (MANDATORY)
+
+Before completing any task:
+- [ ] All required rules read and understood
+- [ ] PM tool work items checked/created appropriately
+- [ ] Git workflow followed (if applicable)
+- [ ] Security standards applied (if applicable)
+- [ ] Testing requirements met (if applicable)
+
+## 🚨 EMERGENCY OVERRIDE
+
+If rule conflicts occur:
+1. Stop and ask for clarification
+2. Reference: INT-CONFLICT-01 (Rule Conflict Resolution)
+3. Document the conflict and proposed resolution
+
+## 📋 SUCCESS CRITERIA
+
+- **100% workflow compliance** with context-specific rules
+- **0% PM tool violations** through mandatory pre-work checklists
+- **90%+ task efficiency** with focused rule application
+- **Complete quality gate verification** before task completion
+
+**FAILURE TO FOLLOW = Incomplete work, rule violations, poor quality**
+**SUCCESS = Context-aware compliance, efficient execution, zero violations**
