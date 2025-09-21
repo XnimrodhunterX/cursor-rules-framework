@@ -22,6 +22,7 @@ Based on your task, read the appropriate section:
 #### B. Git Work (Commits, Branching, Version Control)
 - Read: `.cursor/rules/development/git-branching-strategy.mdc` (GIT-01)
 - Read: `.cursor/rules/core/communication-protocol.mdc` (QC-13)
+- **CRITICAL:** Follow Git Synchronization Check Protocol before any git operations
 
 #### C. Kubernetes/Infrastructure Work
 - Read: `.cursor/rules/infrastructure/kubernetes-standards.mdc` (K8S-01)
@@ -32,6 +33,7 @@ Based on your task, read the appropriate section:
 - Read: `.cursor/rules/development/python-structure.mdc` (PYTHON-STRUCTURE-01)
 - Read: `.cursor/rules/development/systematic-debugging-methodology.mdc` (QC-15)
 - Read: `.cursor/rules/architecture/database-standards.mdc` (DP-01)
+- **CRITICAL:** Follow Context Analysis Protocol when encountering any issues
 
 #### E. Frontend Development
 - Read: `.cursor/rules/architecture/frontend-standards.mdc` (FE-01)
@@ -53,6 +55,11 @@ Based on your task, read the appropriate section:
 #### I. Documentation Work
 - Read: `.cursor/rules/core/qc-14-doc-sync.mdc` (QC-14)
 - Read: `.cursor/rules/core/human-like-writing-standards.mdc` (QC-17)
+
+#### J. Troubleshooting Work
+- Read: `.cursor/rules/development/systematic-debugging-methodology.mdc` (QC-15)
+- Read: `.cursor/rules/core/no-assumptions-rule.mdc` (QC-16)
+- **CRITICAL:** Follow Context Analysis Protocol and document issues completely
 
 ### 3. CROSS-CUTTING CONCERNS
 If your task involves multiple domains, read:

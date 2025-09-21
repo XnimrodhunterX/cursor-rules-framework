@@ -36,11 +36,81 @@ Prevent circular debugging and ensure systematic problem-solving through pattern
 - **TRACE the exact error path** from creation to failure point
 - **ANALYZE type/class mismatches** systematically
 
+## MANDATORY Context Analysis Protocol
+
+**CRITICAL:** When encountering ANY issue, you MUST follow this protocol BEFORE attempting any fixes:
+
+### PHASE 0: STOP, DOCUMENT, ANALYZE CONTEXT (MANDATORY)
+
+#### Step 1: IMMEDIATE STOP
+- **STOP** all work immediately when encountering an issue
+- **DO NOT** attempt any fixes until context analysis is complete
+- **DO NOT** make assumptions about the problem scope
+
+#### Step 2: DOCUMENT THE ISSUE
+```markdown
+## ISSUE DOCUMENTATION TEMPLATE
+
+### Problem Description
+- **What exactly is happening?**
+- **What error messages are displayed?**
+- **What was the expected behavior?**
+- **What was the actual behavior?**
+
+### Error Details
+- **Complete error stack trace:**
+- **File and line number where error occurs:**
+- **Input data that caused the error:**
+- **Environment details (OS, Python version, etc.):**
+
+### Context Analysis
+- **What files are involved in this issue?**
+- **What is the broader system context?**
+- **What other components might be affected?**
+- **What dependencies are involved?**
+
+### Current Understanding
+- **What do I think is causing this issue?**
+- **What is my confidence level (1-10)?**
+- **What additional context do I need?**
+- **What questions should I ask before proceeding?**
+```
+
+#### Step 3: CONTEXT SUFFICIENCY CHECK
+```markdown
+## CONTEXT SUFFICIENCY VERIFICATION
+
+□ Have I read ALL files that could be related to this issue?
+□ Do I understand the complete data flow from start to error?
+□ Have I checked for similar issues in the codebase?
+□ Do I know how this component interacts with others?
+□ Have I verified my understanding with the user?
+□ Am I confident I have enough context to fix this properly?
+
+**IF ANY BOX IS UNCHECKED: STOP and ask for clarification**
+```
+
+#### Step 4: BROADER CONTEXT ANALYSIS
+```bash
+# MANDATORY: Analyze beyond the current file
+# Check related files and dependencies
+find . -name "*.py" -exec grep -l "related_function" {} \;
+grep -r "import.*current_module" .
+grep -r "from.*current_module" .
+
+# Check for similar patterns in the codebase
+grep -r "similar_error_pattern" .
+grep -r "similar_function_name" .
+```
+
 ## Mandatory Pre-Flight Checklist
 
-Before making ANY code changes, you MUST complete this checklist:
+After completing context analysis, before making ANY code changes:
 
 ```markdown
+□ Have I completed the full context analysis protocol?
+□ Have I documented the issue completely?
+□ Have I verified I have sufficient context?
 □ Have I seen this exact error pattern before? (Check lessons learned)
 □ Am I about to change field names or add complexity?
 □ Is this a type mismatch that can be fixed with a validator?

@@ -33,7 +33,36 @@ This rule prohibits making assumptions and requires asking for guidance when dir
 - **Process questions** - When workflow or procedure is unclear
 - **Resource constraints** - When limitations are not specified
 
-### 2. How to Ask for Guidance
+### 2. Context Sufficiency Verification
+
+#### MANDATORY Context Check Before Any Action
+```yaml
+context_sufficiency_check:
+  files_analyzed:
+    - "Have I read ALL relevant files?"
+    - "Do I understand the complete system context?"
+    - "Have I checked for similar patterns in the codebase?"
+  
+  problem_scope:
+    - "Do I understand the full scope of this issue?"
+    - "Have I identified all components that might be affected?"
+    - "Do I know the dependencies and interactions?"
+  
+  confidence_level:
+    - "What is my confidence level (1-10) in my understanding?"
+    - "What specific information am I missing?"
+    - "What could go wrong if I proceed with incomplete context?"
+```
+
+#### Context Insufficiency Triggers
+**STOP and ask for guidance if:**
+- Confidence level is below 7/10
+- Any related files haven't been analyzed
+- The problem scope is unclear
+- Dependencies or interactions are unknown
+- Similar patterns in codebase haven't been checked
+
+### 3. How to Ask for Guidance
 
 #### Clear Question Format
 ```yaml
@@ -43,6 +72,8 @@ guidance_request:
   options_considered: "What alternatives were considered"
   impact_of_assumption: "What could go wrong if I assume incorrectly"
   suggested_approach: "Proposed way forward (if any)"
+  context_analysis: "What files/patterns I've already checked"
+  confidence_level: "My confidence level (1-10) in current understanding"
 ```
 
 #### Examples of Good Guidance Requests

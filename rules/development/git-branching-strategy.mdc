@@ -18,7 +18,64 @@ Comprehensive Git branching strategy and version control standards based on GitF
 
 ## Core Standards
 
-### 1. Branch Structure & Deployment Mapping
+### 1. MANDATORY Git Synchronization Check Protocol
+
+**CRITICAL:** Before ANY git operation, AI agents MUST follow this protocol:
+
+#### Step 1: Check Repository Status
+```bash
+# MANDATORY: Check current status first
+git status
+git branch -v
+```
+
+#### Step 2: Compare Local vs Remote
+```bash
+# MANDATORY: Check if remote is ahead
+git fetch origin
+git log HEAD..origin/main --oneline
+
+# MANDATORY: Check if local is ahead  
+git log origin/main..HEAD --oneline
+
+# MANDATORY: Check if branches are in sync
+git rev-list --count --left-right HEAD...origin/main
+```
+
+#### Step 3: Decision Matrix
+```yaml
+synchronization_decision:
+  remote_ahead:
+    condition: "Remote has commits that local doesn't have"
+    action: "git pull origin main"
+    reason: "Remote is more up to date"
+  
+  local_ahead:
+    condition: "Local has commits that remote doesn't have"
+    action: "git commit -m 'message' && git push origin main"
+    reason: "Local is more up to date, push first"
+  
+  same_status:
+    condition: "Local and remote are identical"
+    action: "Proceed with next step"
+    reason: "No synchronization needed"
+  
+  diverged:
+    condition: "Both local and remote have different commits"
+    action: "STOP - Ask for guidance on merge strategy"
+    reason: "Complex merge situation requires human decision"
+```
+
+#### Step 4: Document Decision
+```bash
+# MANDATORY: Document the synchronization decision
+echo "Git sync check: $(date)" >> git-operations.log
+echo "Remote commits ahead: $(git rev-list --count origin/main..HEAD)" >> git-operations.log
+echo "Local commits ahead: $(git rev-list --count HEAD..origin/main)" >> git-operations.log
+echo "Action taken: [PULL|PUSH|PROCEED|STOP]" >> git-operations.log
+```
+
+### 2. Branch Structure & Deployment Mapping
 
 #### MANDATORY Branch Hierarchy
 ```yaml
