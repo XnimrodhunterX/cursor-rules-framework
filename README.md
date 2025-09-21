@@ -78,6 +78,8 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
 
 4. **Provide evidence of compliance** in your responses
 
+5. **Provide feedback on rule issues** (MANDATORY if problems encountered)
+
 **FALLBACK**: If `.cursor/prompts/ai-agent-workflow.md` doesn't exist, use these basic rules:
 - PM Tool Work: Check existing work items first, then create if needed
 - Git Work: Use development branch, commit frequently with descriptive messages
@@ -93,6 +95,12 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
 - File paths of created/modified files
 - Status updates with validation results
 - Screenshots or logs showing successful completion
+
+**FEEDBACK REQUIREMENTS**: If you encounter ANY issues with rules, you MUST provide feedback:
+- Create feedback file: `rule_feedback/feedback_YYYYMMDD-HHMMSS.md`
+- Use template: `rule_feedback/feedback-template.md`
+- Document specific rule issues, conflicts, or unclear guidance
+- Submit for continuous rule system improvement
 
 ### ⚠️ VIOLATION PREVENTION
 

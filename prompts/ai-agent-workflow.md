@@ -11,6 +11,7 @@ This is your single entry point for all rule guidance. Follow the workflow below
 - `.cursor/rules/core/no-assumptions-rule.mdc` (QC-16)
 - `.cursor/rules/core/project-management-standards.mdc` (QC-06)
 - `.cursor/rules/core/pm-tool-usage-standards.mdc` (QC-18)
+- `.cursor/rules/core/rule-feedback-collection.mdc` (QC-20)
 
 ### 2. TASK TYPE DETECTION
 Based on your task, read the appropriate section:
@@ -81,6 +82,42 @@ For each quality gate completed, provide:
 - File paths of created/modified files
 - Status updates with validation results
 - Screenshots or logs showing successful completion
+
+### 6. FEEDBACK REQUIREMENT (MANDATORY)
+If you encounter ANY issues with rules or cannot follow them properly, you MUST provide feedback:
+
+#### When to Provide Feedback
+- Rule was unclear or confusing
+- Rule conflicted with another rule
+- Template was missing information
+- Workflow step was impossible to follow
+- Quality gate was unclear or missing
+- Context analysis was insufficient
+- Any other rule system issue
+
+#### How to Provide Feedback
+```bash
+# Option 1: Use the feedback creation script
+./rule_feedback/create-feedback.sh full "Description of rule issue"
+
+# Option 2: Manual creation
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+cp rule_feedback/feedback-template.md rule_feedback/feedback_${TIMESTAMP}.md
+
+# Edit the feedback file with specific issues
+# Fill out all relevant sections
+# Submit for rule system improvement
+```
+
+#### Quick Feedback for Simple Issues
+```bash
+# Option 1: Use the feedback creation script
+./rule_feedback/create-feedback.sh quick "Brief description of issue"
+
+# Option 2: Manual creation
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+cp rule_feedback/quick-feedback-template.md rule_feedback/quick_${TIMESTAMP}.md
+```
 
 ## RULE DEPENDENCY MATRIX
 For complex tasks, reference: `.cursor/rules/RULE_DEPENDENCY_MATRIX.md`

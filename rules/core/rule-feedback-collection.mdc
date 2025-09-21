@@ -1,0 +1,222 @@
+---
+ruleId: "QC-20"
+title: "Rule Feedback Collection Standards"
+status: "active"
+compliance: "mandatory"
+description: "Mandatory feedback collection for continuous rule system improvement and issue identification"
+alwaysApply: true
+lastUpdated: "2025-09-21"
+category: "core"
+---
+
+# QC-20: Rule Feedback Collection Standards
+
+## Purpose & Scope
+
+This rule establishes mandatory feedback collection mechanisms for continuous improvement of the rule system. It ensures that AI agents report issues, conflicts, and improvements needed in the rule system to maintain effectiveness and prevent recurring problems.
+
+## MANDATORY Feedback Protocol
+
+### 1. When to Provide Feedback
+
+#### Rule Issues (MANDATORY)
+- **Rule was unclear or confusing** - When a rule's instructions are ambiguous
+- **Rule conflicted with another rule** - When rules contradict each other
+- **Rule was impossible to follow** - When a rule's requirements cannot be met
+- **Rule was missing critical information** - When a rule lacks necessary details
+- **Rule caused incorrect behavior** - When following a rule led to wrong results
+
+#### Workflow Issues (MANDATORY)
+- **Template was missing information** - When templates lack necessary guidance
+- **Workflow step was impossible to follow** - When workflow steps cannot be completed
+- **Quality gate was unclear or missing** - When quality gates are ambiguous
+- **Context analysis was insufficient** - When context analysis protocols failed
+- **Evidence requirements were unclear** - When evidence requirements are confusing
+
+#### System Issues (MANDATORY)
+- **Performance problems** - When the rule system caused inefficiencies
+- **Cognitive overload** - When the rule system was too complex
+- **Missing rules** - When guidance was needed but no rule existed
+- **Integration problems** - When rules didn't work well together
+
+### 2. Feedback Collection Process
+
+#### Step 1: Identify the Issue
+```markdown
+- What specific rule or workflow step had problems?
+- What was the expected behavior vs actual behavior?
+- What was the impact on task completion?
+- What information was missing or unclear?
+```
+
+#### Step 2: Create Feedback File
+```bash
+# Create timestamped feedback file
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+cp rule_feedback/feedback-template.md rule_feedback/feedback_${TIMESTAMP}.md
+
+# For quick issues, use quick template
+cp rule_feedback/quick-feedback-template.md rule_feedback/quick_${TIMESTAMP}.md
+```
+
+#### Step 3: Fill Out Feedback Template
+Complete all relevant sections of the feedback template:
+- Rule adherence issues
+- Workflow violations
+- Context analysis problems
+- Quality gate failures
+- Rule system improvements
+- Performance issues
+- Success stories
+
+#### Step 4: Submit for Analysis
+```bash
+# Add feedback file to git for tracking
+git add rule_feedback/feedback_${TIMESTAMP}.md
+git commit -m "feedback: rule issue identified - [brief description]"
+```
+
+### 3. Feedback Template Requirements
+
+#### Comprehensive Feedback (for complex issues)
+Use `rule_feedback/feedback-template.md` for:
+- Multiple rule conflicts
+- Workflow system problems
+- Template issues
+- Performance problems
+- Missing rules or guidance
+
+#### Quick Feedback (for simple issues)
+Use `rule_feedback/quick-feedback-template.md` for:
+- Single rule clarity issues
+- Simple template problems
+- Quick workflow fixes
+- Minor improvements
+
+### 4. Feedback Quality Standards
+
+#### Required Information
+- **Specific rule ID** or workflow step involved
+- **Clear problem description** with examples
+- **Impact assessment** on task completion
+- **Suggested improvements** or fixes
+- **Priority level** (High/Medium/Low)
+
+#### Evidence Requirements
+- **Command outputs** that show the problem
+- **File paths** of affected files
+- **Screenshots or logs** demonstrating the issue
+- **Before/after examples** of what should happen
+
+### 5. Feedback Analysis and Response
+
+#### Rule System Maintainer Responsibilities
+- **Review all feedback** within 48 hours
+- **Categorize issues** by priority and type
+- **Implement fixes** for high-priority issues
+- **Update rules** based on feedback
+- **Communicate changes** back to users
+
+#### Feedback Response Process
+```markdown
+1. Acknowledge receipt of feedback
+2. Analyze the issue and root cause
+3. Determine fix priority and approach
+4. Implement rule or workflow improvements
+5. Test fixes with affected use cases
+6. Deploy improvements to rule system
+7. Notify feedback provider of resolution
+```
+
+## Quality Gates for Feedback
+
+### Before Submitting Feedback
+- [ ] Issue clearly identified and described
+- [ ] Impact on task completion documented
+- [ ] Specific rule or workflow step identified
+- [ ] Suggested improvement provided
+- [ ] Evidence of the problem included
+- [ ] Priority level assigned
+
+### After Receiving Feedback
+- [ ] Feedback acknowledged within 48 hours
+- [ ] Issue analyzed and categorized
+- [ ] Fix implemented or planned
+- [ ] Rule system updated accordingly
+- [ ] Feedback provider notified of resolution
+
+## Success Metrics
+
+### Feedback Collection
+- **100% of rule issues** are reported through feedback system
+- **100% of workflow problems** are documented
+- **100% of template issues** are identified
+- **100% of quality gate failures** are reported
+
+### Feedback Response
+- **100% of feedback** is acknowledged within 48 hours
+- **90% of high-priority issues** are resolved within 1 week
+- **100% of rule improvements** are tested before deployment
+- **100% of feedback providers** are notified of resolution
+
+## Continuous Improvement
+
+### Monthly Feedback Analysis
+- Review all feedback received in the past month
+- Identify common patterns and recurring issues
+- Prioritize rule system improvements
+- Plan next iteration of enhancements
+
+### Quarterly Rule System Review
+- Analyze feedback trends over the quarter
+- Assess rule system effectiveness
+- Identify major improvements needed
+- Update rule system architecture if needed
+
+## Anti-Patterns to Avoid
+
+### Inadequate Feedback
+- **Vague descriptions** - "Rule didn't work"
+- **Missing context** - No specific rule ID or step
+- **No suggested fix** - Just complaining without solutions
+- **Missing evidence** - No proof of the problem
+
+### Poor Feedback Response
+- **Ignoring feedback** - Not acknowledging or responding
+- **Slow response** - Taking too long to address issues
+- **Incomplete fixes** - Not fully resolving the problem
+- **No communication** - Not updating feedback provider
+
+## Integration with Other Rules
+
+### QC-16: No Assumptions Rule
+- Use feedback when assumptions lead to rule violations
+- Document unclear guidance that caused assumptions
+- Report when context was insufficient for proper rule application
+
+### QC-15: Systematic Debugging Methodology
+- Use feedback when debugging reveals rule problems
+- Document rule issues discovered during context analysis
+- Report when rules conflict with debugging methodology
+
+### GIT-01: Git Branching Strategy
+- Use feedback when git synchronization protocol fails
+- Document git workflow issues that prevent proper branching
+- Report when git rules conflict with other development rules
+
+## Evidence of Compliance
+
+### Feedback Submission Evidence
+- Feedback file created with timestamp
+- All relevant sections completed
+- Evidence of the problem included
+- Git commit with feedback file
+
+### Feedback Response Evidence
+- Acknowledgment of feedback receipt
+- Analysis and categorization of issue
+- Implementation of fix or improvement
+- Communication back to feedback provider
+
+**FAILURE TO PROVIDE FEEDBACK = Rule system degradation, recurring issues, poor AI agent performance**
+**SUCCESS = Continuous improvement, effective rules, high AI agent compliance**
