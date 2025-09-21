@@ -66,16 +66,35 @@ If your task involves multiple domains, read:
 - `.cursor/rules/integration/rule-application-decision-tree.mdc` (INT-DECISION-01)
 - `.cursor/rules/integration/rule-conflict-resolution.mdc` (INT-CONFLICT-01)
 
-### 4. QUALITY GATES
+### 4. QUALITY GATES (MANDATORY)
 Before completing any task, verify:
 - [ ] All required rules read and understood
-- [ ] PM tool work items checked/created appropriately
+- [ ] PM tool work items checked/created appropriately (if applicable)
 - [ ] Git workflow followed (if applicable)
 - [ ] Security standards applied (if applicable)
 - [ ] Testing requirements met (if applicable)
+- [ ] Context analysis completed (if troubleshooting)
+
+### 5. EVIDENCE REQUIREMENTS
+For each quality gate completed, provide:
+- Command outputs that prove compliance
+- File paths of created/modified files
+- Status updates with validation results
+- Screenshots or logs showing successful completion
 
 ## RULE DEPENDENCY MATRIX
 For complex tasks, reference: `.cursor/rules/RULE_DEPENDENCY_MATRIX.md`
+
+## FALLBACK INSTRUCTIONS
+If `.cursor/prompts/ai-agent-workflow.md` doesn't exist or is incomplete, use these basic rules:
+- **PM Tool Work**: Check existing work items first, then create if needed
+- **Git Work**: Use development branch, commit frequently with descriptive messages
+- **Development Work**: Follow Python structure standards, use systematic debugging
+- **Infrastructure Work**: Follow Kubernetes standards, use deployment progression
+- **Security Work**: Apply universal security standards, validate all inputs
+- **Testing Work**: Follow comprehensive testing standards, achieve 90% coverage
+- **Documentation Work**: Follow document sync standards, update cross-references
+- **Troubleshooting Work**: Stop, document issue, analyze context, then fix
 
 ## EMERGENCY OVERRIDE
 If you encounter a rule conflict or unclear situation:

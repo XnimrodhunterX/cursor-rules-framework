@@ -59,17 +59,40 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
    ```
 
 2. **Follow the task-specific workflow** based on your task type:
-   - PM Tool Work → Use `pm-tool-work-prompt-template.md`
-   - Git Work → Use `git-work-prompt-template.md`
-   - Development Work → Use `development-work-prompt-template.md`
-   - Infrastructure Work → Use `infrastructure-work-prompt-template.md`
-   - Security Work → Use `security-work-prompt-template.md`
-   - Testing Work → Use `testing-work-prompt-template.md`
-   - Documentation Work → Use `documentation-work-prompt-template.md`
+   - PM Tool Work → Read and follow `.cursor/prompts/templates/pm-tool-work-prompt-template.md`
+   - Git Work → Read and follow `.cursor/prompts/templates/git-work-prompt-template.md`
+   - Development Work → Read and follow `.cursor/prompts/templates/development-work-prompt-template.md`
+   - Infrastructure Work → Read and follow `.cursor/prompts/templates/infrastructure-work-prompt-template.md`
+   - Security Work → Read and follow `.cursor/prompts/templates/security-work-prompt-template.md`
+   - Testing Work → Read and follow `.cursor/prompts/templates/testing-work-prompt-template.md`
+   - Documentation Work → Read and follow `.cursor/prompts/templates/documentation-work-prompt-template.md`
+   - Troubleshooting Work → Read and follow `.cursor/prompts/templates/troubleshooting-work-prompt-template.md`
 
-3. **Complete ALL quality gates** before finishing any task
+3. **Complete these quality gates before finishing:**
+   - [ ] All required rules read and understood
+   - [ ] PM tool work items checked/created appropriately (if applicable)
+   - [ ] Git workflow followed (if applicable)
+   - [ ] Security standards applied (if applicable)
+   - [ ] Testing requirements met (if applicable)
+   - [ ] Context analysis completed (if troubleshooting)
 
 4. **Provide evidence of compliance** in your responses
+
+**FALLBACK**: If `.cursor/prompts/ai-agent-workflow.md` doesn't exist, use these basic rules:
+- PM Tool Work: Check existing work items first, then create if needed
+- Git Work: Use development branch, commit frequently with descriptive messages
+- Development Work: Follow Python structure standards, use systematic debugging
+- Infrastructure Work: Follow Kubernetes standards, use deployment progression
+- Security Work: Apply universal security standards, validate all inputs
+- Testing Work: Follow comprehensive testing standards, achieve 90% coverage
+- Documentation Work: Follow document sync standards, update cross-references
+- Troubleshooting Work: Stop, document issue, analyze context, then fix
+
+**EVIDENCE REQUIREMENTS**: For each quality gate completed, provide:
+- Command outputs that prove compliance
+- File paths of created/modified files
+- Status updates with validation results
+- Screenshots or logs showing successful completion
 
 ### ⚠️ VIOLATION PREVENTION
 
