@@ -74,14 +74,14 @@ Before completing any task, verify:
 - [ ] Git workflow followed (if applicable)
 - [ ] Security standards applied (if applicable)
 - [ ] Testing requirements met (if applicable)
-- [ ] Context analysis completed (if troubleshooting)
+- [ ] Context analysis completed (if troubleshooting) - Document issue, analyze broader context, verify confidence level ≥ 7/10
 
 ### 5. EVIDENCE REQUIREMENTS
 For each quality gate completed, provide:
 - Command outputs that prove compliance
 - File paths of created/modified files
 - Status updates with validation results
-- Screenshots or logs showing successful completion
+- Log entries or terminal output showing successful completion
 
 ### 6. FEEDBACK REQUIREMENT (MANDATORY)
 If you encounter ANY issues with rules or cannot follow them properly, you MUST provide feedback:

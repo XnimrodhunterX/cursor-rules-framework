@@ -59,14 +59,15 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
    ```
 
 2. **Follow the task-specific workflow** based on your task type:
-   - PM Tool Work → Read and follow `.cursor/prompts/templates/pm-tool-work-prompt-template.md`
-   - Git Work → Read and follow `.cursor/prompts/templates/git-work-prompt-template.md`
-   - Development Work → Read and follow `.cursor/prompts/templates/development-work-prompt-template.md`
-   - Infrastructure Work → Read and follow `.cursor/prompts/templates/infrastructure-work-prompt-template.md`
-   - Security Work → Read and follow `.cursor/prompts/templates/security-work-prompt-template.md`
-   - Testing Work → Read and follow `.cursor/prompts/templates/testing-work-prompt-template.md`
-   - Documentation Work → Read and follow `.cursor/prompts/templates/documentation-work-prompt-template.md`
-   - Troubleshooting Work → Read and follow `.cursor/prompts/templates/troubleshooting-work-prompt-template.md`
+   **MANDATORY**: Execute the template file to read and follow its instructions:
+   - PM Tool Work → `cat .cursor/prompts/templates/pm-tool-work-prompt-template.md` and follow ALL instructions
+   - Git Work → `cat .cursor/prompts/templates/git-work-prompt-template.md` and follow ALL instructions
+   - Development Work → `cat .cursor/prompts/templates/development-work-prompt-template.md` and follow ALL instructions
+   - Infrastructure Work → `cat .cursor/prompts/templates/infrastructure-work-prompt-template.md` and follow ALL instructions
+   - Security Work → `cat .cursor/prompts/templates/security-work-prompt-template.md` and follow ALL instructions
+   - Testing Work → `cat .cursor/prompts/templates/testing-work-prompt-template.md` and follow ALL instructions
+   - Documentation Work → `cat .cursor/prompts/templates/documentation-work-prompt-template.md` and follow ALL instructions
+   - Troubleshooting Work → `cat .cursor/prompts/templates/troubleshooting-work-prompt-template.md` and follow ALL instructions
 
 3. **Complete these quality gates before finishing:**
    - [ ] All required rules read and understood
@@ -74,30 +75,30 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
    - [ ] Git workflow followed (if applicable)
    - [ ] Security standards applied (if applicable)
    - [ ] Testing requirements met (if applicable)
-   - [ ] Context analysis completed (if troubleshooting)
+   - [ ] Context analysis completed (if troubleshooting) - Document issue, analyze broader context, verify confidence level ≥ 7/10
 
 4. **Provide evidence of compliance** in your responses
 
 5. **Provide feedback on rule issues** (MANDATORY if problems encountered)
 
 **FALLBACK**: If `.cursor/prompts/ai-agent-workflow.md` doesn't exist, use these basic rules:
-- PM Tool Work: Check existing work items first, then create if needed
-- Git Work: Use development branch, commit frequently with descriptive messages
-- Development Work: Follow Python structure standards, use systematic debugging
-- Infrastructure Work: Follow Kubernetes standards, use deployment progression
-- Security Work: Apply universal security standards, validate all inputs
-- Testing Work: Follow comprehensive testing standards, achieve 90% coverage
-- Documentation Work: Follow document sync standards, update cross-references
-- Troubleshooting Work: Stop, document issue, analyze context, then fix
+- **PM Tool Work**: `pm work-item list --status todo` then `pm work-item create "title" --type task`
+- **Git Work**: `git checkout development` then `git add . && git commit -m "type: description"`
+- **Development Work**: Follow Python src/ layout, use `python -m pytest` for testing
+- **Infrastructure Work**: Use `kubectl apply -f` for deployments, follow K3S standards
+- **Security Work**: Validate all inputs, use `grep -r "password" .` to check for secrets
+- **Testing Work**: Achieve 90% coverage with `pytest --cov=src --cov-report=html`
+- **Documentation Work**: Update cross-references, use `find . -name "*.md" -exec grep -l "old-reference" {} \;`
+- **Troubleshooting Work**: `echo "Issue: [description]" > issue-log.txt` then analyze context
 
 **EVIDENCE REQUIREMENTS**: For each quality gate completed, provide:
 - Command outputs that prove compliance
 - File paths of created/modified files
 - Status updates with validation results
-- Screenshots or logs showing successful completion
+- Log entries or terminal output showing successful completion
 
 **FEEDBACK REQUIREMENTS**: If you encounter ANY issues with rules, you MUST provide feedback:
-- Create feedback file: `rule_feedback/feedback_YYYYMMDD-HHMMSS.md`
+- Create feedback file: `mkdir -p rule_feedback && cp rule_feedback/feedback-template.md rule_feedback/feedback_$(date +%Y%m%d-%H%M%S).md`
 - Use template: `rule_feedback/feedback-template.md`
 - Document specific rule issues, conflicts, or unclear guidance
 - Submit for continuous rule system improvement
