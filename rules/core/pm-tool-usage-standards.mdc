@@ -5,7 +5,7 @@ status: "active"
 compliance: "mandatory"
 description: "Comprehensive standards for using the PM tool to track and manage all work items"
 alwaysApply: true
-lastUpdated: "2025-09-12 - CRITICAL SYNTAX CORRECTIONS APPLIED - CREATE COMMANDS FIXED"
+lastUpdated: "2025-09-21"
 category: "core"
 ---
 

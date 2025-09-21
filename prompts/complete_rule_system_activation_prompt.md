@@ -2,7 +2,7 @@ Follow the rules in .cursor/rules/*
 
 This is a comprehensive rule system with 45+ rules covering all aspects of development, including:
 
-**ALWAYS APPLY RULES (16 rules):**
+**ALWAYS APPLY RULES (20 rules):**
 - GLOBAL-01: Comprehensive Rule Reading Protocol (MANDATORY - read ALL rules)
 - SEC-01: Universal Security Standards
 - INT-SEC-01: Security Integration Standards
@@ -11,14 +11,18 @@ This is a comprehensive rule system with 45+ rules covering all aspects of devel
 - INT-IMPACT-01: Rule Impact Analysis Tools and Framework
 - INT-PERF-MON-01: Rule Performance Monitoring and Optimization
 - INT-LEARN-01: Rule Learning System and Usage Pattern Analysis
+- INT-DECISION-01: Rule Application Decision Tree
+- INT-METRICS-01: Rule Effectiveness Metrics and Monitoring
 - QC-13: AI Assistant Communication Protocol
-- QC-14: Document Synchronization & Cross-Reference Management
-- QC-15: Systematic Debugging Methodology
+- QC-14: Document Synchronization & Cross-Reference Management (PRIMARY documentation authority)
 - QC-08: File Organization Standards
 - QC-06: Project Management & Governance Standards
-- QC-07: Documentation Standards
-- QC-14-FEATURE: Feature-to-Documentation Synchronization
+- QC-01: Comprehensive Testing Standards (90% coverage minimum)
 - GIT-01: Git Branching Strategy
+- TEST-01: Testing Standards (90% coverage minimum)
+- INT-TEST-01: Testing Integration Standards
+- INT-PERF-01: Performance Integration Standards
+- PYTHON-STRUCTURE-01: Python Package Structure Standards (mandatory src/ layout)
 
 **APPLY INTELLIGENTLY RULES (12 rules):**
 - API-01: API Development Standards
@@ -45,15 +49,11 @@ This is a comprehensive rule system with 45+ rules covering all aspects of devel
 - INT-PERF-01: Performance Integration Standards
 - INT-CONFLICT-01: Rule Conflict Resolution Standards
 
-**DECISION & METRICS RULES (2 rules):**
-- INT-DECISION-01: Rule Application Decision Tree
-- INT-METRICS-01: Rule Effectiveness Metrics and Monitoring
-
-**LONG-TERM INTEGRATION RULES (4 rules):**
-- INT-VERSION-01: Rule Versioning and Compatibility Standards
-- INT-IMPACT-01: Rule Impact Analysis Tools and Framework
-- INT-PERF-MON-01: Rule Performance Monitoring and Optimization
-- INT-LEARN-01: Rule Learning System and Usage Pattern Analysis
+**MOBILE PLATFORM RULES (4 rules):**
+- MB-01: iOS Development Standards
+- MB-02: Android Development Standards
+- MB-03: Cross-Platform Consistency (PRIMARY for mobile testing)
+- MB-04: Mobile Testing Standards
 
 **CRITICAL REQUIREMENTS:**
 1. **ALWAYS read ALL rules** in .cursor/rules/* completely before starting any work

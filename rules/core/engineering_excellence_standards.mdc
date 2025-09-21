@@ -1,7 +1,12 @@
 ---
-ruleId: "ENG-01"
+ruleId: "QC-19"
 title: "Engineering Excellence Standards"
+status: "active"
+compliance: "mandatory"
+description: "Critical engineering standards for code quality, performance, and architectural excellence"
 alwaysApply: true
+lastUpdated: "2025-09-21"
+category: "core"
 ---
 
 When generating or reviewing code, ensure that solutions meet critical engineering standards. Every code change must be evaluated against these dimensions:

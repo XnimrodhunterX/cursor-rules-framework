@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Infrastructure-as-Code standards ensuring all infrastructure is declarative, tested, and GitOps-compliant"
 globs: ["**/infrastructure/**", "**/terraform/**", "**/ansible/**", "**/pulumi/**", "**/cloudformation/**", "**/*.tf", "**/*.tfvars"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "infrastructure"
 ---
 

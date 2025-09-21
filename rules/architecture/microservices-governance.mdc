@@ -1,5 +1,12 @@
 ---
+ruleId: "MICRO-01"
+title: "Microservices Governance Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive microservices governance standards for architecture, deployment, and operational excellence"
 alwaysApply: false
+lastUpdated: "2025-09-21"
+category: "architecture"
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
@@ -463,7 +470,7 @@ from .api.routes import Router                # ❌ FORBIDDEN
 #### Definition of Done for Microservices
 - [ ] **API Contract**: OpenAPI specification complete and validated
 - [ ] **Security**: Threat model documented and controls implemented
-- [ ] **Testing**: Unit tests >80% coverage, integration tests complete
+- [ ] **Testing**: Unit tests >90% coverage, integration tests complete
 - [ ] **Documentation**: Service documentation and deployment guides
 - [ ] **Monitoring**: Health checks, metrics, and alerting configured
 - [ ] **Security Scanning**: Container and dependency vulnerability scans passed
@@ -486,7 +493,3 @@ from .api.routes import Router                # ❌ FORBIDDEN
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: CRITICAL for all microservices development
 **Purpose**: Ensure scalable, secure, and maintainable microservices architecture
-description: "Microservices governance and architecture standards covering service design, communication, and operational excellence"
-globs: ["**/services/**", "**/microservices/**", "**/*.service.*", "**/api/**"]
-alwaysApply: false
----

@@ -5,7 +5,7 @@ status: "active"
 compliance: "mandatory"
 description: "Ensures writing does not sound like AI-generated content and maintains human-like quality and authenticity"
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "core"
 ---
 

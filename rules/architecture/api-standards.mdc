@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "API design and development standards covering REST, GraphQL, and best practices"
 globs: ["**/api/**", "**/*.api.*", "**/routes/**", "**/endpoints/**", "**/controllers/**", "**/*.controller.*"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "architecture"
 ---
 

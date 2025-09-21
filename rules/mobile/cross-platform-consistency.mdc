@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Standards for maintaining consistent UX and functionality across Web, iOS, and Android platforms"
 globs: ["**/mobile/**", "**/apps/**", "**/shared/**"]
 alwaysApply: false
-lastUpdated: "2024-09-08"
+lastUpdated: "2025-09-21"
 category: "mobile"
 ---
 
@@ -15,6 +15,35 @@ category: "mobile"
 ## Purpose & Scope
 
 Cross-platform consistency standards ensuring unified user experience, feature parity, and design coherence across Web, iOS, and Android applications for The Middle platform while respecting platform-specific conventions.
+
+## Mobile Testing Strategy Hierarchy
+
+### PRIMARY Authority: MB-03 (Cross-Platform Consistency)
+- **Core functionality consistency** across all platforms
+- **Shared business logic** and API integration
+- **Design system** and user experience standards
+- **Feature parity** requirements
+
+### SECONDARY Authority: Platform-Specific Rules
+- **MB-01 (iOS Development)**: Platform-specific optimization and iOS conventions
+- **MB-02 (Android Development)**: Platform-specific optimization and Android conventions  
+- **MB-04 (Mobile Testing)**: Platform-specific testing implementation
+
+### Implementation Strategy
+```yaml
+mobile_development_approach:
+  mvp_phase:
+    - "Start with cross-platform consistency (MB-03)"
+    - "Implement shared business logic and APIs"
+    - "Use common design system and components"
+    - "Focus on feature delivery over platform optimization"
+  
+  optimization_phase:
+    - "Evolve to platform-specific optimization (MB-01/MB-02)"
+    - "Implement platform-specific UI/UX enhancements"
+    - "Add platform-specific performance optimizations"
+    - "Leverage platform-specific capabilities"
+```
 
 ## Core Standards
 
@@ -444,3 +473,4 @@ When you encounter cross-platform development work, reference these additional r
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all cross-platform development
 **Purpose**: Ensure cohesive user experience while respecting platform conventions
+**Authority**: PRIMARY for cross-platform consistency - MB-01 (iOS) and MB-02 (Android) defer to this standard

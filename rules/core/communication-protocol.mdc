@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Transparency and communication standards for AI assistant interactions"
 globs: ["**/*"]
 alwaysApply: true
-lastUpdated: "2024-09-08"
+lastUpdated: "2025-09-21"
 category: "core"
 ---
 
@@ -71,9 +71,9 @@ I'm {action} because {reason} following {rule_reference}
 #### Examples
 - "I'm installing the missing dependency using `pip install psutil` to meet QC-09 Engineering Standards"
 - "I'm refactoring this function to comply with QC-09 maximum function length requirements"
-- "I'm creating tests following QC-01 Testing Standards to achieve >80% coverage"
+- "I'm creating tests following QC-01 Testing Standards to achieve >90% coverage"
 - "Hey Steve, I'm creating this test script following QC-01 Comprehensive Testing Standards"
-- "Hey Steve, I'm updating these docs following QC-07 Documentation Standards"
+- "Hey Steve, I'm updating these docs following QC-14 Document Synchronization Standards"
 
 #### Before File Operations
 ```

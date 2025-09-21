@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Comprehensive Git branching strategy and version control standards based on GitFlow methodology"
 globs: ["**/.git/**", "**/.gitignore", "**/.gitattributes", "**/git/**", "**/.github/**", "**/.gitlab-ci.yml", "**/Jenkinsfile", "**/azure-pipelines.yml", "**/deploy/**", "**/release/**", "**/version/**"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "development"
 ---
 
@@ -306,17 +306,32 @@ release_workflow:
 ### 5. Commit Message Standards
 
 #### MANDATORY Commit Convention
+**PRIMARY REFERENCE**: See `/templates/commit-message-template.md` for complete Conventional Commits specification.
+
 ```yaml
 commit_convention:
-  format: "<type>(<scope>): <description>"
-  types:
+  format: "<type>[optional scope]: <description>"
+  template: "/templates/commit-message-template.md"
+  standard: "Conventional Commits v1.0.0"
+  
+  primary_types:
     - "feat: new feature"
     - "fix: bug fix"
     - "docs: documentation changes"
     - "style: formatting, missing semicolons, etc."
     - "refactor: code refactoring"
+    - "perf: performance improvements"
     - "test: adding or updating tests"
-    - "chore: build process or auxiliary tool changes"
+    - "build: build system changes"
+    - "ci: CI/CD changes"
+    - "chore: other changes"
+    - "revert: reverts a previous commit"
+  
+  secondary_types:
+    - "security: security-related changes"
+    - "deps: dependency updates"
+    - "config: configuration changes"
+    - "release: release-related changes"
   
   examples:
     - "feat(auth): add OAuth2 authentication"
@@ -325,6 +340,8 @@ commit_convention:
     - "refactor(utils): simplify date formatting function"
     - "test(auth): add unit tests for login validation"
     - "chore(deps): update dependencies to latest versions"
+    - "security(auth): fix JWT token validation vulnerability"
+    - "perf(db): optimize user query performance"
   
   forbidden:
     - "update"
@@ -332,6 +349,9 @@ commit_convention:
     - "modify"
     - "fix bug"
     - "new feature"
+    - "wip"
+    - "temp"
+    - "asdf"
 ```
 
 ### 6. Version Control Best Practices
@@ -564,7 +584,8 @@ validation_criteria:
   
   commit_messages:
     format: "conventional commits"
-    types: ["feat", "fix", "docs", "style", "refactor", "test", "chore"]
+    template: "/templates/commit-message-template.md"
+    types: ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert", "security", "deps", "config", "release"]
   
   branch_protection:
     main: "fully protected"

@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Frontend development standards for React/TypeScript, component architecture, and UI/UX best practices"
 globs: ["**/*.tsx", "**/*.jsx", "**/*.ts", "**/*.js", "**/components/**", "**/src/**", "**/app/**", "**/pages/**"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "architecture"
 ---
 
@@ -715,7 +715,7 @@ export default defineConfig({
 - [ ] **TypeScript**: All components properly typed
 - [ ] **Accessibility**: WCAG 2.1 AA compliance verified
 - [ ] **Performance**: Lighthouse score >90
-- [ ] **Testing**: >80% component test coverage
+- [ ] **Testing**: >90% component test coverage
 - [ ] **Responsive**: Works on all target devices
 - [ ] **Documentation**: Component documentation updated
 
@@ -724,7 +724,3 @@ export default defineConfig({
 **Rule Status**: ✅ **ACTIVE**  
 **Compliance**: MANDATORY for all frontend development  
 **Purpose**: Ensure consistent, accessible, and performant user interfaces
-description: "Frontend development standards covering UI/UX, frameworks, and best practices"
-globs: ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/frontend/**", "**/ui/**", "**/components/**", "**/*.css", "**/*.scss", "**/*.less"]
-alwaysApply: false
----

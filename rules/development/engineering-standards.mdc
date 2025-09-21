@@ -1,12 +1,12 @@
 ---
-ruleId: "QC-09"
+ruleId: "ENG-01"
 title: "Engineering Standards"
 status: "active"
 compliance: "mandatory"
 description: "Code structure, quality, performance, and architectural consistency standards"
 globs: ["**/src/**", "**/app/**", "**/lib/**", "**/utils/**", "**/helpers/**", "**/core/**", "**/shared/**", "**/common/**", "**/services/**", "**/models/**", "**/controllers/**"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "development"
 ---
 
@@ -302,7 +302,7 @@ class TestServiceManager:
 ### 5. Import Structure Standards
 
 #### MANDATORY Import Organization
-- **Services should use relative imports** within their own modules
+- **Services should use absolute imports** per PYTHON-STRUCTURE-01
 - **External imports should be at the top** of files
 - **Group imports** by standard library, third-party, and local
 
@@ -318,21 +318,42 @@ from datetime import datetime
 import requests
 from pydantic import BaseModel
 
-# Local imports
-from ..config import ServiceConfig
-from ..schemas import InputSchema, OutputSchema
-from ..models import DataModel
-from ..utils import helper_function
+# Local imports (absolute imports per PYTHON-STRUCTURE-01)
+# See rules/development/python-structure.mdc for mandatory import standards
+from service_name.config import ServiceConfig
+from service_name.schemas import InputSchema, OutputSchema
+from service_name.models import DataModel
+from service_name.utils import helper_function
 ```
 
 ### 6. Performance Standards
 
-#### MANDATORY Performance Requirements
-- **Response time** < 200ms for API endpoints
-- **Memory usage** < 512MB per service instance
-- **CPU usage** < 80% under normal load
-- **Database query time** < 100ms for simple queries
-- **Async operations** for I/O-bound tasks
+#### Tiered Performance Requirements
+Performance requirements vary by deployment tier. See INT-PERF-01 for complete tiered system.
+
+**Development Tier:**
+- **Response time**: No strict thresholds - focus on functionality
+- **Memory usage**: Basic monitoring only
+- **CPU usage**: Basic monitoring only
+- **Database queries**: Focus on correctness over performance
+
+**Pre-Production Tier:**
+- **Response time**: 500ms soft target, 750ms warning threshold
+- **Memory usage**: 80% utilization warning threshold
+- **CPU usage**: 80% utilization warning threshold
+- **Database queries**: 200ms soft target, 500ms warning threshold
+
+**Production Tier:**
+- **Response time**: 200ms for user-facing APIs, 500ms for complex operations
+- **Memory usage**: < 512MB per service instance
+- **CPU usage**: < 80% under normal load
+- **Database queries**: < 100ms for simple queries, < 200ms for complex queries
+
+**PoC/MVP Tier:**
+- **Response time**: Good enough for demonstration
+- **Memory usage**: Minimal resource requirements
+- **CPU usage**: Minimal resource requirements
+- **Database queries**: Functional performance only
 
 #### Performance Implementation
 ```python
@@ -388,10 +409,13 @@ class PerformanceOptimizedService:
 ### 7. Error Handling Standards
 
 #### MANDATORY Error Handling Requirements
+**PRIMARY REFERENCE**: See SEC-01 (Security Standards) for error handling authority and security requirements.
+
 - **Custom exception classes** for domain-specific errors
-- **Proper error logging** with context information
+- **Proper error logging** with context information (per SEC-01 security requirements)
 - **Graceful degradation** for non-critical failures
 - **Circuit breaker pattern** for external service calls
+- **Security-first error handling** - no information leakage in user-facing messages
 
 #### Error Handling Implementation
 ```python
@@ -421,17 +445,30 @@ from .exceptions import ServiceError, ExternalServiceError
 logger = logging.getLogger(__name__)
 
 def handle_errors(func: Callable) -> Callable:
-    """Decorator for consistent error handling."""
+    """Decorator for consistent error handling (per SEC-01 security requirements)."""
     @wraps(func)
     def wrapper(*args, **kwargs) -> Any:
         try:
             return func(*args, **kwargs)
         except ServiceError as e:
-            logger.error(f"Service error in {func.__name__}: {e}")
+            # Internal logging with full details (per SEC-01)
+            logger.error(f"Service error in {func.__name__}: {e}", extra={
+                'function': func.__name__,
+                'error_type': 'ServiceError',
+                'error_details': str(e),
+                'correlation_id': get_correlation_id()
+            })
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in {func.__name__}: {e}")
-            raise ServiceError(f"Unexpected error: {e}")
+            # Internal logging with full details (per SEC-01)
+            logger.error(f"Unexpected error in {func.__name__}: {e}", extra={
+                'function': func.__name__,
+                'error_type': 'UnexpectedError',
+                'error_details': str(e),
+                'correlation_id': get_correlation_id()
+            })
+            # Generic error for user-facing responses (per SEC-01)
+            raise ServiceError("An unexpected error occurred. Please try again.")
     return wrapper
 
 class CircuitBreaker:
@@ -466,7 +503,7 @@ class CircuitBreaker:
 #### Definition of Done for Engineering
 - [ ] **Code Structure**: Follows mandatory directory structure
 - [ ] **Code Quality**: Type hints, docstrings, and naming conventions
-- [ ] **Testing**: Comprehensive test coverage (>80%)
+- [ ] **Testing**: Comprehensive test coverage (>90%)
 - [ ] **Performance**: Meets performance requirements
 - [ ] **Error Handling**: Proper exception handling and logging
 - [ ] **Documentation**: Complete API documentation
@@ -477,7 +514,3 @@ class CircuitBreaker:
 **Rule Status**: ✅ **ACTIVE**  
 **Compliance**: MANDATORY for all engineering work  
 **Purpose**: Ensure consistent, high-quality, and maintainable code
-description: "Engineering Standards - Code structure, quality, performance, and architectural consistency"
-globs: ["**/src/**", "**/app/**", "**/lib/**", "**/utils/**", "**/helpers/**", "**/core/**", "**/shared/**", "**/common/**", "**/services/**", "**/models/**", "**/controllers/**"]
-alwaysApply: false
----

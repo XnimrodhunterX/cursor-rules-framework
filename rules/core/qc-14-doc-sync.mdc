@@ -1,16 +1,22 @@
 ---
 ruleId: "QC-14"
 title: "Document Synchronization & Cross-Reference Management"
+status: "active"
+compliance: "mandatory"
+description: "PRIMARY documentation governance authority - ensure comprehensive document synchronization and prevent orphaned files"
 alwaysApply: true
+lastUpdated: "2025-09-21"
+category: "core"
 ---
 
 
 **Rule Status**: ✅ **ACTIVE**  
 **Compliance**: MANDATORY for all document operations  
-**Purpose**: Ensure comprehensive document synchronization and prevent orphaned files
+**Purpose**: PRIMARY documentation governance authority - ensure comprehensive document synchronization and prevent orphaned files
 **Rule Type**: Quality Control  
 **Priority**: MANDATORY  
-**Scope**: All documentation creation, updates, and maintenance  
+**Scope**: All documentation creation, updates, and maintenance
+**Authority**: PRIMARY documentation governance rule - all other documentation rules defer to this standard  
 
 ## PURPOSE & SCOPE
 
@@ -89,6 +95,7 @@ document_update_matrix:
 2. **Verify Naming**: Ensure kebab-case naming convention
 3. **Confirm Placement**: Verify correct directory per QC-07/QC-08
 4. **Plan Integration**: Identify all files that need updating
+5. **Python Structure Compliance**: For Python projects, ensure src/ layout per PYTHON-STRUCTURE-01
 
 #### REQUIRED Communication Pattern:
 ```
@@ -263,6 +270,29 @@ find docs/ -name "*.md" -exec grep -L "last_updated:" {} \;
 - [ ] **Audit Logged**: Change recorded in audit log
 - [ ] **Validation Passed**: All links and references work
 - [ ] **Metadata Complete**: YAML front matter valid
+
+### CONSOLIDATED DOCUMENTATION GOVERNANCE
+
+#### Primary Authority Responsibilities
+As the PRIMARY documentation governance rule, QC-14 consolidates and supersedes:
+- **QC-07 (Documentation Standards)**: Defers to QC-14 for synchronization
+- **QC-15 (Feature Documentation Sync)**: Defers to QC-14 for cross-reference management
+- **All other documentation rules**: Must align with QC-14 synchronization standards
+
+#### Consolidated Standards
+```yaml
+documentation_governance:
+  primary_authority: "QC-14: Document Synchronization & Cross-Reference Management"
+  secondary_rules:
+    - "QC-07: Documentation Standards (content standards)"
+    - "QC-15: Feature Documentation Sync (feature-specific sync)"
+  
+  consolidated_requirements:
+    - "All document operations must follow QC-14 synchronization protocol"
+    - "Content standards from QC-07 apply to document creation"
+    - "Feature-specific sync from QC-15 applies to feature documentation"
+    - "Cross-reference management is exclusively QC-14 responsibility"
+```
 
 ### IMPLEMENTATION CHECKLIST
 

@@ -1,12 +1,12 @@
 ---
-ruleId: "QC-01"
+ruleId: "TEST-01"
 title: "Comprehensive Testing Standards & Automation"
 status: "active"
 compliance: "mandatory"
 description: "Comprehensive testing standards covering test strategy, TDD, and automation"
 globs: ["**/*.test.*", "**/*.spec.*", "**/tests/**", "**/test/**", "**/__tests__/**", "**/*.test.js", "**/*.test.ts", "**/*.test.py"]
-alwaysApply: false
-lastUpdated: "2025-09-12"
+alwaysApply: true
+lastUpdated: "2025-09-21"
 category: "development"
 ---
 
@@ -274,6 +274,8 @@ export class TDDWorkflow {
 - **Integration tests for every inter-service or API interaction**
 - **Explicit edge case and error handling tests**
 - **Performance testing for critical paths**
+- **Meaningful tests that find real issues**: dead code detection, over-engineering prevention, security vulnerabilities
+- **Comprehensive test types**: unit/integration/negative/regression/e2e/performance testing with proper fixtures
 
 #### Coverage Validation
 ```yaml

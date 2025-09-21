@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "iOS native development standards for Swift, SwiftUI, and Apple platform integration"
 globs: ["**/ios/**", "**/*.swift", "**/*.plist", "**/*.xcodeproj/**"]
 alwaysApply: false
-lastUpdated: "2024-09-08"
+lastUpdated: "2025-09-21"
 category: "mobile"
 ---
 
@@ -342,7 +342,7 @@ When you encounter iOS development work, reference these additional rules:
 
 ### Definition of Done for iOS Development
 - [ ] **SwiftLint passes** with zero warnings
-- [ ] **Unit test coverage** >80% for ViewModels and Services
+- [ ] **Unit test coverage** >90% for ViewModels and Services
 - [ ] **UI tests** for critical user journeys
 - [ ] **Accessibility audit** complete (VoiceOver, Dynamic Type)
 - [ ] **Performance testing** on oldest supported device
@@ -362,3 +362,4 @@ When you encounter iOS development work, reference these additional rules:
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all iOS development
 **Purpose**: Ensure high-quality, performant, and platform-compliant iOS applications
+**Authority**: SECONDARY - defers to MB-03 for cross-platform consistency

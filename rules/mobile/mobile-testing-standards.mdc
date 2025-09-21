@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Comprehensive testing standards for iOS and Android applications including unit, integration, UI, and device testing"
 globs: ["**/mobile/**", "**/test/**", "**/androidTest/**", "**/UITests/**"]
 alwaysApply: false
-lastUpdated: "2024-09-08"
+lastUpdated: "2025-09-21"
 category: "mobile"
 ---
 
@@ -24,7 +24,7 @@ Mobile testing standards ensuring comprehensive quality assurance for iOS and An
 ```yaml
 mobile_test_pyramid:
   unit_tests:
-    target_coverage: 80%
+    target_coverage: 90%
     focus_areas:
       - ViewModels and business logic
       - Data models and transformations
@@ -677,7 +677,7 @@ When you encounter mobile testing work, reference these additional rules:
 ## Quality Gates
 
 ### Mobile Testing Requirements
-- [ ] **Unit test coverage** >80% for ViewModels and business logic
+- [ ] **Unit test coverage** >90% for ViewModels and business logic
 - [ ] **Integration test coverage** >60% for API and database operations
 - [ ] **UI test coverage** for all critical user journeys
 - [ ] **Device compatibility** tested on primary device matrix
@@ -696,3 +696,4 @@ When you encounter mobile testing work, reference these additional rules:
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all mobile application testing
 **Purpose**: Ensure comprehensive quality assurance and reliability across mobile platforms
+**Authority**: SECONDARY - defers to MB-03 for cross-platform consistency requirements

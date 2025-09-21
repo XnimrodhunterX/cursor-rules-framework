@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Universal security standards for secure development practices across all applications and systems"
 globs: ["**/auth/**", "**/security/**", "**/secrets/**", "**/config/**", "**/*.env*", "**/*.key*", "**/*.pem*", "**/*.crt*", "**/middleware/**", "**/guards/**", "**/policies/**"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "security"
 ---
 
@@ -15,6 +15,39 @@ category: "security"
 ## Purpose & Scope
 
 Universal security standards ensure secure development practices across all applications and systems. This rule establishes comprehensive security requirements for credential management, input validation, authentication, authorization, security scanning, and data protection.
+
+## Error Handling Authority Hierarchy
+
+### PRIMARY Authority: Security Rules (SEC-01)
+Security rules establish the PRIMARY authority for all error handling patterns to prevent information leakage and maintain security posture.
+
+#### Centralized Error Handling Guidance
+```yaml
+error_handling_hierarchy:
+  user_facing_errors:
+    - "Generic messages only - no technical details"
+    - "No stack traces or internal paths exposed"
+    - "Consistent error format across all interfaces"
+    - "User-friendly language for all error messages"
+  
+  internal_logging:
+    - "Detailed debug information for developers"
+    - "Structured logging with context and correlation IDs"
+    - "Security event logging with full details"
+    - "Audit trail for all error conditions"
+  
+  alerting_system:
+    - "Security events trigger immediate alerts"
+    - "Error rate thresholds for monitoring"
+    - "Escalation procedures for critical errors"
+    - "Integration with incident response systems"
+```
+
+#### Security-First Error Handling Requirements
+- **No information leakage** in user-facing error messages
+- **Comprehensive logging** for security analysis and debugging
+- **Immediate alerting** for security-related errors
+- **Audit trail** for all error conditions and responses
 
 ## Core Standards
 

@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Documentation standards covering architecture, governance, and best practices"
 globs: ["**/*.md", "**/*.rst", "**/docs/**", "**/documentation/**", "**/README*"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "core"
 ---
 
@@ -15,6 +15,7 @@ category: "core"
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all documentation
 **Purpose**: Ensure comprehensive, maintainable, and accessible project documentation
+**Authority**: SECONDARY - defers to QC-14 for document synchronization and cross-reference management
 
 ## Purpose & Scope
 

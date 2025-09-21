@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Comprehensive decision tree and workflow for determining which rules to apply in different contexts and scenarios"
 globs: ["**/*.mdc", "**/.cursor/rules/**"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "integration"
 ---
 

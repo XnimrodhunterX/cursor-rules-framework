@@ -5,8 +5,8 @@ status: "active"
 compliance: "mandatory"
 description: "Ensures systematic reading, application, and continuous auditing of all rules in .cursor/rules/*"
 alwaysApply: true
-lastUpdated: "2025-09-12"
-category: "global"
+lastUpdated: "2025-09-21"
+category: "core"
 ---
 
 # GLOBAL-01: Comprehensive Rule Reading Protocol
@@ -220,8 +220,7 @@ When you encounter specific work types, reference these additional rules:
 
 This global rule works in conjunction with:
 - **QC-13**: AI Assistant Communication Protocol
-- **QC-14**: Document Synchronization & Cross-Reference Management
-- **QC-15**: Systematic Debugging Methodology
+- **QC-14**: Document Synchronization & Cross-Reference Management (PRIMARY documentation authority)
 - **QC-16**: No Assumptions Rule
 - **QC-17**: Human-Like Writing Standards
 - **INT-VERSION-01**: Rule Versioning and Compatibility Standards

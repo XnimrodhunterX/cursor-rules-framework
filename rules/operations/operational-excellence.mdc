@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Operational excellence standards covering incident response, service reliability, and operational procedures"
 globs: ["**/operations/**", "**/runbooks/**", "**/incidents/**", "**/sre/**", "**/oncall/**"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "operations"
 ---
 
@@ -603,7 +603,3 @@ echo "✅ OPS-01 compliance checks passed"
 OPS-01 Operational Excellence Standards establish comprehensive requirements for incident management, service level objectives, and operational automation. These standards ensure consistent, reliable, and efficient operations while supporting rapid incident response and continuous improvement.
 
 **Integration Note**: This rule extends CN-04 monitoring standards with operational procedures and integrates with INF-01 infrastructure standards to provide complete operational governance.
-description:
-globs:
-alwaysApply: false
----

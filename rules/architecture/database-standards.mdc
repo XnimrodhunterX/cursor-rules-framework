@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Comprehensive database standards covering schema design, migration management, operations, and performance optimization"
 globs: ["**/*.sql", "**/migrations/**", "**/database/**", "**/db/**", "**/*.db.*"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "architecture"
 ---
 
@@ -726,13 +726,3 @@ CREATE TABLE audit_log (
 - [ ] **Performance**: Query optimization and monitoring in place
 - [ ] **Backup**: Backup and recovery procedures tested
 - [ ] **Documentation**: Schema documentation and migration notes updated
-
----
-
-**Rule Status**: ✅ **ACTIVE**  
-**Compliance**: MANDATORY for all database operations  
-**Purpose**: Ensure data integrity, performance, and operational excellence
-description: "Database design and operations standards covering schema design, migrations, and best practices"
-globs: ["**/migrations/**", "**/models/**", "**/*.sql", "**/database/**", "**/schema/**", "**/*.model.*"]
-alwaysApply: false
----

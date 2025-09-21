@@ -1,7 +1,12 @@
 ---
 ruleId: "QC-08"
 title: "File Organization Standards"
+status: "active"
+compliance: "mandatory"
+description: "Ensures consistent, maintainable project structure and file organization"
 alwaysApply: true
+lastUpdated: "2025-09-21"
+category: "core"
 ---
 # 
 
@@ -253,7 +258,7 @@ Is this shared/reusable code we're building?
 
 #### ✅ infra/ Examples
 - `infra/kubernetes/local/` - Local K8s manifests (we provision K8s resources)
-- `infra/docker/development/` - Development docker-compose (we define container orchestration)
+- `infra/docker/development/` - Development docker-compose (we define container building)
 - `infra/terraform/aws/` - AWS infrastructure definitions (we provision cloud resources)
 
 #### ✅ ops/ Examples

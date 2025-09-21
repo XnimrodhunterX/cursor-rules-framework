@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Cross-cutting performance integration standards that ensure optimal performance across all development domains"
 globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/*.swift", "**/*.kt", "**/*.yaml", "**/*.yml", "**/*.tf", "**/*.sql"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "integration"
 ---
 
@@ -18,7 +18,81 @@ This integration rule ensures performance standards are consistently applied acr
 
 ## Cross-Domain Performance Strategy
 
-### 1. Performance Baseline Establishment
+### 1. Tiered Performance Standards System
+
+#### Development Tier
+```yaml
+development_tier:
+  focus: "Functionality and feature development"
+  performance_approach: "Good enough for development and testing"
+  thresholds:
+    api_response: "No strict thresholds - focus on functionality"
+    database_queries: "No strict thresholds - focus on correctness"
+    frontend_metrics: "No strict thresholds - focus on feature completion"
+    infrastructure: "Basic resource monitoring only"
+  
+  requirements:
+    - "Code must be functional and testable"
+    - "No performance optimization required"
+    - "Basic monitoring for development feedback"
+    - "Focus on feature delivery over performance"
+```
+
+#### Pre-Production Tier
+```yaml
+pre_production_tier:
+  focus: "Performance validation and optimization"
+  performance_approach: "Soft targets with warning thresholds"
+  thresholds:
+    api_response: "500ms soft target, 750ms warning threshold"
+    database_queries: "200ms soft target, 500ms warning threshold"
+    frontend_metrics: "2x production targets as soft goals"
+    infrastructure: "80% resource utilization warning threshold"
+  
+  requirements:
+    - "Performance testing must be implemented"
+    - "Warning alerts for performance degradation"
+    - "Performance optimization recommendations"
+    - "Capacity planning validation"
+```
+
+#### Production Tier
+```yaml
+production_tier:
+  focus: "Strict performance requirements and SLA compliance"
+  performance_approach: "Hard thresholds with alerting and escalation"
+  thresholds:
+    api_response: "200ms for user-facing APIs, 500ms for complex operations"
+    database_queries: "100ms for simple queries, 200ms for complex queries"
+    frontend_metrics: "Production-grade performance requirements"
+    infrastructure: "70% CPU, 80% memory utilization limits"
+  
+  requirements:
+    - "SLA compliance mandatory"
+    - "Real-time performance monitoring"
+    - "Automatic alerting and escalation"
+    - "Performance regression prevention"
+```
+
+#### PoC/MVP Tier
+```yaml
+poc_mvp_tier:
+  focus: "Proof of concept and minimum viable product"
+  performance_approach: "Good enough to demonstrate value"
+  thresholds:
+    api_response: "Good enough for demonstration"
+    database_queries: "Functional performance only"
+    frontend_metrics: "Basic usability requirements"
+    infrastructure: "Minimal resource requirements"
+  
+  requirements:
+    - "Functional demonstration capability"
+    - "Basic performance monitoring"
+    - "Clear performance improvement roadmap"
+    - "Scalability planning for future tiers"
+```
+
+### 2. Performance Baseline Establishment
 ```yaml
 performance_baselines:
   frontend_metrics:

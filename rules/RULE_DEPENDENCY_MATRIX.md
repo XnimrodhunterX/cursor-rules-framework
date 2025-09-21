@@ -24,7 +24,7 @@ GLOBAL-01 (global-rule.mdc)
 ├── Mobile Work → MB-01/MB-02 + INT-SEC-01 + INT-TEST-01 + MB-03 + MB-04
 ├── Infrastructure Work → K8S-01/INF-01 + INT-SEC-01 + OPEX-01
 ├── Testing Work → QC-01 + INT-TEST-01 + INT-SEC-01
-├── Writing Work → QC-17 + QC-07 + QC-14
+├── Writing Work → QC-17 + QC-14 (PRIMARY documentation authority)
 └── Unclear Situations → QC-16 + QC-13
 
 INT-SEC-01 (security-integration.mdc)
@@ -67,14 +67,14 @@ INT-METRICS-01 (rule-effectiveness-metrics.mdc)
 └── Performance Metrics → INT-PERF-01 + INT-PERF-MON-01
 
 QC-16 (no-assumptions-rule.mdc)
-├── Technical Clarification → QC-13 + QC-07
+├── Technical Clarification → QC-13 + QC-14
 ├── Process Clarification → QC-06 + QC-13
 └── Security Clarification → INT-SEC-01 + QC-13
 
 QC-17 (human-like-writing-standards.mdc)
-├── Documentation Writing → QC-07 + QC-14
+├── Documentation Writing → QC-14 (PRIMARY documentation authority)
 ├── Technical Writing → QC-08 + QC-13
-└── Content Creation → QC-14-FEATURE + QC-14
+└── Content Creation → QC-14 (PRIMARY documentation authority)
 ```
 
 ## Rule Activation Prompts
@@ -95,14 +95,15 @@ QC-17 (human-like-writing-standards.mdc)
 - **GLOBAL-01**: Comprehensive Rule Reading Protocol
 - **QC-13**: AI Assistant Communication Protocol  
 - **QC-14**: Document Synchronization & Cross-Reference Management
-- **QC-15**: Systematic Debugging Methodology
+- **QC-14**: Document Synchronization & Cross-Reference Management (PRIMARY documentation authority - QC-07, QC-15, QC-14-FEATURE consolidated)
 - **QC-16**: No Assumptions Rule
 - **QC-17**: Human-Like Writing Standards
 - **QC-18**: PM Tool Usage Standards
 - **QC-08**: File Organization Standards
 - **QC-06**: Project Management & Governance Standards
-- **QC-07**: Documentation Standards
-- **QC-14-FEATURE**: Feature-to-Documentation Synchronization
+- **QC-01**: Comprehensive Testing Standards (90% coverage minimum)
+- **TEST-01**: Testing Standards (90% coverage minimum)
+- **PYTHON-STRUCTURE-01**: Python Package Structure Standards (mandatory src/ layout)
 - **SEC-01**: Universal Security Standards
 - **GIT-01**: Git Branching Strategy
 - **OPEX-02**: Deployment Progression Standards

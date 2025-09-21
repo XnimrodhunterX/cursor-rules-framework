@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Android native development standards for Kotlin, Jetpack Compose, and Android platform integration"
 globs: ["**/android/**", "**/*.kt", "**/*.kts", "**/*.xml", "**/gradle/**"]
 alwaysApply: false
-lastUpdated: "2024-09-08"
+lastUpdated: "2025-09-21"
 category: "mobile"
 ---
 
@@ -573,7 +573,7 @@ When you encounter Android development work, reference these additional rules:
 
 ### Definition of Done for Android Development
 - [ ] **ktlint and Detekt** pass with zero warnings
-- [ ] **Unit test coverage** >80% for ViewModels and Repositories
+- [ ] **Unit test coverage** >90% for ViewModels and Repositories
 - [ ] **UI tests** for critical user journeys
 - [ ] **Accessibility testing** with TalkBack enabled
 - [ ] **Performance testing** on low-end devices (API 26+)
@@ -593,3 +593,4 @@ When you encounter Android development work, reference these additional rules:
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all Android development
 **Purpose**: Ensure high-quality, performant, and platform-compliant Android applications
+**Authority**: SECONDARY - defers to MB-03 for cross-platform consistency

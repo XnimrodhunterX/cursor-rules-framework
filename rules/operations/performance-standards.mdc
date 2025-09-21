@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Performance standards for optimal system performance through baseline establishment, resource optimization, and capacity planning"
 globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/api/**", "**/services/**", "**/database/**", "**/monitoring/**", "**/metrics/**"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "operations"
 ---
 
@@ -837,7 +837,3 @@ echo "✅ PERF-01 compliance checks passed"
 PERF-01 Performance Standards establish comprehensive requirements for performance optimization, resource management, and capacity planning. These standards ensure optimal system performance while supporting efficient resource utilization and scalable growth.
 
 **Integration Note**: This rule complements CN-04 monitoring standards with performance-specific requirements and integrates with INF-01 infrastructure standards to provide complete performance governance.
-description:
-globs:
-alwaysApply: false
----

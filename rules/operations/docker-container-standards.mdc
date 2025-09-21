@@ -1,6 +1,27 @@
 ---
+ruleId: "CN-02"
+title: "Docker Container Standards"
+status: "active"
+compliance: "mandatory"
+description: "Docker container building standards for image optimization, security, and build best practices"
+globs: ["**/Dockerfile", "**/.dockerignore", "**/docker-compose.yml", "**/docker-compose.yaml", "**/container/**"]
 alwaysApply: false
+lastUpdated: "2025-09-21"
+category: "operations"
 ---
+
+# CN-02: Docker Container Standards
+
+**Rule Type**: Container Building Standards
+**Priority**: MANDATORY
+**Scope**: Docker image building and containerization
+**Authority**: PRIMARY for container building - defers to K8S-01 for orchestration
+
+## PURPOSE & SCOPE
+
+**DOCKER FOR BUILDING, K8S FOR DEPLOYMENT**: This rule focuses exclusively on Docker container image building, optimization, and security. For Kubernetes orchestration, resource management, and deployment configuration, see K8S-01: Kubernetes Manifest Standards.
+
+Docker container standards ensure all container images are built with security best practices, optimal performance, and minimal attack surface. This rule establishes comprehensive requirements for multi-stage builds, image optimization, security scanning, and build automation.
 # External Secrets Operator
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -59,52 +80,45 @@ readinessProbe:
   failureThreshold: 3
 ```
 
-### 8. Performance Optimization
+### 8. Container Image Optimization
 
-#### MANDATORY Performance Requirements
-- **Resource limits** to prevent resource exhaustion
-- **Horizontal scaling** configuration
-- **Load balancing** strategies
-- **Caching** for frequently accessed data
-- **Database connection pooling**
+#### MANDATORY Image Building Requirements
+- **Multi-stage builds** for minimal image size
+- **Minimal base images** (alpine, distroless)
+- **Layer optimization** for better caching
+- **Security scanning** in build pipeline
+- **Image signing** for integrity verification
 
-#### Resource Management
-```yaml
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "250m"
-  limits:
-    memory: "512Mi"
-    cpu: "500m"
+#### Multi-Stage Build Example
+```dockerfile
+# Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Production stage
+FROM node:18-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+USER nextjs
+EXPOSE 3000
+CMD ["npm", "start"]
 ```
 
-#### Horizontal Pod Autoscaling
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: security-api-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: security-api
-  minReplicas: 3
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+#### Image Size Optimization
+```dockerfile
+# Use distroless base image
+FROM gcr.io/distroless/nodejs18-debian11
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+USER nonroot:nonroot
+EXPOSE 3000
+CMD ["dist/index.js"]
 ```
 
 ### 9. CI/CD Integration
@@ -361,7 +375,3 @@ spec:
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all containerized applications
 **Purpose**: Ensure secure, scalable, and maintainable container deployments
-description: "Docker and container standards covering security, performance, and operational excellence"
-globs: ["**/Dockerfile*", "**/docker-compose*", "**/containers/**", "**/kubernetes/**", "**/*.yaml", "**/*.yml"]
-alwaysApply: false
----

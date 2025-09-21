@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Cross-cutting testing integration standards that ensure comprehensive test coverage across all development domains"
 globs: ["**/*.test.*", "**/*.spec.*", "**/tests/**", "**/test/**", "**/__tests__/**", "**/*.test.js", "**/*.test.ts", "**/*.test.py", "**/*.test.swift", "**/*.test.kt"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "integration"
 ---
 
@@ -18,11 +18,20 @@ This integration rule ensures comprehensive testing standards are consistently a
 
 ## Cross-Domain Testing Strategy
 
-### 1. Test Pyramid Integration
+### 1. Performance Testing Integration
+**PRIMARY REFERENCE**: See INT-PERF-01 (Performance Integration Standards) for tiered performance requirements.
+
+Testing performance requirements vary by deployment tier:
+- **Development Tier**: No strict thresholds - focus on functionality
+- **Pre-Production Tier**: 500ms soft target, 750ms warning threshold
+- **Production Tier**: 200ms for user-facing APIs, 500ms for complex operations
+- **PoC/MVP Tier**: Good enough for demonstration
+
+### 2. Test Pyramid Integration
 ```yaml
 test_pyramid:
   unit_tests:
-    coverage: "80% minimum"
+    coverage: "90% minimum"
     scope: "Individual functions, methods, classes"
     execution: "Fast (< 1ms per test)"
     isolation: "No external dependencies"
@@ -217,7 +226,7 @@ ci_testing:
 ```yaml
 quality_gates:
   coverage_thresholds:
-    unit_tests: "80% minimum"
+    unit_tests: "90% minimum"
     integration_tests: "60% minimum"
     e2e_tests: "40% minimum"
   

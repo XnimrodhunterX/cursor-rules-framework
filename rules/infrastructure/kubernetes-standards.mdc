@@ -6,20 +6,38 @@ compliance: "mandatory"
 description: "Kubernetes manifest standards for security, performance, and operational best practices"
 globs: ["**/*.yaml", "**/*.yml", "**/k8s/**", "**/kubernetes/**", "**/manifests/**", "**/deployments/**", "**/helm/**", "**/charts/**"]
 alwaysApply: false
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "infrastructure"
 ---
 
 # K8S-01: Kubernetes Manifest Standards
 
-**Rule Type**: Kubernetes Standards
+**Rule Type**: Kubernetes Orchestration Standards
 **Priority**: CRITICAL
 **Scope**: All Kubernetes manifests and deployments
+**Authority**: PRIMARY for orchestration - defers to CN-02 for container building
 **Integration**: Extends CN-02 Container Standards, INF-01 Infrastructure Standards
 
 ## PURPOSE & SCOPE
 
+**K8S FOR ORCHESTRATION, DOCKER FOR BUILDING**: This rule focuses exclusively on Kubernetes orchestration, resource management, and deployment configuration. For Docker container building, image optimization, and build processes, see CN-02: Docker Container Standards.
+
 Kubernetes manifest standards ensure all K3S platform deployments follow security best practices, resource optimization, and operational excellence. This rule establishes comprehensive requirements for pod security, resource management, health checks, and Cilium service mesh integration.
+
+## Container vs Orchestration Separation
+
+### Docker (CN-02) Responsibilities
+- **Image Building**: Multi-stage builds, minimal base images
+- **Image Security**: Vulnerability scanning, image signing
+- **Build Optimization**: Layer caching, .dockerignore
+- **Container Creation**: Dockerfile best practices
+
+### Kubernetes (K8S-01) Responsibilities
+- **Resource Management**: CPU/memory limits, requests
+- **Scaling**: HPA, VPA, cluster autoscaling
+- **Deployment**: Rolling updates, blue-green, canary
+- **Service Mesh**: Cilium networking, security policies
+- **Monitoring**: Health checks, metrics, logging
 
 ## Rule Triggers
 
@@ -678,7 +696,3 @@ When you encounter Kubernetes development work, reference these additional rules
 K8S-01 Kubernetes Manifest Standards establish comprehensive requirements for secure, efficient, and operational Kubernetes deployments on the K3S platform. These standards ensure all workloads follow security best practices, resource optimization, and service mesh integration patterns.
 
 **Integration Note**: This rule extends CN-02 container standards with Kubernetes-specific requirements and integrates with INF-01 infrastructure standards to provide complete K3S platform governance.
-description:
-globs:
-alwaysApply: false
----

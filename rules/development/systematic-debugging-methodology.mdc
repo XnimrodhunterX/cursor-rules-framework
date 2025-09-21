@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Prevent circular debugging through systematic analysis, pattern recognition, and root cause focus"
 globs: ["**/*.py", "**/commands/**", "**/services/**", "**/models/**", "**/tests/**"]
 alwaysApply: true
-lastUpdated: "2025-01-15"
+lastUpdated: "2025-09-21"
 category: "development"
 ---
 

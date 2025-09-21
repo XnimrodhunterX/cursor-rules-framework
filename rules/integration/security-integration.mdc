@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Cross-cutting security integration standards that apply across all development domains"
 globs: ["**/*.py", "**/*.js", "**/*.ts", "**/*.go", "**/*.java", "**/*.swift", "**/*.kt", "**/*.yaml", "**/*.yml", "**/*.tf", "**/*.sql"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "integration"
 ---
 

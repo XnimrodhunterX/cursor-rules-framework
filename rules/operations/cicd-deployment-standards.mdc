@@ -1,5 +1,12 @@
 ---
+ruleId: "CI-CD-01"
+title: "CI/CD & Deployment Standards"
+status: "active"
+compliance: "mandatory"
+description: "Comprehensive CI/CD pipeline standards ensuring automated, secure, and reliable software delivery"
 alwaysApply: false
+lastUpdated: "2025-09-21"
+category: "operations"
 ---
 # CN-04: CI/CD & Deployment Standards
 
@@ -787,13 +794,3 @@ spec:
 - [ ] **Deployment**: Successful deployment to staging and production
 - [ ] **Monitoring**: Monitoring and alerting configured (see monitoring-observability-standards.mdc)
 - [ ] **Rollback**: Rollback plan tested and ready
-
----
-
-**Rule Status**: ✅ **ACTIVE**  
-**Compliance**: MANDATORY for all CI/CD and deployment processes  
-**Purpose**: Ensure automated, secure, and reliable software delivery
-description: "CI/CD and deployment standards covering automation, security, and operational excellence"
-globs: ["**/.github/**", "**/ci/**", "**/cd/**", "**/.gitlab-ci.yml", "**/Jenkinsfile", "**/azure-pipelines.yml", "**/deploy/**", "**/infrastructure/**"]
-alwaysApply: false
----

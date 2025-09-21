@@ -6,7 +6,7 @@ compliance: "mandatory"
 description: "Mandatory synchronization between feature specifications, roadmap tracking, and project documentation"
 globs: ["**/*.md", "**/docs/**", "**/specs/**", "**/requirements/**"]
 alwaysApply: true
-lastUpdated: "2025-09-12"
+lastUpdated: "2025-09-21"
 category: "core"
 ---
 
@@ -19,6 +19,7 @@ Mandatory synchronization between feature specifications, roadmap tracking, and 
 **Rule Status**: ✅ **ACTIVE**
 **Compliance**: MANDATORY for all feature development and documentation
 **Purpose**: Prevent orphaned specifications and ensure systematic feature delivery
+**Authority**: SECONDARY - defers to QC-14 for document synchronization and cross-reference management
 
 ## Core Principles
 

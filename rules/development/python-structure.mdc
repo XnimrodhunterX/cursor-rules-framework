@@ -4,8 +4,8 @@ title: "Python Package Structure Standards"
 status: "active"
 compliance: "mandatory"
 description: "Enforces 2025 Python packaging standards with mandatory src/ layout for all microservices"
-alwaysApply: false
-lastUpdated: "2025-01-27"
+alwaysApply: true
+lastUpdated: "2025-09-21"
 category: "development"
 globs: ["**/services/**/*.py", "**/microservices/**/*.py", "**/src/**/*.py", "**/pyproject.toml", "**/setup.py"]
 ---
@@ -61,6 +61,21 @@ services/
 - **NO relative imports allowed**: `from .module import Class`
 - **NO relative imports allowed**: `from ..module import Class`
 - **NO exceptions** - this prevents import path issues
+
+### Mandatory Absolute Imports Section
+This section enforces absolute imports as the PRIMARY import strategy for all Python microservices. This prevents circular dependency issues and ensures consistent import behavior across different execution contexts.
+
+#### Absolute Import Requirements
+- **Primary Strategy**: Use absolute imports for all internal module references
+- **Import Path**: Always use full package path from project root
+- **Consistency**: Same import works in development, testing, and production
+- **Maintainability**: Clear dependency relationships and easier refactoring
+
+#### Exception Handling
+- **Explicit Relative Imports**: Only allowed for complex package layouts where absolute imports create circular dependencies
+- **Documentation Required**: Any relative import must be documented with justification
+- **Review Required**: All relative imports must be approved during code review
+- **Alternative Solutions**: Prefer package restructuring over relative imports
 
 ### Correct Import Examples
 ```python
