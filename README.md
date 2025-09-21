@@ -22,7 +22,7 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
    cat .cursor/prompts/ai-agent-workflow.md
    
    # Then use the appropriate activation prompt
-   cat .cursor/prompts/complete_rule_system_activation_prompt_short_version.md
+   cat .cursor/prompts/ai-agent-workflow.md
    ```
 
 ## ⚡ NEW: AI Agent Workflow System
@@ -161,9 +161,6 @@ A comprehensive rule framework for Cursor IDE with 44+ integrated standards cove
 
 ### Rule Activation
 - [`prompts/ai-agent-workflow.md`](prompts/ai-agent-workflow.md) - **MANDATORY: Read this first**
-- [`prompts/complete_rule_system_activation_prompt_short_version.md`](prompts/complete_rule_system_activation_prompt_short_version.md) - Quick reference
-- [`prompts/complete_rule_system_activation_prompt.md`](prompts/complete_rule_system_activation_prompt.md) - Full system activation
-- [`prompts/rule_compliance.md`](prompts/rule_compliance.md) - Compliance guide for the new workflow system
 
 ### Prompt Templates
 - [`prompts/templates/`](prompts/templates/) - Task-specific prompt templates
@@ -232,8 +229,7 @@ cat .cursor/rules/RULE_DEPENDENCY_MATRIX.md
 # View all available rules
 find .cursor/rules/ -name "*.mdc" -type f
 
-# Activate complete rule system (old approach)
-cat .cursor/prompts/complete_rule_system_activation_prompt.md
+# Legacy approach (deprecated - use ai-agent-workflow.md instead)
 ```
 
 ### Rule Customization

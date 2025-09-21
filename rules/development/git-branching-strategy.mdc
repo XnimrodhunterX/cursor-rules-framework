@@ -363,12 +363,12 @@ release_workflow:
 ### 5. Commit Message Standards
 
 #### MANDATORY Commit Convention
-**PRIMARY REFERENCE**: See `/templates/commit-message-template.md` for complete Conventional Commits specification.
+**PRIMARY REFERENCE**: See `.cursor/prompts/templates/git-work-prompt-template.md` for complete Conventional Commits specification.
 
 ```yaml
 commit_convention:
   format: "<type>[optional scope]: <description>"
-  template: "/templates/commit-message-template.md"
+  template: ".cursor/prompts/templates/git-work-prompt-template.md"
   standard: "Conventional Commits v1.0.0"
   
   primary_types:
@@ -641,7 +641,7 @@ validation_criteria:
   
   commit_messages:
     format: "conventional commits"
-    template: "/templates/commit-message-template.md"
+    template: ".cursor/prompts/templates/git-work-prompt-template.md"
     types: ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert", "security", "deps", "config", "release"]
   
   branch_protection:
